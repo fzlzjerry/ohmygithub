@@ -112,6 +112,7 @@ function setVisibleCount(listId: string, visibleCount: number): void {
       <SidebarMenu>
         <SidebarMenuItem>
           <SidebarMenuButton
+            class="before:hidden"
             size="sm"
             :tooltip="t('workspace.sidebar.search')"
             type="button"
@@ -122,6 +123,7 @@ function setVisibleCount(listId: string, visibleCount: number): void {
         </SidebarMenuItem>
         <SidebarMenuItem>
           <SidebarMenuButton
+            class="before:hidden"
             size="sm"
             :is-active="activeUrl === '/inbox'"
             :tooltip="t('workspace.sidebar.items.inbox')"

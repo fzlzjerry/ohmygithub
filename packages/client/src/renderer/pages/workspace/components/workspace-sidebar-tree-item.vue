@@ -107,7 +107,7 @@ function showMoreItems(): void {
   <SidebarMenuItem v-if="level === 0">
     <SidebarMenuButton
       as="div"
-      class="gap-1 pr-1"
+      class="gap-1 pr-1 before:hidden"
       :class="item.url ? 'cursor-pointer' : 'cursor-default'"
       role="button"
       size="sm"
