@@ -1,0 +1,1642 @@
+---
+name: memoh-web
+description: Primary Web development skill for apps/web — white-floating-card design language, disciplined @memohai/ui usage, deliberate copy, honest empty states, aligned controls, and restrained motion. Never hand-write controls or menus; never leave stray fragments (orphan status labels, misaligned save hints). Compose from @memohai/ui primitives and reuse existing save/feedback patterns from reference pages. Use for any apps/web UI work — new pages, settings/list/detail surfaces, chat components, polish passes — not only legacy page migrations. Read this skill before writing or changing Web frontend code.
+---
+
+> Oh My GitHub adaptation: this file is copied from Memoh's `.agents/skills/memoh-web`.
+> Treat `@memohai/ui` as `@oh-my-github/ui` and `apps/web` as this repository's Electron
+> renderer/UI surface. The design-language rules are intentionally inherited.
+
+# Memoh Web — Page Development & Design Language
+
+## Non-negotiables — read this even if you skim the rest
+
+The nine rules that break a page if you miss them. The rest of this file is the *why* and
+the *how*; these are the *must*.
+
+1. **Copy the new, never the legacy — and copy the *contract*, not a page's raw classes.** Open
+   a refactored reference page (§ Reference map in `reference.md`) and mirror its *structure*.
+   Never pattern-match off a dirty / un-refactored page — and never inherit a reference page's
+   stray `font-[NNN]` / `text-[Npx]` / `text-foreground/NN`: some references still carry
+   pre-contract token debt (`about` is one — it ships off-scale size, arbitrary weight, and
+   hand-mixed alpha in one line), so the token law in `packages/ui/AGENTS.md` outranks any
+   single page's classes when they disagree.
+2. **A refactor must not regress.** *Before* touching anything, inventory every behavior,
+   feature, state, and path the old page has — the new page keeps all of them unless you
+   deliberately drop one and say so.
+3. **Never hand-write a color — tokens only.** `bg-card` / `text-foreground` / `border-border`,
+   etc. Dark mode is purely the result of this, and **nothing lints raw colors in app pages**,
+   so one `bg-white` / `#hex` / `text-gray-*` ships visibly broken in dark. For any hover /
+   selected / pressed / subtle tint, use the neutral **overlay ladder** (`--ui-hover` /
+   `--ui-selected` / `bg-accent`) — never a gray or a `/10` alpha.
+4. **Build from the shared shell + primitives.** Centered `max-w-3xl` with gutters;
+   `SettingsSection` / `SettingsRow` white cards — one hairline, role-map radius, inset
+   dividers, deliberate spacing rhythm, and **no hover-rise** on cards.
+5. **Reuse a component — never hand-write one.** Compose from the real `@memohai/ui` atoms
+   (Select / Combobox / Tooltip / icon `Button` / `Empty`) and the existing shared parts; never
+   re-skin one, hand-roll an equivalent, or rebuild a control out of raw `<div>`s. **Menus
+   included:** dropdown / context / action menus use `DropdownMenu` / `ContextMenu` and their
+   `*Item` / `*Separator` / `*Label` slots — never hand-written `<button>` rows, never `<hr>` /
+   `border-b` dividers inside a popover. The same rule applies to every other surface: if
+   `@memohai/ui` (or an existing app component) already covers it, use it — hand-built markup
+   drifts out of the token contract and reads inconsistent page to page. If a layout repeats,
+   extract it into one shared component instead of pasting it twice. A genuinely new component
+   is a last resort — clear it with the developer *before* building it.
+6. **Earn every word and every block.** Cut copy that doesn't guide; hide blocks that aren't
+   actionable; empty *and* loading states must still draw their frame (no layout jump).
+   **No stray fragments:** every visible piece must sit in a named region (PageShell
+   `#actions`, a row's control column, a dialog footer, a toast) — never a lone status line
+   floating where it aligns with nothing. If it can be removed, remove it; if it must stay,
+   anchor it and reuse an existing pattern from a reference page.
+7. **You are not done until you verify the *rendered* page:** grep for raw colors → flip to
+   **dark** → shrink to **narrow + `zh`** → walk **every old interaction** → `mise run lint`.
+8. **Draw it before you build it, then audit the nesting.** Sketch the page as an ASCII
+   wireframe first — and again when it looks done — and read it like space-complexity: no
+   card-in-card, no decorative icon stacked in a card, no nesting layer that isn't earning its
+   keep. Fewer boxes, shallower depth.
+9. **The root surface answers "is it working," not "configure everything" (the 99/1 rule).**
+   The first page a user lands on serves the 99% who came to *glance at state* — it must not
+   make them carry the visual weight of inputs, button piles, or history lists that only the 1%
+   want. But the 1% are not browsing; they **arrive with a purpose** and will hunt for the
+   button — so deep/rare operations (limits, snapshots/history, destructive actions) live behind
+   a **named entry point** (a one-line summary row + a button) that opens a focused form showing
+   the data *and* the action. Never spill them onto the root, and never bury them in an in-card
+   "Advanced" disclosure that mixes diagnostics with real operations (§ 12).
+
+---
+
+This skill is the **page-level** companion to the **atom-level** contract in
+`packages/ui/AGENTS.md`. That file governs how a single control looks; this file
+governs how you compose controls into a page that reads like the already-refactored
+surfaces (Overview, Appearance, Profile, About, Web Search) and never like the
+legacy ones.
+
+It exists because the refactor kept slowing down: each page re-derived the same
+decisions from scratch and re-made the same mistakes. The point of this skill is to
+make that experience reusable — so refactoring "the next page" is a procedure, not
+a re-invention.
+
+## Prime directive
+
+> **Copy the new language. Never copy the legacy.** When unsure how something should
+> look or behave, open a refactored reference page and mirror it — do not pattern-match
+> off an un-refactored page (even one you are mid-refactor on).
+
+Two non-negotiable first steps before you touch a page:
+
+1. **Read `packages/ui/AGENTS.md` in full.** It is the law for tokens, radius, borders,
+   color, motion, and the "clean vs dirty" rule. This skill assumes it.
+2. **Open one refactored reference + the page you're replacing side by side.** See
+   `reference.md` § Reference map for which page to copy for each page shape, and the
+   dirty→clean table for diagnosing what to strip.
+
+## A refactor is behavior-preserving — interrogate what it breaks
+
+The Prime directive covers the *look*; this covers the *behavior*. Changing how a page looks
+must not silently change what it does. The most common refactor failure is not an ugly page —
+it's a page that quietly **lost** an affordance that was buried in the old messy layout. Before
+and during a refactor, stop and ask what the refactor could break:
+
+1. **What is the user's path here?** (This is the § 1 copy question, upstream of pixels.) Why
+   does the user come to this page, what are they trying to do, how do they get in and out?
+   The visual exists to serve that path — so derive the path first, then build to it.
+2. **Does each remaining control's *interaction logic* need to change — and if you change it,
+   is it still complete?** A control is not just its look. It carries behavior: a select that
+   filters, an input that debounces, a toggle that triggers auto-save, a context menu, keyboard
+   handling, a drag, a hover-to-reveal action, an empty/loading/error branch. When you swap a
+   legacy control for a refactored one, **re-wire every behavior it had** — don't just port the
+   markup.
+3. **Did the refactor drop functionality?** Inventory everything the old page could *do* — every
+   button, menu item, edge action, state, shortcut — and confirm the new page can still do all
+   of it, or that you **deliberately** removed it and said why. Never lose a capability by
+   accident.
+4. **Is there a better path?** A refactor is the moment to question whether the old flow was even
+   right: a step that can be removed, a dialog that can be inlined, two redundant controls that
+   can merge, a shorter route in/out. Improve the path, don't just repaint it.
+5. **A new page is all of the above, from zero.** With no old page to inventory, you must derive
+   the path, the required behaviors, and the complete feature set from the requirement itself.
+   The risk inverts: not "losing" an old behavior, but **never specifying** one you needed —
+   so think the full interaction surface (states, edges, empties, exits) up front.
+
+## Engineering correctness — the dirt the eye can't see
+
+A page can pass every visual rule and still be **wrong**. The most expensive debt isn't an
+ugly card — it's behavior that breaks because two modules quietly disagree about a contract.
+This is invisible in a screenshot and survives review, so it gets its own pass. Treat it as
+part of "clean," not a separate concern.
+
+- **A cross-module assumption must be enforced or eliminated — never just commented.** The
+  back-affordance bug is the cautionary tale: `useSyncedQueryParam` switched tabs with
+  `router.replace` under a comment claiming "replace won't bury the previous page," while
+  `installBackHistory`'s `afterEach` never distinguished replace from push — so replace *did*
+  overwrite `previous`, and the back button started reading the bot's raw `bot-<uuid>` slug.
+  Both comments looked reasonable; together they were wrong. If module A leans on module B
+  behaving a certain way, lock it with a type or a test, or remove the assumption. A comment
+  asserting the contract is not enforcement of it.
+- **Layout size must never be driven by content.** A `w-fit` sidebar
+  (`master-detail-sidebar-layout`) let one too-long back label stretch the whole panel — so a
+  bad string became a visibly wider sidebar. Pin widths and let text `truncate` inside a fixed
+  box; a locale change, longer data, or an upstream bug must never move the frame.
+- **In-page state syncs with `replace`; whatever reads "the previous page" must honor that.**
+  Tab/filter swaps are not navigations — they `router.replace`. A history reader that counts
+  replace transitions will treat a tab switch as a place to step "back" to.
+- **One root cause often wears two faces.** The slug label and the widened sidebar were the
+  same bug. When two oddities appear together on the same action, hunt one upstream cause
+  before patching each symptom in place.
+
+## The design language in one breath
+
+The refactor is **not** new chrome. It is a switch to a calmer language whose body is
+defined by a **single hairline stroke + an inherited white surface**, and whose
+interaction is read through **color/fill change in place** — never by lifting, scaling,
+shadowing, or bordering something "to make it nicer."
+
+What concretely changed, before → after:
+
+- **Floating white cards.** Content lives in `bg-card` cards with **one** `border-border`
+  hairline and the shell radius. The section title sits *above* the card as quiet muted
+  text. Use the shared `SettingsSection` / `SettingsRow` primitives — do not hand-roll a card.
+- **Unified stroke.** One hairline, `border-border`. Never `border-border/50`,
+  `border-*/40`, or a structural border on a control body.
+- **Unified radius.** Only the role-map scale (card 14 / menu-shell 12 / control 8 /
+  badge·tooltip 6). Never a bare `rounded` or an off-scale `rounded-lg` on a control.
+- **Unified color.** Black/white/gray is ~90% of the UI (the skeleton). Charcoal is the
+  high-emphasis CTA; blue means "selected"; purple is scarce. `success`/`warning`/
+  `destructive` are **rationed signals**, not surface decoration — never tint a whole
+  card `bg-success/5`.
+- **Unified components.** Use the refactored `@memohai/ui` atoms as-is. Do not re-skin
+  them or inject classes that fight their contract (the canonical "weird Select" bug).
+- **No hover-rise, ever.** Cards and rows do **not** lift / scale-up / grow a shadow on
+  hover or press. Press-scale belongs only to buttons and sidebar rail items — never to a
+  large content card (a bot card does not shrink when you press it).
+
+### The shell & spacing rhythm
+
+This is the part that most often gets skipped and is the fastest tell of an un-refactored
+page. The refactored pages (Appearance / Profile / About) are **not full-bleed** — they all
+sit inside the same shell, and nothing ever touches an edge or another element.
+
+- **The shell.** Content is a centered column inside the right pane, not stretched edge to
+  edge: `mx-auto max-w-3xl` caps the width (~768px) and centers it, `px-6` keeps a left/right
+  gutter so nothing glues to the pane edge, `pt-10` pushes the title down off the top, `pb-12`
+  leaves room at the bottom. A page that runs full-width or starts flush against the top is
+  immediately off-language. (About is the one exception: being sparse, it centers its group
+  vertically with a slight upward bias instead of top-aligning.)
+- **Spacing is a hierarchy of gaps, not free-styled margins.** Each level of structure has
+  its own consistent breathing room, and you reuse the same rung instead of inventing values:
+  - title → content: `mb-6` (Profile uses `mb-8`)
+  - card group → card group: `space-y-8` — the big, generous gap that separates sections
+  - section label → its card: `space-y-2.5`
+  - row → row inside a card: a `border-b` hairline divider + `py-3`, each row `min-h-[3.75rem]`
+  - label → its description: `mt-0.5`
+  - inside a padded card block: `p-4`/`p-5` with `space-y-4`
+- **Text is never glued — to edges, to the top, or to each other.** Every label has air above
+  and below it; the title has air under it; cards have air between them. When something feels
+  cramped, the fix is almost always "use the next rung of the spacing hierarchy," not a
+  one-off margin.
+
+Concrete shell + primitives (exact recipes + the full spacing ladder live in `reference.md`):
+
+- Page shell: `mx-auto max-w-3xl px-6 pt-10 pb-12`, title `mb-6 px-2 text-lg font-semibold`,
+  sections stacked with `space-y-8`.
+- Card: `SettingsSection` = `overflow-hidden rounded-[var(--radius-menu-shell)] border border-border bg-card`,
+  optional title above as `px-2 text-[13px] font-medium text-muted-foreground`.
+- Row: `SettingsRow` = label (`text-sm font-medium`) + description (`text-xs text-muted-foreground`)
+  on the left, the control on the right, rows split by `border-b border-border last:border-b-0`.
+
+### Dividers — inset inside a card, full-bleed everywhere else
+
+A divider has two different jobs and two different widths; using the wrong one is a tell.
+
+- **Separating rows *inside* one white card → inset.** The hairline must **not** reach the
+  card's left/right edges. This is done by putting the border on a horizontally-margined row
+  (the `mx-4` on `SettingsRow`), never on the card itself, and dropping it on the last row
+  (`last:border-b-0`). An edge-to-edge line would visually slice the rounded card into stacked
+  tiles and break the "this is one continuous surface" reading. **Corollary:** borders go on
+  *rows*, never on the invisible wrapper `<div>` you put a `v-if` block in — a wrapper with
+  `border-b` that ends up the **last child of the card** doubles its hairline onto the card's own
+  bottom stroke (the recurring "fights the stroke" bug). See reference.md § Dividers.
+- **Structurally splitting a container → full-bleed.** A Dialog header/footer band, a
+  section-heading underline, or a standalone `Separator` between blocks divides the *whole*
+  container, so the line spans edge to edge while the content keeps its own inner padding.
+
+The test: is this line separating **items within one surface** (inset) or **splitting the
+container itself** (full-bleed)? Answer that before you place a divider.
+
+### Dark mode is not a task — it is the absence of hardcoded color
+
+**Read this twice. This is the single most-skipped requirement, and nothing will catch it for
+you.** You do **not** "add dark mode" at the end. Dark mode is the *automatic* result of using
+only semantic tokens; it breaks the moment you hardcode one raw color. So there is exactly one
+rule, applied from the first line: **never write a raw color — use a semantic token.**
+
+- Raw colors that silently break dark mode: `bg-white`, `bg-black`, `text-white`, `text-black`,
+  any `*-gray-*` / `*-zinc-*` / `*-slate-*` / `*-neutral-*`, any `#hex`, any `bg-[#…]` /
+  `text-[#…]`, any inline `style="color: …"` / `background: …`. Use `bg-card`, `bg-background`,
+  `text-foreground`, `text-muted-foreground`, `border-border`, `bg-accent`, etc. instead.
+- **For tints and subtle layering, prefer the neutral overlay ladder — it is the dark-safe way
+  to add "color."** When you need a hover / selected / pressed shade, or a faint layer to set
+  something apart, reach for the interaction-overlay tokens (`--ui-hover` / `--ui-selected` /
+  `--ui-pressed`, the `--overlay-*` rungs, or `bg-accent` which maps into them) — **never** a
+  solid fill, a hand-mixed gray, or an alpha hack (`bg-black/5`, `hover:bg-gray-100`). The
+  overlays are chroma-0 and composite over whatever surface they sit on, so they are the **same
+  token in light and dark** (light = a black wash, dark = a white wash) and identical across
+  every color scheme — no `dark:` variant, no per-scheme override, and they cannot break the way
+  a baked color does. (Full ladder in `packages/ui/AGENTS.md` § Color → Interaction overlay.)
+- **A `dark:` override is a smell, not a fix.** Themed tokens auto-switch with **no** `dark:`
+  prefix. If you're reaching for `dark:bg-…` to patch a page, it means you started from a raw
+  light color — go back and replace the base color with a token; don't band-aid it per-mode.
+- **There is no safety net for app pages.** The UI-contract guard (`mise run lint`) only scans
+  `packages/ui` — `apps/web` pages are explicitly out of scope, and there is no ESLint rule for
+  hardcoded colors. So a raw color in a page is caught by *nothing*; lint passes, and the page
+  ships broken in dark. The discipline below is the only defense — treat it as mandatory.
+- **Before you finish, do two things, every time:** (1) grep the page for raw colors
+  (`bg-white`, `text-black`, `text-gray-`, `bg-gray-`, `#`, `dark:`, inline `style=`); (2)
+  actually **flip the app to dark and look at the rendered page**. The only sanctioned `bg-white`
+  is a physical knob (Switch / Slider thumb) over a colored track. Canvas content (charts) can't
+  read tokens — reuse the token→concrete-color resolve the reference pages already do, re-run on
+  theme change.
+
+### Narrow screens reflow, never overflow
+
+A settings page is a centered `max-w-3xl` column, but the pane is resizable and the desktop
+window can be narrow. Multi-column grids collapse with responsive prefixes (`grid-cols-1
+sm:grid-cols-2`, stat rows `grid-cols-2 sm:grid-cols-4`); same-row control clusters (search +
+button) must not break or clip. Always check the narrowest realistic width, not just the wide
+default — and remember Chinese copy is wider, so the narrow + `zh` combination is the real worst
+case (see § 1).
+
+**When a component must adapt to a resizable pane, viewport breakpoints are the wrong tool.**
+`sm:` / `md:` watch the *window* — but a dockview / master-detail pane changes width while the
+window doesn't, so a `sm:` grid won't react when the same component sits in a narrow vs wide
+pane. Reach for a **container query** (`@container`) so the component responds to *its own
+container's* width, not the viewport. (Page-level `max-w-3xl` columns still use viewport
+prefixes; this is only for components that live inside variable-width panes.)
+
+Pane width is only one of three "bigger" axes; the page must also hold up under **browser zoom**
+and a **larger root/OS font**. The defence is the same discipline: lay out with the spacing
+ladder and flex/grid gaps (never a margin tuned to one string), size inline-with-text icons in
+`em` so they grow with the text while standalone control icons keep the `size-*` rem ladder, cap
+width with `max-w-*` + centre so a wide screen never stretches a line, and let any line that can
+outgrow its box `truncate`. Full rules + the verify pass (zoom 50→200%, narrow + `zh`, ultra-wide)
+live in `reference.md` § Scaling & zoom.
+
+### Scroll ownership
+
+Know who owns the scroll before you add `overflow-*` anywhere. The desktop shell **locks body
+overflow**, so a page that needs to scroll must own its own scroll container (the dev wall does
+this with `h-dvh overflow-y-auto`); a settings page instead scrolls inside the section's
+existing scroll area. The failure modes are symmetric: a page that forgets to own its scroll is
+un-scrollable inside the desktop shell, and a page that adds a stray `overflow-*` creates a
+*nested* scroll container (a scrollbar inside a scrollbar) or a surprise horizontal scrollbar.
+When a transform nudges content sideways (the list↔detail swap pushes panes ±24px), clip it
+with `overflow-x-clip` — not `overflow-x-hidden`, which would turn the element into a vertical
+scroll container and steal scrolling from the ancestor. Don't introduce a new scroll container
+unless you mean to.
+
+**Every page-level scroll container that holds a centered `max-w-3xl` column must reserve the
+scrollbar gutter — `[scrollbar-gutter:stable]`.** The shell centers content with `mx-auto`, so
+its left/right margins are computed from the pane's *available* width. When a classic
+(space-consuming) scrollbar appears, it eats that width and the whole centered column — title,
+card edges, everything — shifts sideways. The tell is real and confusing: two sibling tabs look
+"only similar," because a long tab scrolls (narrower pane) while a short one doesn't (wider
+pane), so the title and card edges land in different spots as you switch between them. A page
+that doesn't scroll *today* will the day its content grows — so this is not optional on the
+scroller, it's structural. Reserving the gutter keeps the available width constant whether or
+not the scrollbar is visible, so every page that shares (or mirrors) the scroller stays aligned.
+There are only a handful of these page-level scrollers (the settings section's `router-view`
+pane; any master-detail surface that runs its *own* inner scroll pane, e.g. the bot-detail tab
+pane) — put the rule on the scroll container itself, never on each page, so all pages it hosts
+inherit it for free. Bounded inner scrollers (a tool-call detail body, a dropdown list, a log
+pane) are left-aligned and don't need it.
+
+## Component discipline
+
+**Reuse first; build new only with sign-off.** The default is always to *find and reuse* an
+existing component, then to *compose* existing atoms — never to hand-write a control out of raw
+markup. The most expensive page is the one where the agent quietly re-built from zero what
+already existed. Three rules, in order:
+
+1. **Hand-writing a component is forbidden.** A clickable `<div>` that re-implements a Button, a
+   bespoke popover list that re-implements a Select, a `<div>`-grid that re-implements a Table —
+   all banned. They can't receive the size / token / focus / a11y contract, and they drift. If
+   `@memohai/ui` (or an existing app component) has it, use it as-is.
+2. **A composition that can repeat must be extracted, not pasted.** Even when every piece is a
+   properly reused atom, if the *arrangement* could appear in more than one place (a provider
+   row, a card header, an empty tile, a field cluster), lift it into one shared component and
+   reuse that. Copy-pasted markup is duplication waiting to drift out of sync — and a reused
+   composition dropped into a spot where the same shape recurs is the signal to extract it.
+3. **A genuinely new component needs the developer's OK first.** When nothing fits and no
+   composition will do, stop and say so — name what's missing and why — get agreement, then
+   build it once in the shared layer. Never silently spawn a one-off component mid-page.
+
+Then pick the right component instead of bending the wrong one. See `reference.md` §
+Component picker for the full decision table and the icon/badge/tooltip rules. The
+recurring failures to avoid:
+
+- **Menus (dropdown / context / overflow / kebab):** `DropdownMenu` or `ContextMenu` as the
+  shell; each action is `DropdownMenuItem` / `ContextMenuItem` (or checkbox/radio variants when
+  needed); group labels use `*MenuLabel`; splits use `*MenuSeparator` — never a raw `<button>`,
+  clickable `<div>`, or `<hr>` / `border-b` / `h-px bg-border` standing in for menu chrome.
+  The trigger is `<Button>` / `TextButton` / `DropdownMenuTrigger as-child`, not a bespoke
+  clickable span. Submenus use `*MenuSub` + `*MenuSubTrigger` + `*MenuSubContent`. All menu
+  surfaces share `lib/menu.ts` (`menuItemClass`, `menuSeparatorClass`) — hand-building rows
+  bypasses that contract and is the fastest path to "this menu looks different from every other
+  menu."
+- **Choosers:** `Select` (pick one value from a menu) · `Combobox` (searchable, single
+  *or* `multiple`) · `SegmentedControl` (a mode/filter, no panels) · `Tabs` (switch panels).
+  Do not hand-roll a searchable dropdown when `Combobox` exists; do not inject custom
+  classes into a `Select` trigger that fight the field-edge contract.
+- **Icon buttons:** `<Button variant="ghost" size="icon">` in a toolbar, `variant="outline"`
+  standalone. Icons are **lucide components** (`<Plus/>`), never a typed glyph (`"+"`),
+  and never free-sized — let the `size-4` control ladder apply. Never `scale-90` a control
+  to "fix" its size.
+- **Default to no icon — an icon is a cost, not a freebie.** An icon must earn its place by
+  carrying meaning — a brand/provider mark, a status, or a clear action glyph on a button. It is
+  never free: a boxed icon drags in a surface (and its shadow), one more color, and a "does this
+  glyph even fit our language?" judgment call. So a generic lucide glyph dropped beside a title,
+  floated atop a "No X" empty block, or **stacked inside a card** is decoration, not signal — it
+  reads as cheap chrome and cheapens the page. Ship none by default; when a spot genuinely seems
+  to want one, **clear it with the developer before adding it** rather than sprinkling icons on
+  your own judgment.
+- **`BadgeCount`:** `destructive` red dot pinned to an icon corner = alert/unread; `default`
+  neutral count rides a tab/filter/segment; a flat list row uses a plain muted numeral, no bubble.
+- **`Tooltip`:** always the `@memohai/ui` `Tooltip`. A hand-rolled or legacy tooltip is a bug.
+- **An empty state keeps the populated skeleton — it is the same page with no rows yet.** The
+  worst empty-state failure is letting "there's no data" rearrange the page into a *different*
+  shape. Keep the exact frame the populated state uses (the same `SettingsSection` card, the same
+  grid container) and drop the message *inside* it, so entering an empty page vs a full one never
+  jolts the layout. The model is the **Plugins tab**: its empty state is the very white card it
+  shows when populated — just `py-12` centered title + description + the one guiding action (an
+  outline "+ Add" / "Supermarket" button). Two hard rules ride on top:
+  - **`border-dashed` is NOT an empty-state look.** Dashed is reserved for the **"+ Add another"
+    tile** that sits *beside real items in an already-populated list/grid*, where adding one more
+    is the secondary affordance. A completely-empty surface takes the **solid** frame its
+    populated form has — the section card, or a solid-`border` framed block for a standalone grid
+    — never a dashed box, and never bare floating muted text. (This refines the older "outermost
+    Empty earns a dashed border" guidance: it does not — outermost empties are solid-framed.)
+  - **No decorative icon.** An `EmptyMedia variant="icon"` glyph tile, or any big lucide glyph
+    stacked above the title, is banned: it is both card-in-card and the icon-abuse below. Just
+    title + description + action. (An action *button* keeps its own small action glyph — that is
+    not a decorative tile.) This page-type attracts icon abuse — a giant glyph crammed in front
+    of a list item or empty block — so default to **none** everywhere except a button's own glyph.
+- **Destructive actions:** a filled `<Button variant="destructive">`, gated behind a
+  confirmation (`ConfirmPopover`, or a dialog for heavier deletes) — never a bare one-click
+  delete, never a ghost button with manual red text. Group truly dangerous actions in a danger
+  card kept at the bottom of the page. **Confirm covers interruption, not just deletion:** any
+  action that ends running work or severs a live connection — Stop a runtime, Terminate a
+  session, Disconnect — earns the same confirm step, because "it stops what it was doing" is a
+  consequence the user must opt into. Skip the confirm only for cheap, reversible actions.
+- **Long lists / big dropdowns virtualize.** A list or chooser that can hold hundreds of rows
+  (sessions, models, searchable selects) must virtualize, not render every node — otherwise the
+  refactor that "looks fine" with 5 rows jank-scrolls with 500. Reuse the existing virtualized
+  patterns instead of a plain `v-for` over an unbounded list.
+
+## Compose, don't style — the extension boundary
+
+This is the page-layer half of `packages/ui/AGENTS.md` § *Compose, don't style* (read it for
+the ownership table + the four override planes). Component discipline above says *which*
+component to use; this says how you are allowed to **add to** one — because the moment you
+can't, the only exit left is injecting CSS, and injected CSS is the single largest source of
+page debt: it fights the component's `::before` fill / field-edge, breaks dark mode, and
+nothing lints it on an app page.
+
+**"I want to add something" has exactly five exits — four need no CSS, the fifth is an upgrade:**
+
+| I want to… | The sanctioned exit |
+|---|---|
+| add content (icon / badge / suffix) | a **slot** |
+| change size / density | the **`size` prop** |
+| change meaning (emphasis / danger / selected) | the **`variant` prop** |
+| change *outer* layout (width / alignment / outer margin) | a **layout-only className** (see the red line) |
+| want a look the component doesn't offer | **upgrade the component** (add a `variant`/slot, or extract a pure-style component) — never inject in place |
+
+**The className red line — the outer box is yours, the body is the component's:**
+
+- **Allowed on a component** (it only positions the outer box): `w-full`, `flex-1`, `grid`,
+  `gap-*`, outer margin (`mt-*` / `mx-auto`), `max-w-*`.
+- **Forbidden on a component** (it reaches into the body and fights `style.css`): `bg-*`,
+  `hover:*`, `active:*`, `border-*`, `shadow-*` / `shadow-none!`, `ring-*`, `h-[Npx]`. If you
+  just typed one of these onto a `<Button>` / `<Select>` / `<TextButton>`, stop — pick the
+  right `variant`/`size`, or upgrade the component. (Canonical offender: the 6×-pasted "add
+  provider" button carrying `bg-background border-border hover:bg-accent shadow-none!` on a
+  real `<Button>`.)
+
+**The agent workflow — find, reuse, compose, upgrade; never style:**
+
+1. **Find before you write — and do not trust grep.** Ten near-identical controls can wear a
+   hundred names, and they all share similar CSS, so "I didn't match it" does **not** mean it
+   doesn't exist — the odds it already exists under another name are high. Check the component
+   map / `reference.md` § Component picker before assuming nothing fits. Re-deriving an existing
+   component is the #1 debt source.
+2. **Priority is an order, not a suggestion:** reuse > compose > upgrade > (never) hand-write style.
+3. **Copy only a gold-standard reference, never a dirty page.** few-shot copies what it sees;
+   some good-looking pages are already off-contract, so their markup is poison — confirm a page
+   is clean before mirroring it.
+4. **Red lights — STOP and ask, do not improvise:** you need a *new component*, a *new token*,
+   to *edit `style.css`*, or an *a11y / RTL* trade-off. Improvising past any of these means
+   hand-writing past the boundary — exactly the move this whole contract exists to prevent.
+
+## The debt taxonomy — name it before you decide to fix it
+
+"Is this debt?" stops being a vibe once the failure has a name. Three axes turn the adjectives
+*maintainable / reliable / clean* into a checklist; when unsure whether something is worth
+flagging, match it here. This is a diagnostic lens, not new rules — most rows already have a
+rule elsewhere; the value is being able to **name** the failure (and so decide whether to fix
+it now or mark it known).
+
+- **Maintainability** (can we still change it fast & safely tomorrow):
+  - *override-plane debt* — one result must hold on all four planes at once (`packages/ui/AGENTS.md`).
+  - *duplication debt* — one arrangement pasted N times; change one = change N, and they drift.
+  - *source-of-truth debt* — one value hand-copied to two homes, kept in sync "by remembering"
+    (a list mirrored in `cva` and an array with a "keep in sync" comment).
+  - *discoverability debt* — can't find it → rebuild it. grep is blind here (same job, a hundred
+    names, identical-looking CSS), so a missing component map *guarantees* re-derivation.
+- **Reliability** (will it break when no one is looking):
+  - *coupling / boundary debt* — a cross-module assumption asserted only in a comment, never
+    enforced; survives review, fires at runtime.
+  - *consistency debt* — one job done N ways, so one of them is always the odd/wrong one
+    (the trigger-open philosophy split: Select vs ghost).
+- **Cleanliness** (will it rot the more it is used):
+  - *extension-contract debt* — no sanctioned exit → injection (the red line above).
+  - *rule debt* — a rule written but not mechanized, or whose guard is scoped to the wrong place
+    (the contract scans `packages/ui`; the debt lives in `apps/web`).
+  - *exemplar debt* — a dirty page becomes the thing the next author (or agent) copies.
+
+The deepest debt is **un-greppable**: it lives at runtime / in injected dependency behavior —
+reka's focus management + `pointer-events`, portal/teleport leaving the style context, z-index
+stacking, JS↔CSS measured layout, the Tailwind-v4 `translate`/`transform` remap. String search
+can't find it and review can't see it, because it is synthesized only when the page runs. The
+defense is always the same: push that complexity **down** into components / tokens / lint, so
+neither a human nor an agent ever has to reason about it from inside a page.
+
+## Seam-first debugging — find the seam, don't grind the layer
+
+The debt above is mostly un-greppable, so when a visual / interaction bug appears you cannot
+search your way out — and the wrong instinct is to **grind the layer**: stack another
+`!important`, nudge a z-index, pile on a hover override, tweak a margin until it "looks right."
+Every grind adds a chrome layer (= more debt) and usually treats a symptom whose cause lives in
+a seam you are not even editing. Front-end conflicts almost never live *inside* the layer you
+are touching; they live in the **seam between two layers**. So when stuck, debug the seam, not
+the layer. (This is the diagnostic the override-plane map can't pre-list for you: the map names
+*known* seams; this is how you handle a seam nobody wrote down yet.)
+
+1. **Stop signal.** If your next move is "add one more CSS rule" to fix a look / interaction —
+   stop. That urge is itself the tell that you're grinding a layer.
+2. **Name the seam.** Ask what *composes* this final result: your classes + the framework's
+   injected `data-*` / behavior (reka) + the browser's cascade + the current runtime state. The
+   fight is at the seam between two of these — not in the one file you opened.
+3. **Check ownership.** The misbehaving property — where is its home (the ownership table in
+   `packages/ui/AGENTS.md`)? If you're changing it somewhere it shouldn't be touched, that's the
+   cause; go fix it in its home.
+4. **Find a solved twin.** Has this exact seam already been solved elsewhere? (`select-trigger`
+   solved the open/hover seam with `pointer-events:auto`.) Copy the solved one — don't invent a
+   second, conflicting fix (that is how the trigger-open split was born).
+5. **Fix the contract, not the symptom.** Resolve it at the seam's contract (add / unify a
+   `variant` / slot / one philosophy), never by caking CSS onto the symptom.
+6. **Circuit breaker.** Same bug, second or third "add CSS" attempt still not clean? That is
+   conclusive: the cause is a seam, not a missing rule. Stop adding CSS, return to step 2 — and
+   if the honest fix is a new component / token / a `style.css` edit, that's a red light
+   (§ Compose, don't style — the extension boundary): stop and ask, don't grind on.
+
+## Re-review — two failures a single read of this skill can't prevent
+
+Reading the rules once, up front, is not enough — two failure modes slip past it, and both are
+fixed by the agent **re-reviewing itself**, not by adding more rules:
+
+- **Context decay — you forgot the rules you read.** After a long task (many tool calls, a big
+  diff) the skill you read at the start has been diluted out of context, and the code you just
+  wrote can quietly violate it. So before calling a thing done, **reload the contract — don't
+  review from memory**: re-open the ownership table + the className red line + the five exits
+  (and run § The review ritual below), then walk your own diff against them — did I inject an
+  appearance/interaction class onto a component, hand-write a hover, hand-roll a control? Memory
+  is not the source of truth; the rules file is.
+- **The loop is the signal — you're patching a wrong direction.** When the same problem runs
+  *human flags it → you patch → still wrong*, two or three rounds deep, **stop patching.** The
+  loop is conclusive on its own: the cause is not "one more fix," it's a wrong root or a wrong
+  direction, and every patch only stacks complexity (= debt) on a bad base. Even if you
+  eventually make it "work," a thing patched onto a wrong direction is debt, not a solution.
+  Step back and re-review the *whole* thing, not the last edit: did I understand the requirement
+  right? Am I fixing the root or a symptom (§ Seam-first debugging)? Is the honest move to
+  **throw it out and redo it** rather than patch again? Is this a red light (§ Compose, don't
+  style)? The bar is "is the direction right," never "can I eventually make it run."
+
+Same spirit as § Seam-first debugging, scaled up: seam-first stops you grinding one **layer** on
+a single bug (a spatial move — look at the seam); this stops you grinding one **direction**
+across many rounds (a time/round move — look at the whole). Both say: at a threshold, quit local
+patching and re-review the larger frame.
+
+## UX principles — the part that is hard to see
+
+These are judgment rules. They are the difference between "it renders" and "it's good."
+
+### 1. Interrogate every line of copy
+
+Before you write *any* user-facing line, slow down and ask, repeatedly:
+
+- The user already knows the page's **icon** and its **name in the sidebar**. So what do
+  they actually not know yet?
+- Why did they come to this page? What are they here to *do*?
+- Does this line **guide** them — point a direction, reduce a decision — or does it just
+  restate the title in more words?
+- If I add this sentence, does it mean anything to the user? If I remove it, do they lose
+  anything?
+
+Then audit both directions: **what guidance is missing** (a user who lands here is lost),
+and **what is redundant** (a label that just narrates the obvious). Cut filler; keep
+direction. A page is not better for having more words on it.
+
+Two repeat offenders that survive the cut above because each line *alone* looks fine — they
+only read wrong stacked together:
+
+- **Don't repeat the same word down the nesting ladder.** A page title, a section title, and a
+  row label are three rungs, and each must add information, not echo the rung above. A page
+  titled *Desktop Environment*, a section titled *Desktop*, and a row labelled *Desktop* says
+  the word three times and informs once. When a section holds a single control whose label
+  already equals the section title, drop the section title — `SettingsSection` renders titleless
+  — and let the row carry the name.
+- **Name the user's outcome, not the implementation under it.** Copy is about what the user
+  gets, never the stack that delivers it. "Give this bot a screen it can see and control" — not
+  "Enable the VNC desktop; auto-provisions Debian/Ubuntu/Alpine." Terms like *VNC*, *gstreamer*,
+  *namespace*, *CDI*, *provision*, or a raw base-image name are implementation trivia the user
+  never asked for; they belong in a diagnostic *Details* surface at most, never in a headline,
+  a toggle label, or its description. (This is also the no-foreign-product-name rule: the UI
+  speaks the user's language, not the runtime's.)
+
+**Copy is bilingual, and that is a layout constraint, not just a translation chore.** Every
+user-facing string goes through an i18n key with **both** `en` and `zh` written — no hardcoded
+text. But the two languages have different shapes: Chinese is denser and wider per glyph,
+English runs longer. A row that fits perfectly in English can wrap or overflow in Chinese (and
+vice versa), which silently breaks same-row height (§ 4) and narrow-screen reflow. So write and
+**eyeball both locales**, and design the layout to survive the longer/wider of the two.
+
+**An error message follows a formula: what happened · why · how to fix.** "Email needs an @
+symbol" beats "Invalid input"; "We couldn't reach the server — check your connection and retry"
+beats "Something went wrong." Never blame the user ("This field is required", not "You entered
+nothing"), and never use humor in an error — they're already frustrated.
+
+**One concept, one word — terminology consistency is the copy-layer of consistency debt (§ The
+debt taxonomy).** Pick a term and hold it product-wide: *Delete* (never also Remove / Trash),
+*Settings* (never also Preferences / Options), *Create* (never also Add / New). Synonyms-for-
+variety read as different features and quietly erode trust. And a button label names the
+*outcome*, not "OK / Submit / Yes" — *Save changes*, *Create account*, *Delete 5 items* (show
+the count).
+
+### 2. Don't over-prompt (validation and beyond)
+
+A required field that the user merely touched and moved away from should **not** flash red.
+On a page that is a single input plus a select, or a two-field sign-in, nagging "you didn't
+fill this in" is absurd — the user can see the two empty boxes. Validate at the moment it
+matters (submit), and surface the error usefully then.
+
+Generalize this: the red-required box is just one instance. **Restraint applies to all
+external component signals.** Don't make a component shout a state the user did not ask
+about and does not benefit from.
+
+### 3. Empty *and loading* states must hold the frame
+
+Before shipping an empty state, ask: **can this page hold the void?** If a bare centered
+"No data" line leaves the page looking broken or unbalanced, that is the wrong answer.
+Keep the card / list / table **frame** drawn, and put the message *inside* it ("No usage
+data for the selected period"). The structure should survive having no rows.
+(Anti-example: a page that drops to bare centered muted text. Good: a framed `Empty`, or a
+`TableEmpty` row inside the table that still draws.)
+
+The loading state has the same duty, plus one more: **the layout must not jump when data
+arrives.** A skeleton should match the *shape* of the final content (Profile's skeleton is a
+card of rows the same size as the real rows), and every block that loads async should reserve
+its height up front (the reference pages set a `min-h` on each row "so a cold load doesn't make
+the block jump"). Never let a section pop in at a different size than its placeholder, and use
+`—` for a not-yet-sampled value rather than a faked `0`.
+
+**"Hold the frame" is for a section that is always present** — the page's primary content, a
+list that's core to why the page exists. A *conditional, secondary* section does the opposite:
+one that only exists to manage things *when there are things to manage* (an *Active sessions*
+list, an issue banner) **vanishes entirely** when empty rather than drawing an empty frame
+(this is the §9 / §13 "let the block disappear" move, not a contradiction of the rule above).
+The test: would a first-time user with nothing set up expect this block to be on the page at
+all? If it only makes sense once populated, hide it while empty; if it's part of the page's
+skeleton, keep its frame with the message inside.
+
+### 4. Same-row controls share a height
+
+Anything sitting on one visual line — a search box next to an "Add" button, a select next
+to an action — **must be the same height**. A short search field beside a tall button is a
+real bug we shipped before. Build the search with `InputGroup` and the action with `Button`
+at the matching size, then verify the heights actually line up.
+
+### 5. No redundant or fighting controls
+
+Two controls that solve the same job and contradict each other is a defect, not a feature.
+(Anti-example: a "Time Range" preset select *and* a "Custom Range" date picker coexisting
+with no defined relationship — picking one silently fights the other.) Either pick one
+model, or make their relationship explicit and visible.
+
+### 6. Motion: never abused, always felt
+
+- **Press-scale only where it fits** — buttons, sidebar rail items. **Never** on a large
+  content card.
+- **Directional list ↔ detail** uses `useViewSwap` + `SwapTransition`: forward = list slides
+  out left while detail slides in from the right; back = the reverse. One view visibly gives
+  way to the other — no "fade out, then fade in" double-jump.
+- The motion duration palette is fixed (see `packages/ui/AGENTS.md` § Motion). Stay in it.
+- The rule: **don't overuse motion, but make every user action perceivable.** A click that
+  changes nothing visible feels broken even when it worked.
+
+### Select triggers
+
+A recurring anti-pattern in settings rows is a select trigger rebuilt as a `<Button>`.
+
+- **A select trigger is not a button.** Use the shared `selectTriggerClass` or the default trigger
+  from `SearchableSelectPopover` / `Select` / `Combobox`. Do not drop a `<Button variant="outline">`
+  into the trigger slot — buttons carry a press-scale that visibly lurches on wide, full-width
+  selects and breaks the field-like select language. This applies to every chooser, not just the
+  ones that happen to be narrow today.
+- **Press-scale is a narrow, secondary-button signal.** It is dangerous on wide or primary buttons:
+  a full-width button that scales down looks like the whole surface is lurching. For wide / primary
+  actions, use a color-press (the library's `primary` / `brand` block mode) plus a `Spinner`, not a
+  scale-down. Keep scale for small, secondary, non-block controls.
+
+### 7. Think the whole user path, including the exit
+
+Every entry needs a sane, short exit. Trace the full round-trip before you ship.
+(Anti-example: opening a manager from the chat sidebar landed the user in Settings, and
+"Back" walked Settings → Settings → Chat — two backs to undo one click. The fix was a
+direct return to chat.) If getting *out* takes more steps than getting *in*, the path is wrong.
+
+### 8. Save model & feedback (toast timing)
+
+First decide *whether the page even needs a manual Save button.* Most settings surfaces
+don't — a Save button exists to let the user commit a deliberate batch (a real form, a risky
+change). A page that is a few toggles and selects should **auto-save** each change instead of
+hoarding edits behind a button.
+
+- **Auto-save is silent.** It generally gets **no success toast** — a toast on every settings
+  tweak is too loud and reads as nagging. Save quietly, only surface *errors* (and roll the
+  optimistic edit back on failure). Profile is the model: edits auto-save, success says
+  nothing, failure toasts + rolls back.
+- **Manual save can confirm.** When the user explicitly clicks Save, a single success toast is
+  fine — they took a deliberate action and deserve the acknowledgement.
+- **Toast timing in general:** toasts are for *explicit* user actions (save / delete / create)
+  and for *errors that need attention.* Never fire them for ambient, automatic, or background
+  changes. One toast per action, not one per keystroke.
+
+### 9. Earn the space — show only what's actionable, and only card it when it's a group
+
+Every block on the page must justify its pixels. Two questions decide whether something belongs
+and how it's framed:
+
+- **Does this block need to be here right now?** Prefer **progressive disclosure**: show a block
+  only when it's actionable, and let the whole block *disappear* when there's nothing to do — a
+  healthy, fully-configured bot does not need a row telling it that it's healthy. (Overview hides
+  Platforms once everything is connected, and drops the whole Reminders section when the setup
+  list is empty.) An always-present "Status: OK" row is noise; an issue banner that appears only
+  when there's an issue is signal.
+- **Does this block earn a card, or is a card overkill?** A `SettingsSection` frame is for a
+  **group of rows**. Wrapping a single row of metric tiles in a bordered card is card-in-card —
+  a big box moated around small boxes, which reads as mostly-empty. When content is a single
+  self-contained unit (a tile row, a chart), let it sit directly under its title with no outer
+  card. Card the groups; don't card the singletons.
+- **An in-card "expand details" / "Advanced" disclosure is a junk drawer, not progressive
+  disclosure.** Hiding a pile of inputs, a snapshot list, and restore/backup buttons behind a
+  *Show details* / *Advanced* toggle *inside the root card* does not reduce weight — it just
+  defers it onto the same surface, and a label like "Advanced" becomes a drawer that mixes
+  read-only diagnostics with real, sometimes destructive operations. Progressive disclosure
+  moves a whole concern **off** the root into its own focused surface (a dialog/form named by
+  what it does — *Resource limits*, *Snapshots & restore*, *Details*, *Delete*), reached from a
+  one-line entry row (§ 12). The in-card expander is reserved for genuinely secondary fields
+  *within a form* (the **More options** chevron in the New Task dialog, § 11; the **Advanced**
+  toggle on a provider config) — never as the root page's way to stash whole features. **The line
+  is *concern*, not field count.** A form's own advanced/optional fields stay inline behind the
+  one canonical toggle (§ Advanced disclosure) **even when there are many of them, split into
+  titled groups** (auth, network, env, …) — they are still the *same* concern the user is already
+  filling in. Field count never promotes them into a dialog. A § 12 named-entry-row → dialog is
+  reserved for a genuinely *separate* concern (limits / snapshots / delete — a task the 1% comes
+  to *do*). Pushing a form's advanced fields into their own dialog is itself the anti-pattern: it
+  splits one task across two surfaces and walls the same form behind a door. (The Network provider
+  config briefly opened a dialog for Tailscale's grouped fields; it now uses the inline toggle —
+  the exact pattern from the Access rules card.)
+
+### 10. No stray fragments — every visible piece earns a home
+
+A **stray fragment** is UI that renders but doesn't belong to any layout region: a lone
+"Saved" / "已保存" label drifting in a corner, a status chip that doesn't share an edge with
+the title row or the card below, a one-off hint parked beside nothing. It reads broken even
+when the logic is correct, because the eye can't tell what it is attached to.
+
+**While building, run this on every new visible element:**
+
+1. **What region owns this?** Title actions (`PageShell` `#actions`), a `SettingsRow` control
+   column, a dialog footer, inline field feedback, or a toast — pick one. If you can't name
+   the owner, it's probably stray.
+2. **Can it go away entirely?** Most save/sync feedback does not need a persistent label.
+   A disabled Save button already says "nothing to commit"; a success toast on explicit Save
+   is enough acknowledgement. **Do not show a standing "Saved" state** — it duplicates what
+   the quiet synced form already communicates and tends to land misaligned.
+3. **Does this capability already have a house pattern?** Before writing any new status UI,
+   search refactored pages for the same job (see § 8 Save model, `profile` auto-save,
+   `PageShell` + Save in `#actions`). Reuse that model; don't invent a third one for the
+   same page type.
+4. **If it must stay, compose it — don't free-float it.** Unsaved hints belong in the
+   `#actions` cluster next to the Save button (same `flex` row, same baseline), not in a
+   separate corner. Loading belongs on the button (`Spinner`) or in the row being fetched
+   (`Skeleton`), not as orphan text.
+
+**Save / sync feedback — the reference models (do not invent a fourth):**
+
+| Model | When | Feedback |
+|---|---|---|
+| **Silent auto-save** | Toggles / selects that commit on change (`profile`) | Nothing on success; `toast.error` + rollback on failure |
+| **Manual Save in `#actions`** | A form the user batches (`PageShell` + Save button) | Button disabled when synced; `Spinner` while saving; **one** success toast on click |
+| **Explicit unsaved only** | Manual-save pages where drift is easy to miss | Show `common.unsaved` **only while `hasChanges`**, inside `#actions` beside Save — never a parallel "saved" label when synced |
+
+Anti-example: a floating "已保存" that doesn't share the `#actions` right edge with the
+cards below — it answers a question the user isn't asking and breaks the column grid.
+
+### 11. Forms follow one standard; controls are sized on purpose
+
+There is one house form, and the **New Task dialog** (`bot-schedule.vue`'s create/edit
+`Dialog`) is it. Mirror its anatomy — don't reinvent a form per page (recipe in
+`reference.md` § Form):
+
+- **Title:** a plain `DialogTitle` that names the action ("New Task"), nothing more — no
+  subtitle restating it.
+- **Fields:** one `space-y-4` column; each field is a `Label` + control in a `space-y-1.5`
+  group. Optional fields mark the **label** with a quiet `(optional)`, never the placeholder.
+- **Group what belongs together** on one aligned row (a name field + its enable toggle), with
+  the heights matched (§ 4).
+- **Progressive disclosure:** secondary settings live behind a **More options** chevron,
+  collapsed by default; rarely-needed power input (a raw cron, an "advanced" mode) sits in that
+  zone — not in the user's face.
+- **Footer:** a ghost **Cancel** + a single filled primary (Create / Confirm); a destructive
+  delete, when present, sits far left. Validate on **submit**, not on blur (§ 2) — gate the
+  primary with a `canSubmit` and surface the error only when they try.
+
+**Size controls deliberately — not "all small," not "all large."** The height ladder is
+`sm` h-8 · default h-9 · `lg` h-10. **Default (h-9, full height) is the norm**, and it is the
+*only* right size for a form footer and any primary action — a footer of squat half-height
+`sm` buttons is a tell that the page wasn't thought through. Drop to `sm` only where space is
+genuinely tight *and* the action is secondary (a dense toolbar, an inline-in-field button, a
+per-row action in a long list); reserve `lg` for a rare, deliberate hero CTA. Pick the rung for
+a reason every time; never shrink everything to look "compact" nor inflate everything to look
+"important."
+
+### 12. The root surface vs. entry-point depth (the 99/1 rule)
+
+This is the rule that decides **what belongs on the first page at all** — upstream of how it's
+framed (§ 9). It came from a workspace page that shoved a resource-limit form, a snapshot
+history list, and restore/backup buttons onto the root, so a user who came only to check "is my
+bot's runtime alive?" was met with input boxes and a wall of controls.
+
+The two-sided principle, in the developer's own words: *we cannot make 99% of users carry the
+visual weight of 1% of users' needs — but we also cannot sacrifice the 1%'s path for the 99%.*
+
+- **The 99% came to glance.** The root surface answers one question — *is it working, and how
+  much is it using?* That is the hero content (a status badge + a usage tile row). It must not
+  hand a status-checker a form, a button pile, or a history list they didn't ask for.
+- **The 1% came with a purpose.** Someone who needs to set a limit, take/restore a snapshot, or
+  delete the thing is **not** browsing — they arrive intending that operation and will look for
+  its button. So you do **not** protect the 99% by deleting the 1%'s path; you protect it by
+  giving the path a **named entry point**: a quiet one-line row (`label` + a read-only summary as
+  its description) with a button that opens a **focused form/dialog** containing the inputs, the
+  data (e.g. the snapshot list), and the action (e.g. rollback). The summary line doubles as a
+  calm read-only glance for the 99% and the discoverable door for the 1%.
+- **Name the door by what's behind it.** *Resource limits*, *Snapshots & restore*, *Details*,
+  *Delete* — each its own entry → its own focused surface. Do **not** merge them into one
+  "Advanced" drawer (§ 9): a drawer that mixes diagnostics with destructive operations hides the
+  1%'s path *and* muddies it.
+- **Empty state is the same discipline.** When there is nothing to glance at yet, the root is a
+  calm invitation + one guiding action — and even *creating* is a deliberate step, so it opens a
+  focused create dialog rather than dumping a creation form onto the first page.
+- **The test:** for every block on the root, ask *"did the 99% come to see this?"* If no, it is
+  not deleted — it is moved behind a named entry point. The first page holds only what answers
+  "is it working."
+
+### 13. Live & status surfaces — fresh, quiet, and singular
+
+A surface whose job is to show *live* state — a runtime's resource use, a desktop's screen, a
+session list — has its own discipline, distilled from the Workspace and Desktop tabs:
+
+- **Self-refresh; don't hand the user a Refresh button.** A status/preview surface keeps itself
+  current on its own — a silent poll while it's on screen (guard on `document.visibilityState`,
+  clear the interval on unmount) or a live stream. A standing *Refresh* button is a confession
+  the page doesn't stay fresh, and it drags in the cross-app mess of "some refreshes have an
+  icon, some don't, some are `sm`." Reserve a manual refresh only for a genuinely expensive,
+  explicit re-fetch the user deliberately chooses to pay for.
+- **Relative time for "updated", never a ticking absolute stamp.** "Updated just now / 5 min ago"
+  answers the only question the user has — *is this current?* — and stays calm. A full
+  `Updated 06/16/2026, 20:04:11` re-renders on every sample and reads like a log line. Use the
+  shared locale-aware relative-time formatter.
+- **One state, one place.** Render any given status/progress exactly once. The Desktop prepare
+  flow shipped the same install progress *twice* — a centered card plus a redundant bottom bar
+  that blended into the background and grew a stray scrollbar. Two renders of one state drift,
+  conflict, and clutter; keep the one that belongs and delete the other.
+- **A cover over a media surface is opaque, not translucent.** A black video/screen frame behind
+  a `bg-background/95` "preparing" cover bleeds black through the rounded corners. If the cover
+  is meant to *hide* the surface while it loads, make it fully opaque (`bg-background`);
+  translucency is only for a scrim you intend to see through.
+- **Distill backend flags to one human status — let the live surface carry the rest.** Don't
+  mirror every readiness boolean (enabled / running / desktop / browser / toolkit) into a flag
+  grid sitting next to the very thing it describes; the live view already shows connecting /
+  installing / live / can't-reach. Surface at most one distilled human status, and a *problem*
+  only when it's actionable (§9: a healthy state says nothing).
+- **Enumerate the in-between states; a blank surface is not one of them.** This is the step that's
+  easy to skip and the one that bites: a live surface has more states than "loading" and "live" —
+  *idle, connecting, connected-but-no-frame-yet, reconnecting, can't-reach.* The Desktop tab
+  shipped the happy path and the explicit *prepare* path and left the gaps, so the user sat on a
+  blank black box that reads as broken. **List every state first, then give each one a visible,
+  centered affordance** (spinner + one line, *over* the surface — not in an edge footer that a
+  tall 4:3 frame pushes off-screen, which is how the status hid in the first place). And **gate
+  the "live" view on real content, not the transport flag**: a WebRTC connection reports
+  `connected` *before* the first frame paints, so switching on the flag still shows blank — hold
+  the loading state until a frame actually arrives (`@playing` → a `videoReady` ref, reset on
+  teardown). The flag says the pipe is open; only a frame proves something is on screen.
+
+## The review ritual — run it on every finished page
+
+When a page looks done, do **not** stop. **Open it in the running dev app** (`mise run dev`) —
+and the component wall (`Cmd/Ctrl+Shift+D`) for any component you're unsure about — and look at
+the real thing as a first-time user who has never seen it. Reading the code is not the review;
+seeing it rendered is:
+
+- Name everything you see, top to bottom. Is any of it filler? Is any guidance missing?
+  Any **stray fragment** (orphan status text, a chip that doesn't share an edge with its
+  region)?
+- How does it sit in the viewport? Is it balanced **left ↔ right**? **top ↔ bottom**?
+- Force the **empty** state and the **loading** state. Does the frame still hold?
+- Walk **every interaction in the step-2 behavior inventory** — does each one still work? Did
+  the refactor quietly drop a feature, a state, a shortcut, or a path?
+- Do all **same-row controls** line up in height? Do cards share one stroke, one radius?
+- **Dark mode (mandatory, no lint net for app pages):** grep for raw colors (`bg-white`,
+  `text-black`, `text-gray-`, `bg-gray-`, `#`, `dark:`, inline `style=`), then **flip the app
+  to dark and look** — is anything still glued to a light value?
+- Shrink to the **narrowest pane width** (and check `zh`): does anything overflow or clip?
+- **Switch between sibling pages/tabs that share the scroller** — one long (scrolls), one short
+  (doesn't). Does the title / card edge stay put, or jump sideways by a scrollbar's width? If it
+  jumps, the page-level scroll container is missing `[scrollbar-gutter:stable]`.
+- Are dividers the right kind — **inset** inside cards, **full-bleed** as structural splits?
+- Is the **save model** right (auto-save silent vs deliberate manual save), with no toast
+  spam on ambient changes?
+- Is there any **hover-rise**, any tinted card, any off-scale text, any hand-rolled control,
+  or any **hand-built menu** (raw button rows / self-drawn dividers inside a popover)?
+- **Re-draw the finished page as a wireframe and re-count its complexity** (§ workflow step 4):
+  any card-in-card? any icon stacked inside a card? any nesting layer that adds depth but no
+  meaning? If the sketch is busier than the page needs to be, flatten it before you ship.
+- **Reuse audit:** did you reuse every component you could — or hand-write / duplicate something
+  a primitive or a shared composition already covers? Is any brand-new component cleared with
+  the developer? Was a repeated arrangement extracted, not pasted?
+- **Forms & sizing:** do forms match the New Task standard, and is every button sized on purpose
+  (default h-9 for primaries / footers, `sm` only where genuinely tight)? No squat `sm` footers.
+
+Then run **`mise run lint`** — the UI-contract guard (`scripts/check-ui-contract.mjs`)
+mechanically blocks raw colors, invented shadows, off-scale radius, and structural borders
+on controls. A page is not done until it passes.
+
+## Refactor workflow (e.g. an un-refactored bot tab)
+
+1. **Read** `packages/ui/AGENTS.md`. Then open a **reference** page matching the target's
+   shape and the **page you're replacing** (see `reference.md` § Reference map).
+2. **Inventory behavior & path before touching anything.** Write down what the old page can
+   *do* — every control's interaction logic, every feature / state / edge / shortcut — and its
+   user path in and out. This list is your regression contract: the new page must satisfy it
+   (or you decided to drop an item, on purpose). For a *new* page, derive this list from the
+   requirement instead — you have nothing to inventory, so the risk is omission.
+3. **Diagnose** the old page against the dirty→clean table in `reference.md`. List its sins
+   (tinted fills, hairline-alpha borders, off-scale text, `scale-90`, `shadow-none`, colored
+   focus rings, invented dashboards) — these are exactly what "off-language" means.
+4. **Wireframe before you build, and audit the complexity.** Before writing any markup, sketch
+   the target as an ASCII wireframe (template in `reference.md` § Wireframe) — the shell, each
+   card group, the rows, the controls — and read it like space-complexity: count the boxes and
+   the nesting depth. Kill **card-in-card** (a bordered box moated around small boxes), kill
+   **icons stacked inside a card**, kill any layer that isn't earning its keep. The cheapest
+   place to delete a needless layer is here, on paper, before it exists in code.
+5. **Rebuild** from the shell down, **reusing components, never hand-writing them**: page shell →
+   `SettingsSection`/`SettingsRow` groups → the right `@memohai/ui` atoms, tokens only →
+   **re-wire every behavior from the step-2 inventory** → copy through the § 1 interrogation →
+   empty states that hold the frame → aligned same-row heights → only the motion that fits. If a
+   composition repeats, extract it; if you think you need a new component or an icon, get the
+   developer's sign-off first.
+6. **Review ritual** above + `mise run lint`.
+7. Keep code comments about **why** (the reference pages do this well); never narrate the
+   change itself, and never name an external product in a comment.
+
+## Comments & code style
+
+The refactored pages carry short comments explaining *why* a block exists, why it's hidden
+in some states, why there's no card-in-card, why a Badge instead of a loose dot, why `—`
+instead of a faked `0`. Match that: comments justify a non-obvious decision, they do not
+restate the code. Follow `apps/web/AGENTS.md` (semantic tokens only, lucide icons, i18n keys,
+vee-validate + Zod, SDK for data).
+
+
+---
+
+# Reference
+
+# Memoh Web — Reference
+
+Concrete recipes, the dirty→clean diagnostic table, the reference-page map, and the
+component picker. Read `SKILL.md` first for the principles; this file is the lookup.
+
+## Reference map — copy these, by page shape
+
+| Your page is… | Copy this refactored reference | Anti-example to compare against |
+|---|---|---|
+| A sparse, few-card page | `pages/about/index.vue` (centered group, footer meta) | — |
+| A settings page: titled card groups of rows | `pages/bots/components/bot-overview.vue`, `pages/usage/index.vue` | `pages/bots/components/bot-tool-approval.vue` |
+| A list of backends/items → detail | `pages/web-search/index.vue` (`useViewSwap` + `SwapTransition` + `BackendCard` + `DetailPane`) | — |
+| A dashboard with stats + chart | `pages/bots/components/bot-overview.vue` (stat tiles + echarts, black/white/gray only) | `bot-tool-approval.vue` invented "metrics" cards |
+| A form / create-edit dialog | `pages/bots/components/bot-schedule.vue` (the New Task `Dialog`: `DialogTitle`, `space-y-4` fields, `(optional)` on the label, name + toggle on one row, More options collapse, advanced mode, ghost Cancel + full-height primary) | — |
+| The full component catalog | `pages/dev/components/` (the wall — `Cmd/Ctrl+Shift+D`). Each `<Specimen note="…">` states *when* to use a component and its anti-pattern. | — |
+
+`bot-tool-approval.vue` is the canonical un-refactored page: it stacks tinted fills,
+hairline-alpha borders, off-scale text, `scale-90`, `shadow-none`, colored focus rings,
+and an invented metrics dashboard. Treat it as the "what dirty looks like" exhibit.
+
+## Recipes (verified against the refactored pages)
+
+### Wireframe first (draw it before and after you build)
+
+Before any markup — and again when the page looks done — sketch it as plain text and read the
+structure like space-complexity: every box and every level of nesting has to justify itself.
+
+```
+┌ Page (mx-auto max-w-3xl) ───────────────────────────┐
+│  Title                                   [ New … ]   │
+│                                                      │
+│  Section label                                       │
+│  ┌ card ────────────────────────────────────────┐   │
+│  │ Row label          ………………………          control │   │
+│  │ Row label          ………………………          control │   │
+│  └──────────────────────────────────────────────┘   │
+│                                                      │
+│  Section label                                       │
+│  ┌ stat tiles (hairline-divided, NOT carded) ───┐    │
+│  │   12    │    3    │    0    │    —             │    │
+│  └──────────────────────────────────────────────┘   │
+└──────────────────────────────────────────────────────┘
+```
+
+Complexity checklist on the sketch:
+
+1. **Card-in-card?** A box drawn inside another box → flatten to one surface.
+2. **Icon stacked in a card?** Drop it (or get sign-off) — it's a cost, not decoration.
+3. **Nesting depth.** If a row sits three+ frames deep, you're over-building.
+4. **Box count.** Fewer surfaces read calmer; merge or remove the ones that carry nothing.
+
+Delete layers on paper — it's free here and expensive once it's code.
+
+### Page shell (settings/list page)
+
+```vue
+<section class="mx-auto max-w-3xl px-6 pt-10 pb-12">
+  <h1 class="mb-6 px-2 text-lg font-semibold">{{ $t('feature.title') }}</h1>
+  <div class="space-y-8">
+    <!-- SettingsSection groups go here -->
+  </div>
+</section>
+```
+
+A bot tab shell differs slightly (`mx-auto max-w-3xl pt-6 pb-8`, the tab container adds
+its own `px-6`); mirror the sibling tabs, don't invent a new width.
+
+**Header alignment is a contract, not a per-page guess.** The `px-2` that aligns the title to
+card-content's left edge only holds when the body is `SettingsSection` cards (whose content is
+itself inset by `mx-4`). The moment the body is full-bleed — an `Input`, a `Table`, a grid of
+cards whose right edge meets the gutter — a `px-2` on the `<header>` shoves the right-aligned
+action 8px inside the body's right edge: this is the exact "Submit / New member / Save Settings
+don't line up" bug. The fix is structural and now exists: **`PageShell`
+(`apps/web/src/components/page-shell/index.vue`) owns the title, the right-side actions, and the
+body on one set of edges.** The title is inset (`pl-2`) to meet the section-label edge; the
+actions group has no right inset, so it meets the body's right edge; `variant="page" | "tab"`
+covers both the standalone surfaces and the bot-detail tabs (which get their gutter from the tab
+container). Compose through it — `<PageShell :title="…"><template #actions>…</template> …body… </PageShell>`
+— and never hand-roll a `<header>`, or the 8px drift comes straight back.
+
+### Spacing ladder (reuse these rungs — don't free-style margins)
+
+| Gap between… | Value | Notes |
+|---|---|---|
+| pane edge ↔ content (horizontal) | `px-6` | the shell gutter; content never touches the edge |
+| top of pane ↔ title | `pt-10` | text starts well below the top (About centers vertically instead) |
+| bottom of content ↔ pane bottom | `pb-12` | |
+| content column width / centering | `mx-auto max-w-3xl` | centered, ~768px cap — never full-bleed |
+| title ↔ first card | `mb-6` | Profile uses `mb-8` |
+| card group ↔ card group | `space-y-8` | the big section gap |
+| section label ↔ its card | `space-y-2.5` | label is `px-2 text-[13px] text-muted-foreground` |
+| row ↔ row inside a card | `border-b border-border` + `py-3`, `min-h-[3.75rem]` | hairline dividers, `last:border-b-0` |
+| label ↔ its description | `mt-0.5` | |
+| inside a padded card block | `p-4`/`p-5`, `space-y-4` | for non-row card content |
+
+The `px-2` on the title and on section labels deliberately matches the visual left edge of
+card content, so the title, the section labels, and the rows all line up on one invisible
+left margin.
+
+### The card + row primitives (use the shared components — do not hand-roll)
+
+```vue
+<SettingsSection :title="$t('feature.sectionTitle')">
+  <SettingsRow :label="$t('feature.rowLabel')" :description="rowDescription">
+    <Switch v-model="enabled" />
+  </SettingsRow>
+  <SettingsRow :label="…" :description="…">
+    <Button variant="outline" size="sm">{{ $t('feature.action') }}</Button>
+  </SettingsRow>
+</SettingsSection>
+```
+
+What they render (so you can match them when a bespoke layout is unavoidable):
+
+- `SettingsSection` card: `overflow-hidden rounded-[var(--radius-menu-shell)] border border-border bg-card`
+- `SettingsSection` title (above the card): `px-2 text-[13px] font-medium text-muted-foreground`
+- `SettingsRow`: `mx-4 flex min-h-[3.75rem] items-center justify-between gap-4 border-b border-border py-3 last:border-b-0`
+  - label: `text-sm font-medium text-foreground` · description: `mt-0.5 text-xs text-muted-foreground`
+
+### Stat tiles (hairline-divided grid, not bordered boxes-in-a-box)
+
+```vue
+<section class="space-y-2.5">
+  <h2 class="px-2 text-[13px] font-medium text-muted-foreground">{{ $t('feature.overview') }}</h2>
+  <div class="grid grid-cols-2 gap-px overflow-hidden rounded-[var(--radius-menu-shell)] border border-border bg-border sm:grid-cols-4">
+    <div class="bg-card px-4 py-3.5">
+      <p class="text-xs text-muted-foreground">{{ label }}</p>
+      <p class="mt-1 text-xl font-semibold tabular-nums">{{ value }}</p>
+    </div>
+    <!-- … -->
+  </div>
+</section>
+```
+
+The `gap-px` + `bg-border` parent + `bg-card` children draws hairline dividers between
+tiles with no per-tile border. (Contrast: the dirty page wraps each tile in its own
+`rounded-md border` and tints the active one — card-in-card.)
+
+**Short readout (≈3 values) → prefer separated sibling cards, not the hairline join.**
+For a handful of values a center hairline reads as a cramped seam; gapped sibling cards
+breathe and parse as three calm numbers:
+
+```vue
+<div class="grid grid-cols-3 gap-3">
+  <div class="min-w-0 rounded-[var(--radius-menu-shell)] border border-border bg-card px-4 py-3.5">
+    <p class="text-xs text-muted-foreground">{{ label }}</p>
+    <p class="mt-1 text-xl font-semibold tabular-nums text-foreground">{{ value }}</p>
+  </div>
+  <!-- … -->
+</div>
+```
+
+The hairline-join earns its keep only when the grid is denser/longer (many tiles, a
+2×4). Either form is fine **because the tiles are siblings at the section's top level** —
+the per-tile border here is NOT card-in-card. Card-in-card is the two forbidden moves:
+wrapping the tiles in an *outer* card, or tinting the active tile. (Live: `bot-container.vue`
+Container readout uses the separated-sibling form; `bot-overview.vue` uses the hairline join.)
+
+**Vertical column rules are not in the system yet — never split *side-by-side* tiles with a
+hairline.** A `gap-px`/`bg-border` grid with `grid-cols-N` draws BOTH horizontal AND vertical
+rules; the vertical ones read as a cramped, unfinished seam (and they leave an empty ruled cell
+when the last row is short — e.g. one session card with a grey divider trailing into a blank
+half). For anything laid out in columns, use **gapped sibling cards** (`gap-3`), not the
+hairline join. The hairline join is acceptable only as a single horizontal stack of rows (no
+column rule). Until vertical dividers are designed properly, treat them as banned.
+
+### Empty / loading that holds the frame
+
+**An empty state keeps the populated skeleton — the same page with no rows yet — and `dashed`
+is NOT an empty-state look.** An `Empty` is just centered text + an action; it is *not* a card,
+and an empty page must never rearrange into a different shape than its populated form. So:
+
+- **Inside a `SettingsSection` (the usual settings-tab case) → the Empty has NO border and NO
+  icon-tile.** The white section card already *is* the frame; the message sits centered inside it.
+  A dashed-bordered `Empty` (or an `EmptyMedia variant="icon"` gray tile) dropped inside that white
+  card is **card-in-card** — a box inside a box, the exact sin this skill bans. Just `py-12`:
+
+```vue
+<SettingsSection :title="$t('feature.title')">
+  <div v-if="loading" class="mx-4 flex min-h-[3.75rem] items-center gap-3 py-3 text-sm text-muted-foreground">
+    <Spinner class="size-4" /> {{ $t('common.loading') }}
+  </div>
+  <Empty v-else-if="!items.length" class="py-12">
+    <EmptyHeader>
+      <EmptyTitle>{{ $t('feature.emptyTitle') }}</EmptyTitle>
+      <EmptyDescription>{{ $t('feature.emptyDescription') }}</EmptyDescription>
+    </EmptyHeader>
+    <EmptyContent><Button variant="outline" size="sm">…</Button></EmptyContent>
+  </Empty>
+  <!-- rows … -->
+</SettingsSection>
+```
+
+- **As the outermost frame (a standalone list/grid with NO parent card) → a SOLID-bordered
+  framed block.** It still holds the frame, but it is **not** dashed — `dashed` is reserved for
+  the "+ Add another" tile beside real items (below). A solid `border` at the menu-shell radius
+  matches the populated cards' frame:
+
+```vue
+<Empty class="rounded-[var(--radius-menu-shell)] border border-border py-16">
+  <EmptyHeader>
+    <EmptyTitle>{{ $t('feature.emptyTitle') }}</EmptyTitle>
+    <EmptyDescription>{{ $t('feature.emptyDescription') }}</EmptyDescription>
+  </EmptyHeader>
+  <EmptyContent><Button variant="outline">…</Button></EmptyContent>
+</Empty>
+```
+
+- **`dashed` is ONLY the "+ Add another" tile** that sits *beside real items in an already-populated
+  list/grid* (the dashed `+ Add` cell trailing a BackendCard grid). It is never the frame of an
+  empty state — a fully-empty surface uses the solid frame above.
+
+The `EmptyMedia variant="icon"` decorative glyph tile is itself a small inner box — default to
+**no** icon (§ Component discipline); add one only after sign-off, and never inside a card or atop
+an empty block.
+
+In a table, keep the table drawn and use a full-width empty cell:
+
+```vue
+<TableRow v-else-if="rows.length === 0">
+  <TableCell :colspan="N" class="p-0">
+    <div class="flex h-[480px] items-center justify-center text-muted-foreground">
+      {{ $t('feature.noRecords') }}
+    </div>
+  </TableCell>
+</TableRow>
+```
+
+Never replace a section with a lone `<p class="py-12 text-center text-muted-foreground">No data</p>`
+if it leaves the page looking broken — that is the empty-state anti-pattern.
+
+### Search box + action, same height, same row
+
+```vue
+<div class="flex items-center gap-2">
+  <div class="w-44 sm:w-56">
+    <InputGroup class="w-full">
+      <InputGroupAddon align="inline-start"><Search class="size-3.5 text-muted-foreground" /></InputGroupAddon>
+      <InputGroupInput v-model="searchQuery" :placeholder="t('feature.searchPlaceholder')" />
+    </InputGroup>
+  </div>
+  <Button><Plus class="size-4" /> {{ t('feature.add') }}</Button>
+</div>
+```
+
+Consider hiding the search entirely until the list is long enough to need it
+(`v-if="items.length > 8"`) — a search box over four rows is noise.
+
+### Form (the New Task dialog is the house standard)
+
+`bot-schedule.vue`'s create/edit `Dialog` is the reference for every form — copy its anatomy
+instead of reinventing one per page.
+
+```vue
+<Dialog v-model:open="open">
+  <DialogScrollContent class="sm:max-w-lg">
+    <DialogHeader>
+      <DialogTitle>{{ $t('feature.create') }}</DialogTitle>
+    </DialogHeader>
+
+    <form class="space-y-4" @submit.prevent="onSubmit">
+      <!-- group a field + its toggle on one aligned row -->
+      <div class="flex items-end gap-3">
+        <div class="min-w-0 flex-1 space-y-1.5">
+          <Label for="f-name">{{ $t('feature.name') }}</Label>
+          <Input id="f-name" v-model="form.name" :placeholder="…" />
+        </div>
+        <div class="flex h-9 shrink-0 items-center gap-2">
+          <Label class="cursor-pointer text-muted-foreground" @click="form.enabled = !form.enabled">
+            {{ $t('feature.enabled') }}
+          </Label>
+          <Switch v-model="form.enabled" />
+        </div>
+      </div>
+
+      <!-- optional field: mark the LABEL, never the placeholder -->
+      <div class="space-y-1.5">
+        <Label for="f-desc">
+          {{ $t('feature.description') }}
+          <span class="ml-1 font-normal text-muted-foreground">({{ $t('common.optional') }})</span>
+        </Label>
+        <Input id="f-desc" v-model="form.description" :placeholder="…" />
+      </div>
+
+      <!-- More options: secondary / advanced settings, collapsed by default -->
+      <div>
+        <button
+          type="button"
+          class="flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-foreground"
+          @click="showMore = !showMore"
+        >
+          <ChevronRight class="size-3.5" :class="showMore ? 'rotate-90' : ''" />
+          {{ $t('feature.moreOptions') }}
+        </button>
+        <!-- CSS grid-rows collapse: animates height, no JS -->
+        <div
+          class="grid overflow-hidden transition-[grid-template-rows] duration-200 ease-out"
+          :class="showMore ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'"
+        >
+          <div class="min-h-0"><!-- advanced / rarely-needed inputs --></div>
+        </div>
+      </div>
+
+      <DialogFooter class="gap-2 sm:justify-between">
+        <!-- destructive (edit mode) goes far left; otherwise a flex-1 spacer -->
+        <div class="flex gap-2">
+          <DialogClose as-child>
+            <Button type="button" variant="ghost">{{ $t('common.cancel') }}</Button>
+          </DialogClose>
+          <Button type="submit" :disabled="!canSubmit || isSaving">
+            {{ $t('common.create') }}
+          </Button>
+        </div>
+      </DialogFooter>
+    </form>
+  </DialogScrollContent>
+</Dialog>
+```
+
+Rules this encodes: footer/primary buttons are **default size (h-9, full height)** — never `sm`;
+the `(optional)` marker rides the **label**, not the placeholder; secondary and power-user input
+(a raw cron, an "advanced" mode) hides behind **More options**; validation gates the primary via
+`canSubmit` and surfaces errors on **submit**, not on blur (no red-on-touch). Forms still use
+vee-validate + Zod for real schemas (`apps/web/AGENTS.md`); `canSubmit` is the submit gate, not a
+replacement for the schema.
+
+### Advanced / progressive disclosure (two contexts, one chevron)
+
+Hiding secondary or power-user controls behind a toggle has **one shared mechanism** — a
+**leading `ChevronRight` that rotates 90° when open** — in **two skins, picked by context**.
+Don't invent a third (no trailing `ChevronDown`, no ghost-vs-outline coin-flip per page).
+
+- **Inside a Dialog form → low-emphasis text button + CSS grid-rows collapse.** This is the
+  "More options" pattern in the § Form recipe (`bot-schedule.vue`): a `text-xs
+  text-muted-foreground` `<button>` carrying the leading chevron, animating height via
+  `grid-template-rows: 0fr ↔ 1fr`. The toggle is inline form text, so it stays quiet.
+- **Inside a `SettingsSection` card → an outline button in a hairline row.** The disclosed block
+  is a set of card rows, so the control is a section-level affordance, not inline form text:
+
+```vue
+<div class="mx-4 flex min-h-[3.75rem] items-center justify-between gap-4 border-b border-border py-3 last:border-b-0">
+  <span class="text-sm font-medium text-foreground">{{ $t('feature.advancedTitle') }}</span>
+  <Button variant="outline" size="sm" class="shrink-0" @click="open = !open">
+    <ChevronRight class="size-4 transition-transform" :class="open ? 'rotate-90' : ''" />
+    {{ open ? $t('feature.collapse') : $t('feature.expand') }}
+  </Button>
+</div>
+<template v-if="open"><!-- the advanced rows --></template>
+```
+
+The toggle row keeps `last:border-b-0`: collapsed, it's the card's last row so its hairline must
+vanish (otherwise an always-on border sits a few px above the card's rounded edge and **fights
+the stroke**); expanded, the rows below render and the border becomes the real separator.
+References: the Access rules card (`bot-access.vue`) and the channel platform card
+(`channel-settings-panel.vue`) — both now use this exact button, so don't reintroduce a
+divergent one.
+
+**Both skins expand in place — and the deciding line is *concern*, not field count.** Inline
+disclosure carries the secondary / optional fields **of the form you're already in** — even when
+there are many of them and they're split into titled groups (auth, network, env, …). A long or
+grouped advanced set does **not** earn a dialog: it's still the *same* concern (the provider
+config the user is configuring), so it stays inline behind the one toggle. Reserve a § 12 **named
+entry row → dialog** for a genuinely *separate* concern (resource limits, snapshots, delete — a
+task the 1% comes to *do*), never the current form's own optional tail. Pushing a form's advanced
+fields into a dialog (a `label` + `Edit` row that opens a modal of grouped inputs) is the
+**anti-pattern**: field count doesn't make them a new concern, so it just fragments one form
+across two surfaces and makes the 1% click through a door to finish the *same* task they were
+already on. (`bot-network.vue` briefly did this for the overlay provider's Tailscale / auth /
+network groups; it now uses the inline toggle above — the exact `bot-access.vue` control.)
+
+### List ↔ detail directional swap
+
+```vue
+<SwapTransition :direction="direction">
+  <ListView v-if="view === 'list'" @open="openDetail" />
+  <DetailPane v-else :back-label="t('feature.title')" @back="backToList()" />
+</SwapTransition>
+```
+
+```ts
+const { view, direction, openDetail, backToList } = useViewSwap()
+```
+
+`openDetail()` sets `forward` (list exits left, detail enters right); `backToList()` sets
+`back` (reverse). Keyframes live in `style.css`; no `appear`, so landing on the page is a
+plain cut and only the swap moves.
+
+### Dividers — two widths, two jobs
+
+- **Inset (rows inside a card).** The border lives on the horizontally-margined row, not the
+  card: `mx-4 … border-b border-border py-3 last:border-b-0`. The `mx-4` is what keeps the
+  hairline from touching the card's left/right edges; `last:border-b-0` drops it on the final
+  row. This is the `SettingsRow` behavior — reuse the component; only hand-roll it for a
+  bespoke row, matching the same `mx-4`/`last:` rules.
+- **Full-bleed (structural splits).** A Dialog header/footer band uses `border-b/t border-border
+  px-6 py-…` so the line spans the full dialog width while the content keeps `px-6` inside. A
+  section heading underline (`border-b border-border pb-2`) and a standalone `<Separator>` are
+  likewise edge-to-edge.
+
+Picking inset-vs-full-bleed wrong is the tell: a full-bleed line inside a settings card slices
+the rounded surface into stacked tiles; an inset line in a Dialog header looks like a floating
+stub. Ask "separating items within one surface, or splitting the container?" before placing it.
+
+- **A grouping/wrapper `<div>` must not carry its own `border-b`.** Borders belong on *rows*
+  (with `mx-4 … last:border-b-0`), never on the invisible `<div>` you wrap a `v-if` block in.
+  When that wrapper is the **last child of the card**, its full-width `border-b` lands exactly on
+  the card's bottom stroke → a **doubled hairline that fights the stroke** (and it's edge-to-edge,
+  so it also slices the corner). The card's own `border` is the bottom boundary; the last *row*'s
+  `last:border-b-0` already clears the inner line. If you need separation *between* the wrapped
+  block and a sibling above, put the border on the sibling row, not the wrapper. (`bot-network.vue`
+  wrapped the provider-config rows in `<div class="border-b border-border">`; that trailing border
+  doubled the card stroke under the collapsed *Advanced* row — removed.)
+
+### Save model & toast (Profile = auto-save; Tool Approval = manual)
+
+- **Auto-save, silent (the default for settings).** `profile/index.vue` is the reference:
+  edits fire a debounced/triggered `autoSaveProfile()`, success shows **no toast**, and on
+  failure it toasts the error *and rolls the optimistic local edit back* to re-match the
+  server. It also guards out-of-order responses with a monotonic save token. Copy this shape
+  for toggle/select/single-field settings.
+- **Manual Save (only when a deliberate commit is warranted).** A real form, a batch of risky
+  changes, or anything the user should review-then-commit keeps an explicit Save button with a
+  `hasChanges` gate; a single success toast on click is acceptable there.
+- **Never** toast on ambient/automatic/background changes, and never one toast per keystroke.
+  Errors always surface; success is acknowledged only for explicit actions.
+
+### Dark mode & narrow-screen checklist
+
+> **No mechanical net for app pages.** `scripts/check-ui-contract.mjs` (run by `mise run lint`)
+> is scoped to `packages/ui` only — `apps/web` pages are explicitly out of scope, and there is
+> no ESLint color rule. A hardcoded color in a page is caught by **nothing**; lint passes and
+> the page ships broken in dark. This checklist is the only defense — run it every time.
+
+- Pre-ship grep (copy-paste): from the page's dir, search for
+  `bg-white|bg-black|text-white|text-black|-gray-|-zinc-|-slate-|-neutral-|#[0-9a-fA-F]{3,6}|dark:|style=` —
+  every hit is guilty until proven a sanctioned exception. The only allowed `bg-white` is a
+  physical knob (Switch/Slider thumb). Replace the rest with `bg-card` / `bg-background` /
+  `text-foreground` / `text-muted-foreground` / `border-border` / `bg-accent`.
+- A `dark:` override means you started from a raw light color — fix the base token, don't patch
+  per-mode. Themed tokens need no `dark:` prefix.
+- **Tints/interaction states use the overlay ladder, not a baked color or alpha hack.** It is
+  chroma-0 and composites over the surface, so it's identical in light/dark/every scheme with no
+  override. Aliases: `--ui-hover` (standard hover), `--ui-selected` (highlight/selected row),
+  `--ui-pressed` (press), `--sidebar-hover` / `--btn-ghost-hover`; raw rungs `--overlay-hover-light`
+  → `--overlay-hover` → `--overlay-hover-strong` → `--overlay-active` → `--overlay-active-strong`.
+  `bg-accent` is the mapped neutral hover. Use these instead of `hover:bg-gray-100`, `bg-black/5`,
+  or a solid tint. (Defined in `packages/ui/AGENTS.md` § Color.)
+- Then **actually flip the running app to dark and look at the page** (Appearance has the theme
+  toggle). Reading the classes is not enough; render it.
+- Charts/canvas can't read oklch tokens — reuse the `readColor()` token→sRGB round-trip from
+  `bot-overview.vue` / `usage/index.vue`, and re-run it on `isDark` change.
+- Reflow, don't overflow: every multi-column grid needs a `grid-cols-1` (or `grid-cols-2`)
+  base with `sm:`/`md:` step-ups; verify same-row clusters (search+button, label+control)
+  don't clip at the narrowest resizable pane width — Chinese copy is wider, so narrow + `zh`
+  is the worst case.
+- Note (open debt, from `packages/ui/AGENTS.md`): the dark-mode accent palette currently
+  inherits light values — don't assume an accent is dark-tuned; check it.
+
+### Scaling & zoom — size in tokens, never pixels tuned to text
+
+A page has to survive three independent kinds of "bigger" — browser zoom (Cmd ±), a
+wider/narrower pane, and a larger root/OS font — and hold up under all three at once.
+
+- **Lay out with the spacing ladder + flex/grid gaps, never a margin tuned to a string.** Use
+  `gap-*` / `space-y-*` / `p-*` and let flex/grid place things; don't hand-pick a margin or an
+  absolute offset to line up with one specific label's width. Token spacing scales with the root
+  font and reflows on zoom; a pixel nudged to fit today's text breaks the moment the text,
+  locale, or font changes.
+- **Icons inline with variable-size text use `em`; standalone control icons use the `size-*`
+  rem ladder.** `size-4` is `1rem`, relative to the *root* — not the neighbouring text — so an
+  icon beside a `text-lg` label stays 16px and reads as undersized. When an icon must track the
+  text it sits with (a logo beside a name, an inline glyph in a heading), size it in `em`
+  (`size-[1.5em]`, as the provider detail logos do) so it grows with the text. Keep the
+  `size-4` / `size-3.5` / `size-3` rem rungs for icons inside a fixed-size control.
+- **Never pin a width that only fits one zoom/locale.** Cap content with `max-w-*` and centre it
+  so an ultra-wide screen doesn't stretch a line to the full window; give same-row clusters
+  `min-w-0` (and `flex-wrap` where stacking is acceptable) so they shrink instead of clipping.
+- **Truncate is the overflow backstop.** Any single-line label / title / value that can outgrow
+  its box gets `min-w-0 truncate` on the flex child (a back-button label, a card name, a
+  breadcrumb) so it ellipsises instead of overflowing on a small pane or a large font. Pair it
+  with `shrink-0` on the adjacent icon/affordance so only the text gives way.
+- **Verify under all three:** browser zoom 50%→200%, the narrowest resizable pane width (and
+  `zh`, the wider locale), and an ultra-wide window — every state should reflow / centre /
+  truncate, never clip or stretch.
+
+### i18n & bilingual layout
+
+- Every user-facing string is a key in `apps/web/src/i18n/locales/en.json` **and** `zh.json`;
+  no hardcoded text (`apps/web/AGENTS.md` enforces this). Add both locales in the same change.
+- The two languages have different metrics: Chinese is wider/denser per glyph, English is
+  longer. Design for the longer/wider of the two — give labels room to wrap or truncate, don't
+  pin a width that only fits English. Eyeball the page in both locales (the Appearance page has
+  the language switch); a layout that's only checked in one language is half-checked.
+
+### Loading-state stability (no jump on load)
+
+- Skeletons match the *shape* of the final content: `profile/index.vue` renders a skeleton card
+  of rows sized like the real rows, so the swap to data doesn't resize the card.
+- Reserve height up front: the reference pages put `min-h-[3.75rem]` on rows and fixed heights on
+  async blocks "so a cold load doesn't make the block jump." A section must not pop in larger or
+  smaller than its placeholder.
+- Not-yet-sampled values render `—`, never a faked `0` (see `bot-overview.vue` runtime tiles).
+
+### Scroll ownership
+
+- The desktop shell locks `body` overflow. A page that must scroll owns its container
+  (`h-dvh overflow-y-auto`, as the dev wall does); settings pages scroll inside the section's
+  existing scroll area — don't add a second one.
+- **Reserve the scrollbar gutter so growth doesn't shake the layout sideways.** A centered
+  `mx-auto max-w-*` column re-centers the instant a scrollbar appears — i.e. the moment content
+  grows tall enough to scroll (an advanced section expands, a list fills in) — so the title and
+  card edges jump left and the whole pane visibly "shakes" left/right. The fix is
+  `[scrollbar-gutter:stable]` on the **scroll container** (the element with `overflow-y-auto`),
+  *not* on the content: the track's width is always reserved, so showing/hiding the bar never
+  changes the content width, and every tab/state stays aligned. This already lives on the
+  bot-detail pane (`pages/bots/detail.vue`) and the settings shell
+  (`pages/settings-section/index.vue`); any new owned scroll container holding a centered column
+  inherits the same requirement. Set it once on the scroll owner — never per page, never on the
+  inner content.
+- Sideways-nudge transforms (the ±24px list↔detail swap) clip with `overflow-x-clip`, **not**
+  `overflow-x-hidden` (which becomes a vertical scroll container and steals scroll from the
+  ancestor). See `swap-transition.vue`.
+
+### Destructive & confirmation
+
+- Filled `<Button variant="destructive">` + a confirm step (`ConfirmPopover` for inline,
+  a Dialog for heavier deletes). Profile's sign-out and the danger zone are the references.
+- Truly dangerous actions group in a danger card at the bottom of the page, not inline among
+  routine settings.
+
+### Virtualization
+
+- Lists/choosers that can grow unbounded (sessions/recents, model picker, searchable selects)
+  virtualize — there are existing virtualized implementations to reuse. A plain `v-for` over an
+  unbounded list is a perf regression waiting for real data.
+
+## Dirty → clean diagnostic table
+
+Each left-column pattern is a real sin from `bot-tool-approval.vue` (and friends). When you
+see it, replace it with the right column. This is your strip-list when refactoring.
+
+| Dirty (strip it) | Why it's wrong | Clean (do this) |
+|---|---|---|
+| `bg-muted/40`, `bg-background/70`, `bg-success/5` baked tints | a fill grayer/colored vs the `bg-card` parent → "inside ≠ outside"; semantic color as decoration | inherit `bg-card`; tint only as a rationed signal |
+| `border-border/50`, `border-*/40`, `border-success/20` | hand-written alpha + per-control structural borders | one `border-border` hairline; control edges via the field-edge / `--border-hairline` family |
+| `text-[11px]`, `text-[10px]`, `text-[9px]` | off the type scale | the `--text-*` ladder (`text-body`/`text-label`/`text-caption`, etc.) |
+| `rounded-full` status pills, bare `rounded`, mixed `rounded-md`/`rounded` | off the radius role-map | role-map radius (badge/tooltip 6 → control 8 → menu-shell 12 → card 14) |
+| `<Switch class="scale-90">` | resizing a control with a transform | use the control's real size prop; never `scale-*` a control |
+| `class="shadow-none"` fighting an inherited shadow | flat controls/cards carry no shadow | drop it; elevation is a token, used only on floating layers |
+| `focus-visible:ring-success/30`, `…ring-warning/30` | colored focus rings; ring as emphasis | the `--ring` keyboard focus only; field commit swaps the edge in place |
+| `opacity-50 grayscale` for disabled | muddy disabled treatment | `opacity-40` (the contract's single disabled rule) |
+| invented "metrics" cards w/ `text-2xl` numbers, status tints | dashboard chrome that isn't the language | stat-tile grid recipe above, black/white/gray |
+| sticky `bg-background/95 backdrop-blur` "sovereign header" | invented page chrome | the plain page-shell `h1` + a save action where it belongs |
+| a consequential / lifecycle op (`Stop`, `Recreate`, `Delete`) parked in the page **title-row action slot** | that slot is read as *the* page CTA — a non-glance / weighty op there over-weights it and folds "manage" into "glance at status" | title slot holds only a safe page-level action (a save), or **nothing**; group lifecycle + destructive ops (Start/Stop, Delete) in a dedicated **operations section at the bottom** — when it holds benign ops too, name it "Actions" rather than "Danger zone" (the destructive control still carries its own `destructive`+confirm weight) — see `bot-container.vue` |
+| a manual **Refresh** button users must keep pressing for live data | refresh-as-a-feature offloads the freshness job onto the user; the data is stale until they remember to click | poll it yourself while the surface is visible (tab active + `visibilitychange`), silently (no loading-flag flicker, no toast, keep last-good on a transient error), and refresh on return-to-tab; reserve a button only for genuinely expensive/explicit reloads |
+| a status/usage header row carrying title + badge + timestamp **and** an action button | the one glanceable readout gets overloaded; the eye can't separate "what is" from "what to do" | keep the readout to label + status + "Updated {time}"; the doing lives in the operations section |
+| a named **entry row** padded with a preview "summary" that doesn't help the 1% who came with intent (`No snapshots yet`, the first detail field like the image name, `CPU 2 cores`) | the summary masquerades as info but earns nothing — the label already says the concern, and the visitor opening it doesn't need a teaser; it's noise the 99% scan past | entry rows are **label + button only**; let the dialog carry the real data. Only keep a row summary when it answers a question the user would otherwise open the dialog to ask — see `bot-container.vue` manage rows |
+| a gauge tile showing usage with **no ceiling** (one metric has `/ limit` or `No limit`, a sibling has nothing), or a gauge sub showing a **diagnostic path** (a bare `/`) instead of a bound | a dashboard reads as "value against a bound"; an unbounded gauge looks broken next to bounded siblings, and a lone `/` says nothing about capacity | every gauge states its ceiling — `used / cap` when limited, the shared `No limit` string when not; pull the cap from the live metric or, if absent there, the configured limit; the mount path is diagnostic → it lives in Details, never in the gauge |
+| a lifecycle/destructive **action row** carrying a description that restates the verb (`Pause or resume the runtime`) or generic danger boilerplate (`cannot be undone, proceed with caution`) | it reads as caution theater — the verb is in the label, and the weight is already carried by the `destructive` (red) button + the confirm dialog; the line is filler the eye skips | action rows are **label + button**; let the red button + confirm dialog (with its real keep-data/irreversible choice) carry the weight. Keep a line only for a *non-obvious, non-restating* fact — and even then prefer putting it in the dialog where the decision happens — see `bot-container.vue` Actions |
+| a DB-first status read that returns the cached record even when the **runtime resource is definitively gone** (live lookup 404s but the error is swallowed) | the surface renders a ghost (looks healthy) while every secondary live call — metrics, snapshots, start/stop — 404s, greeting the user with a contradictory "not found" toast on a page that shows the thing right there | reconcile: on a *definitive* not-found from the runtime, surface missing so the UI falls to its create/recreate path; still tolerate *transient* runtime errors (keep the record). Secondary fetches behind a dialog load silently and never raise a page-level error — see `bot-container.vue` / `GetContainerInfo` |
+| `"+"` / `"×"` glyphs, hand-rolled icon hover bg, hand-rolled tooltip | not real components; can't receive size/stroke tokens | lucide components in `<Button size="icon">`; `@memohai/ui` `Tooltip` |
+| `Transition name="fade"` + ad-hoc `transition-all duration-300` | lazy catch-all motion | the directional swap / token durations; transition the real property |
+| edge-to-edge `border-b` slicing a card into stacked tiles | wrong divider width inside a surface | inset the row (`mx-4` + `last:border-b-0`); full-bleed only for structural bands |
+| a grouping/wrapper `<div>` (the thing you wrap a `v-if` block in) carrying `border-b`, sitting as the **last child of a card** | its full-width hairline lands on the card's bottom stroke → a doubled line that *fights the stroke* and slices the corner | borders go on **rows** (`mx-4 … last:border-b-0`), never on the wrapper; the card's own border is the bottom edge (§ Dividers; `bot-network.vue` overlay-config wrapper) |
+| success toast on every settings tweak / auto-save | toast spam, reads as nagging | auto-save silently; toast only explicit actions + errors |
+| raw color in an app page (`bg-white`, `text-black`, `-gray-*`, `#fff`, `dark:`) | breaks dark mode; **no lint catches it in `apps/web`** | semantic token (`bg-card`/`text-foreground`/…); grep + flip-to-dark before shipping |
+| hand-mixed gray / alpha for a hover/selected tint (`hover:bg-gray-100`, `bg-black/5`) | not theme/scheme-agnostic; can tilt or break in dark | the neutral overlay ladder (`--ui-hover`/`--ui-selected`/`--overlay-*`, or `bg-accent`) |
+| hardcoded user-facing text | breaks i18n; only checked in one language | i18n key in both `en.json` + `zh.json`; design for the wider/longer locale |
+| section pops in a different size than its skeleton/placeholder | layout jump on load | skeleton matches final shape; reserve `min-h`; `—` not faked `0` |
+| stray `overflow-*` / `overflow-x-hidden` on a swapped pane | nested scrollbar or stolen ancestor scroll | own scroll only when intended; `overflow-x-clip` for sideways-nudge |
+| a centered column that jumps sideways when a scrollbar appears (expand a section → the pane "shakes" left/right) | the `mx-auto` column re-centers the instant the bar takes/returns its width | `[scrollbar-gutter:stable]` on the owning `overflow-y-auto` container — reserve the track once, never per page (§ Scroll ownership) |
+| two different "show advanced" toggles (one ghost + trailing `ChevronDown`, one outline + leading `ChevronRight`) | the same affordance drawn two ways drifts further apart every page | one mechanism — leading `ChevronRight` rotate-90; text-button skin in a Dialog form, outline-button skin in a card (§ Advanced disclosure) |
+| one-click delete, or ghost button + `text-destructive` | unconfirmed/under-weighted destruction | filled `variant="destructive"` + confirm step; danger card at the bottom |
+| always-present "Status: OK" / healthy-state row | noise where a healthy state should say nothing | progressive disclosure — show only when actionable, hide the whole block otherwise |
+| a resource-limit form / a snapshot-history list / a button pile sitting on the **root** surface | makes the 99% who came to glance at state carry the 1%'s deep-operation weight | move each deep op behind a named entry row (`label` + summary + button) that opens a focused form/dialog with the inputs, the data, and the action (§ 12 / SKILL § 12) |
+| an in-card "Advanced" / "Show details" disclosure that stashes whole features (limits + snapshots + restore/backup) on the root card | not progressive disclosure — it defers weight onto the same surface and mixes diagnostics with destructive ops in one junk drawer | one named door per concern → its own dialog (*Resource limits* / *Snapshots & restore* / *Details* / *Delete*); reserve the in-card **More options** chevron for secondary fields *inside a form* only |
+| a form's **advanced/optional fields** hidden behind a *full-width ghost bar* / trailing `ChevronDown` / bespoke per-page toggle | invents a third disclosure skin and reads as a heavy ghost slab instead of a section affordance | the **one** canonical control — a hairline row with an **outline button + leading `ChevronRight` (rotates 90°)**, `Show`/`Hide`, expanding the rows in place (§ Advanced disclosure; `bot-access.vue`) |
+| a form's **advanced/optional fields** pushed into their own *dialog* (a `label` + `Edit` row opening a modal of grouped inputs) because they're many or grouped | field count doesn't make them a separate concern — it fragments one form across two surfaces and walls the *same* task behind a door | keep them inline under the canonical advanced toggle; a § 12 named-entry-row → dialog is only for a genuinely *separate* concern (limits / snapshots / delete), never the current form's optional tail (§ Advanced disclosure / § 12) |
+| hand-written control (clickable `<div>`/`<span>`, bespoke popover list, `<div>`-grid "table") | re-implements a primitive; can't take size/token/focus/a11y, and drifts | reuse the `@memohai/ui` atom as-is; never rebuild a control from raw markup |
+| floating "Saved" / "已保存" status, or any orphan save/sync label misaligned with `#actions` | answers a question the user isn't asking; breaks the column grid; duplicates the disabled Save button | follow § 8 / § 10 save models — silent auto-save, or unsaved-only beside Save in `#actions`, success via toast once |
+| hand-built menu (raw `<button>` rows, `<div @click>`, `<hr>` / `border-b` / `h-px` dividers inside a popover) | bypasses `lib/menu.ts`; row height, highlight, separator, and shell radius drift from Select/Dropdown/Context | `DropdownMenu` / `ContextMenu` + `*MenuItem` + `*MenuSeparator` + `*MenuLabel`; trigger via `Button` / `TextButton` |
+| a composition pasted into two+ places | duplication that drifts out of sync | extract one shared component and reuse it |
+| brand-new one-off component spawned mid-page without asking | scope creep outside the shared layer | clear a genuinely new component with the developer first, then build it once, shared |
+| `size="sm"` on a form footer / primary action | squat half-height buttons read as unfinished | default (`h-9`, full height); `sm` only for genuinely tight, secondary spots |
+| decorative icon stacked in a card / atop an empty block | a cost (surface, shadow, extra color, language-fit) with no signal | ship no icon; add one only after the developer signs off |
+| card-in-card (a bordered box wrapping bordered boxes) | nesting depth with no meaning; reads mostly-empty | flatten to one surface — hairline-divided tiles, not boxes-in-a-box |
+| a `gap-px`/`bg-border` grid with `grid-cols-N` (a **vertical** column rule between side-by-side tiles) | vertical dividers aren't in the system yet — they read as a cramped seam and leave a blank ruled cell on a short last row | gapped sibling cards (`gap-3`); reserve the hairline join for a single horizontal stack of rows |
+| a readiness **flag grid** (Enabled/Runtime/VNC/Browser/Toolkit dots) sitting next to the live surface it describes | the live view already shows connecting / installing / live / can't-reach — the flags just restate it in jargon the user never asked for | let the live surface speak; distill to one human status only if it adds something, and surface a problem only when it's actionable |
+| the same word at three nesting rungs (page title ⊃ section title ⊃ row label all "Desktop") | each rung must inform once; the echo is filler that only reads wrong stacked | each rung adds information; drop a section title that equals its single row's label (titleless `SettingsSection`) |
+| implementation vocabulary in user copy (VNC / gstreamer / provision / Debian-Ubuntu / namespace / CDI) | names the stack, not the outcome the user came for | copy names what the user gets; stack terms live in a diagnostic *Details* surface at most |
+| a manual **Refresh** button on a status/preview surface | a confession the page doesn't keep itself fresh (and it feeds the cross-app icon/`sm` inconsistency) | self-refresh: a visibility-guarded silent poll or a live stream; reserve manual refresh for an expensive explicit re-fetch |
+| a ticking absolute "Updated 06/16/2026, 20:04:11" | re-renders every sample, reads like a log line | locale-aware relative time ("just now / 5 min ago") |
+| one status/progress rendered in two spots at once (a prepare card + a duplicate bottom bar) | the two drift, conflict, and clutter | one state, one place — keep the one that belongs, delete the other |
+| a translucent cover (`bg-background/95`) over a black media/screen frame | the dark surface bleeds through at the rounded corners | opaque cover (`bg-background`) when it's meant to hide the surface; translucency only for an intentional scrim |
+| a secondary/conditional section drawing an empty frame ("No active sessions") | it isn't part of the page skeleton — an empty frame is noise for the 99% | a conditional section vanishes when empty; only always-present content keeps its frame with an in-card message |
+| a live/media surface that goes blank between states (idle / connecting / connected-but-no-frame / can't-reach) | the unhandled gaps read as broken — and "connected" ≠ "something on screen": the transport flag fires before the first frame | enumerate every transient state up front; give each a centered spinner+line over the surface; gate the live view on real content arriving (`@playing`/first frame, reset on teardown), not the connection flag |
+| a dashed/bordered `Empty` — or an `EmptyMedia variant="icon"` gray tile — placed *inside* a `SettingsSection` white card | also card-in-card: the white section already frames it, so the inner border/tile is a box-in-a-box (a white card holding a grey card) | the in-card Empty is borderless centered content (`py-12`, no icon tile) |
+| `border-dashed` used as the frame of a fully-empty state (outermost or otherwise) | empty states must keep the populated skeleton; dashed reads as "drop zone / add here", not "nothing yet" | empty keeps the populated frame — the section card, or a **solid** `border` framed block for a standalone grid; reserve `dashed` for the "+ Add another" tile beside real items |
+| `font-[NNN]` weight / `text-[Npx]` size / `text-foreground\|muted-foreground/NN` alpha in a page | off the role-map weight, off the `--text-*` scale, hand-mixed alpha — the single most common app-page drift (60+ files), and it sits even in the `about` reference | the three weights (`normal`/`medium`/`semibold`), the `--text-*` scale, the overlay ladder — and push the guard to scan `apps/web` |
+| `w-fit` / content-sized container width | one long string (a back label, a name) silently resizes the frame | pin the width; let text `truncate` inside a fixed box |
+| header `px-2` over a full-bleed body (`Input` / `Table` / grid of cards) | the right-aligned action indents 8px off the body's right edge → the "Submit / New member / Save don't line up" bug | compose through `PageShell` (`components/page-shell`) — it owns title + actions + body on one set of edges; never hand-roll a `<header>` |
+| a confirm's core question as `text-xs text-muted-foreground` (+ `size="sm"` buttons) | the *main* prompt rendered as the weakest type; the footer reads unfinished | the prompt is the title rung (`text-sm font-medium text-foreground`); footer buttons are default `h-9`, not `sm` |
+
+| Save / sync feedback | Model | Feedback |
+|---|---|---|
+| Auto-save on change | `profile` | Silent success; error toast + rollback |
+| Manual batch save | `PageShell` `#actions` + Save (`bot-tool-approval`, refactored tabs) | Disabled when synced; spinner on button; one success toast on click |
+| Unsaved hint (optional) | `#actions` beside Save, `hasChanges` only (`bot-settings` pattern) | `common.unsaved` while dirty — **never** a standing "saved" label when clean |
+
+## AI default-aesthetic traps — what it reaches for that breaks our language
+
+These are the decorations an LLM reaches for **by default** when nothing constrains it — the
+"AI slop" fingerprints. In a *make-it-distinctive* brief they're rejected for being generic; in
+*our* brief they're rejected for breaking the calm, unified white-card language. Same verdict,
+opposite reason. Ship **none** by default — none passes the test "does this look like a page
+already in our system, or like an AI improvising its own house style?"
+
+| The AI reaches for… | Why it breaks our language | What we want instead |
+|---|---|---|
+| a boxed / rounded icon stacked above every heading or title | card-in-card + icon-abuse (an icon must earn its place) | no icon — the title is the title |
+| purple→blue gradients, neon, cyan-on-dark, glowing accents | the skeleton is black/white/gray; blue = selected, purple is scarce, nothing glows | token solids; charcoal CTA |
+| gradient text (esp. on metrics / headings) | we have no gradients; text is a solid token | `text-foreground` / `text-muted-foreground` |
+| identical equal-sized card grids (icon + heading + text, repeated) | the identical-card-grid tell, and usually card-in-card | stat tiles (hairline-divided, not boxes-in-a-box) or plain content under a title |
+| the hero-metric template (big number, small label, gradient accent) | template-y; our metrics are a flat stat-tile row, no gradient | stat tiles |
+| glassmorphism — blur, glass cards, glow borders | we're flat: no invented shadow/glow, the edge is one hairline | `bg-card` + one `border-border` hairline |
+| rounded rectangles with a generic drop shadow | flat by default; shadow is a scarce elevation token, not decoration | flat card, no shadow |
+| centering everything | landing-page habit; we left-align inside the `max-w-3xl` shell | left-aligned, shell rhythm |
+| making every button primary | breaks hierarchy; charcoal is the one high-emphasis fill | one primary, the rest ghost / outline |
+| defaulting to dark mode with glowing accents | dark is the automatic result of tokens, not an aesthetic flex | build in tokens; dark just works |
+| a thick colored border on one side of a block | a lazy accent that fights the unified single-hairline stroke | one hairline; express state via fill / color |
+| bounce / elastic easing, or a staggered page-load reveal | our motion is restrained, fixed-palette, no overshoot | the duration palette + ease-out, change read in place |
+| monospace as shorthand for "technical" | a lazy vibe, not our type system | the normal font stack + the `--text-*` scale |
+| a modal as the default container | modals are lazy; we prefer inline / a named-entry surface (§ 9, § 12) | inline first; `Dialog` only when truly warranted |
+
+## Component picker
+
+| Need | Use | Not |
+|---|---|---|
+| Dropdown / overflow / kebab / action menu | `DropdownMenu` + `DropdownMenuContent` + `DropdownMenuItem` (+ `DropdownMenuSeparator` / `DropdownMenuLabel` / `DropdownMenuSub` as needed) | a `Popover` filled with raw `<button>`s; `<hr>` or `border-b` dividers |
+| Right-click / context menu | `ContextMenu` + `ContextMenuContent` + `ContextMenuItem` (+ `ContextMenuSeparator` / `ContextMenuLabel` / submenus) | same hand-built popover list |
+| Pick one value from a menu | `Select` | a hand-rolled popover list |
+| Searchable pick (single or many) | `Combobox` (with `multiple`) | re-skinning `Select`; bespoke search dropdown |
+| Switch a mode/filter, returns a value, no panels | `SegmentedControl` | `Tabs` re-skinned as a pill |
+| Switch between content panels | `Tabs` (underline) | `SegmentedControl` |
+| Dropdown next to styled cards / styled dropdowns (e.g. a log status filter beside `ModelSelect`) | styled `Select` | `NativeSelect` — its OS-rendered popup clashes with the menu-shell language |
+| `NativeSelect` (raw OS popup) | dense forms where native keyboard/mobile UX wins and nothing styled sits beside it | mixing it into a refactored card surface that already uses `Select` / `ModelSelect` |
+| Toolbar icon action | `<Button variant="ghost" size="icon">` | a bare clickable `<svg>` with manual hover bg |
+| Standalone icon action | `<Button variant="outline" size="icon">` | ghost (reads as toolbar) |
+| Clickable low-emphasis text w/ hover chip | `TextButton` (ghost @ `size="text"`) | a `<span @click>` with a hand-rolled hover |
+| High-emphasis CTA | `<Button>` (charcoal default) | `variant="brand"` purple unless it's a true brand CTA |
+| Destructive action | `<Button variant="destructive">` (filled) | `variant="ghost"` + `text-destructive` |
+| Count / unread / overflow badge | `BadgeCount` (`destructive` alert · `default` neutral) | a hand-built rounded-full number pill |
+| Empty surface | `Empty` (+ framed) | bare centered muted `<p>` |
+| Status that aligns to a section title | `Badge` (gives the status a box edge) | a loose dot + text floating with nothing to align to |
+| Create / edit form | the New Task `Dialog` shape (§ Form recipe) | a bespoke per-page form layout; `sm` footer buttons |
+
+### Button & control sizing (pick the rung on purpose)
+
+The height ladder is `sm` h-8 (32) · default h-9 (36) · `lg` h-10 (40); icon-only `icon-sm`
+(32) · `icon` (36) · `icon-lg` (40). Default is the norm; `sm` is the exception, `lg` is rarer.
+
+| Context | Size |
+|---|---|
+| Form footer, dialog actions, any primary CTA | **default** (`h-9`, full height) — never `sm` |
+| Standalone page action (header "New …", section action) | **default** (`h-9`) |
+| Dense toolbar / inline-in-field button / per-row action in a long list | `sm` (`h-8`) — only when space is genuinely tight *and* the action is secondary |
+| Icon-only action | `icon` (36) toolbar/standalone · `icon-sm` (32) in dense rows |
+| Deliberate hero CTA (rare) | `lg` (`h-10`) |
+
+The tell: a footer of squat half-height `sm` buttons, or a page where every button is shrunk to
+look "compact" (or inflated to look "important"). Size each for a reason, not by reflex.
+
+### Icon & badge specifics (from the wall)
+
+- Icons scale on one ladder with the control: default control **16px** (`size-4`); small
+  in-field **14px** (`size-3.5`); text/badge rung **12px** (`size-3`). Pick the rung; don't
+  free-set sizes.
+- `BadgeCount`: `destructive` is the red alert dot pinned to an **icon corner**
+  (`absolute -right-1.5 -top-1.5`) for unread/needs-attention; `default` is a neutral count
+  that rides a tab/filter/segment label; in a flat list row, a count is calmer as a plain
+  muted numeral (`text-caption tabular-nums text-muted-foreground`), no bubble. Overflow caps
+  at `:max` (default 99 → `99+`).
+
+## Lessons baked into the reference pages (worth stealing)
+
+From `bot-overview.vue` — these are the judgment calls that make a page read calm:
+
+- **A healthy state says nothing.** Don't tell the user "you connected Telegram" — they did
+  it. Surface a block only when it's actionable (nothing set up yet, or there's an issue).
+- **No card-in-card.** A single row of metric tiles wrapped in a `SettingsSection` reads as
+  a big bordered box moated around small boxes → "mostly empty." Let the tiles be the content.
+- **A Badge beats a loose dot+text for status**, because the badge gives the status a box to
+  align against the section title instead of floating.
+- **`—`, never a faked `0`.** If the backend didn't sample a metric, show `—`. If there's no
+  metric grid, say *why* in one honest line — don't pad with empty tiles.
+- **Charts are black/white/gray.** `--primary` is a violet in theme; charts use `--foreground`
+  + `--muted-foreground`, no brand/accent. (See the token→canvas color round-trip note in the
+  page — echarts can't read oklch tokens directly.)
+
+## Guard & commands
+
+- `mise run lint` — runs `scripts/check-ui-contract.mjs` (HARD-fails raw colors, off-scale
+  arbitrary radius, invented box-shadows; WARNs on structural borders on controls, invented
+  shadows, ring-offset selection). Run before declaring a page done.
+- The component wall (`Cmd/Ctrl+Shift+D` on desktop, or the `memoh:dev-tools` localStorage
+  flag on web) is the living catalog — verify your component choice against its `note=`
+  annotations before inventing anything.

@@ -1,0 +1,44 @@
+{
+  "actions": {
+    "markDone": "标记完成",
+    "openWorkspace": "打开工作区",
+    "refresh": "刷新"
+  },
+  "app": {
+    "localWorkspace": "本地工作区"
+  },
+  "auth": {
+    "browserOpened": "已在浏览器打开 GitHub。输入这个代码来授权应用。",
+    "electronRequired": "身份验证只能在桌面应用窗口中使用。",
+    "errors": {
+      "unknown": "发生了一些问题。"
+    },
+    "loginWithGitHub": "Login with GitHub",
+    "missingClientId": "还没有配置 GITHUB_CLIENT_ID。请把它加入 .env，或使用个人 token。",
+    "saveToken": "保存 token",
+    "subtitle": "连接 GitHub 账号后开始处理工作项。",
+    "title": "登录",
+    "tokenPlaceholder": "Personal GitHub token",
+    "usePersonalToken": "or use personal github token",
+    "waitingForAuthorization": "正在等待授权："
+  },
+  "commands": {
+    "searchGitHub": "搜索 GitHub"
+  },
+  "home": {
+    "subtitle": "快速处理通知、拉取请求、议题和工作流。"
+  },
+  "item": {
+    "author": "作者",
+    "number": "编号",
+    "state": "状态",
+    "updated": "更新"
+  },
+  "views": {
+    "actions": "工作流",
+    "inbox": "收件箱",
+    "issues": "议题",
+    "pulls": "拉取请求",
+    "repositories": "仓库"
+  }
+}

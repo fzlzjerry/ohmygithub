@@ -1,0 +1,17 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "jsx": "preserve",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["node"],
+    "noEmit": true,
+    "paths": {
+      "#/*": ["packages/ui/src/*"],
+      "@oh-my-github/api": ["packages/api/src/index.ts"],
+      "@oh-my-github/ui": ["packages/ui/src/index.ts"],
+      "@oh-my-github/ui/style.css": ["packages/ui/src/style.css"],
+      "@oh-my-github/ui/*": ["packages/ui/src/*"]
+    }
+  },
+  "include": ["electron.vite.config.ts", "src/**/*.ts", "src/**/*.vue", "src/**/*.d.ts"]
+}

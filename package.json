@@ -1,0 +1,24 @@
+{
+  "name": "oh-my-github",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A faster GitHub workspace for notifications, pull requests, reviews, and actions.",
+  "packageManager": "pnpm@10.29.2",
+  "scripts": {
+    "dev": "pnpm --filter @oh-my-github/client dev",
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "pnpm typecheck"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.7",
+    "typescript": "^5.8.3"
+  },
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "vue-demi"
+    ]
+  }
+}

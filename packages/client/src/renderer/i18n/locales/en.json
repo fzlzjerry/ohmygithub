@@ -1,0 +1,44 @@
+{
+  "actions": {
+    "markDone": "Mark Done",
+    "openWorkspace": "Open Workspace",
+    "refresh": "Refresh"
+  },
+  "app": {
+    "localWorkspace": "Local workspace"
+  },
+  "auth": {
+    "browserOpened": "GitHub opened in your browser. Enter this code to authorize the app.",
+    "electronRequired": "Authentication is only available in the desktop app window.",
+    "errors": {
+      "unknown": "Something went wrong."
+    },
+    "loginWithGitHub": "Login with GitHub",
+    "missingClientId": "GITHUB_CLIENT_ID is not configured. Add it to your .env file or use a personal token.",
+    "saveToken": "Save token",
+    "subtitle": "Connect your GitHub account to start triage.",
+    "title": "Sign in",
+    "tokenPlaceholder": "Personal GitHub token",
+    "usePersonalToken": "or use personal github token",
+    "waitingForAuthorization": "Waiting for authorization at"
+  },
+  "commands": {
+    "searchGitHub": "Search GitHub"
+  },
+  "home": {
+    "subtitle": "Fast triage across notifications, pull requests, issues, and actions."
+  },
+  "item": {
+    "author": "Author",
+    "number": "Number",
+    "state": "State",
+    "updated": "Updated"
+  },
+  "views": {
+    "actions": "Actions",
+    "inbox": "Inbox",
+    "issues": "Issues",
+    "pulls": "Pull Requests",
+    "repositories": "Repositories"
+  }
+}

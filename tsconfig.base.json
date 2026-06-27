@@ -1,0 +1,23 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "useDefineForClassFields": true,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@oh-my-github/api": ["packages/api/src/index.ts"],
+      "@oh-my-github/ui": ["packages/ui/src/index.ts"],
+      "@oh-my-github/ui/style.css": ["packages/ui/src/style.css"],
+      "@oh-my-github/ui/*": ["packages/ui/src/*"]
+    }
+  }
+}
