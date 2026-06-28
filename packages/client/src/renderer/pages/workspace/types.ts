@@ -10,6 +10,10 @@ export type WorkspaceTabType =
   | 'account'
   | 'org'
   | 'repo'
+  | 'pull-request-list'
+  | 'issue-list'
+  | 'pull-request'
+  | 'issue'
 
 export interface WorkspacePanelStat {
   id: string
@@ -32,6 +36,9 @@ export interface WorkspaceTab {
   owner?: string
   repo?: string
   draftId?: string
+  number?: number
+  pullRequestCategory?: GitHubPullRequestCategory
+  issueCategory?: GitHubIssueCategory
 }
 
 export interface WorkspaceBookmarkFolder {
@@ -50,13 +57,43 @@ export interface WorkspaceBookmark {
   owner?: string
   repo?: string
   draftId?: string
+  number?: number
+  pullRequestCategory?: GitHubPullRequestCategory
+  issueCategory?: GitHubIssueCategory
   avatarUrl?: string
   avatarFallback?: string
 }
 
 export interface WorkspaceSidebarTreeItemLoader {
-  type: 'organization-repositories'
-  owner: string
+  type:
+    | 'organization-repositories'
+    | 'pull-request-category'
+    | 'issue-category'
+    | 'repository-pull-requests'
+    | 'repository-issues'
+  owner?: string
+  repo?: string
+  pullRequestCategory?: GitHubPullRequestCategory
+  issueCategory?: GitHubIssueCategory
+  scope?: string
+}
+
+export type WorkspaceSidebarWorkItem =
+  | {
+      type: 'pull-request'
+      state: GitHubPullRequestState
+      ciState: GitHubCiState | null
+      hasUpdates: boolean
+    }
+  | {
+      type: 'issue'
+      state: GitHubIssueState
+      hasUpdates: boolean
+    }
+
+export interface WorkspaceSidebarTreeItemStateText {
+  emptyKey: string
+  errorKey: string
 }
 
 export interface WorkspaceSidebarTreeItem {
@@ -69,6 +106,7 @@ export interface WorkspaceSidebarTreeItem {
   isActive?: boolean
   canExpand?: boolean
   forceExpanded?: boolean
+  workItem?: WorkspaceSidebarWorkItem
   children?: WorkspaceSidebarTreeItem[]
   childrenLoader?: WorkspaceSidebarTreeItemLoader
 }

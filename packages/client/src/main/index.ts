@@ -5,6 +5,8 @@ import { registerAccountsIpc } from './accounts'
 import { initializeAuth, registerAuthIpc } from './auth'
 import { initializeConfig, registerConfigIpc } from './config'
 import { configureDevRemoteDebugging } from './debug'
+import { registerIssuesIpc } from './issues'
+import { registerPullsIpc } from './pulls'
 
 configureDevRemoteDebugging()
 
@@ -66,6 +68,8 @@ void app.whenReady().then(() => {
   registerAccountsIpc()
   registerAuthIpc()
   registerConfigIpc()
+  registerIssuesIpc()
+  registerPullsIpc()
   registerWindowIpc()
   initializeAuth()
   initializeConfig()

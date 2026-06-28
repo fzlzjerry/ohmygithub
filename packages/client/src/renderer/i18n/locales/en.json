@@ -87,6 +87,105 @@
       "placeholder": "Not connected"
     }
   },
+  "pullRequest": {
+    "description": "{repository} {number} is open as a pull request workspace. Review, check, and conversation data will be connected here later.",
+    "eyebrow": "Pull Request",
+    "sections": {
+      "activity": {
+        "description": "A future activity area can collect comments, review requests, and timeline events.",
+        "title": "Activity"
+      },
+      "overview": {
+        "description": "This placeholder will become the pull request overview with status, reviewers, and merge readiness.",
+        "title": "Overview"
+      }
+    },
+    "summary": {
+      "checks": "Checks",
+      "repository": "Repository",
+      "status": "Status"
+    },
+    "values": {
+      "placeholder": "Not connected"
+    }
+  },
+  "pullRequestList": {
+    "description": "{category} is ready as a pull request list workspace. The concrete pull requests are available from the sidebar tree.",
+    "eyebrow": "Pull Request List",
+    "sections": {
+      "overview": {
+        "description": "This placeholder will become the focused pull request list for the selected category.",
+        "title": "List overview"
+      },
+      "sidebar": {
+        "description": "Expand the sidebar category to open individual pull requests from this list.",
+        "title": "Sidebar items"
+      }
+    },
+    "sources": {
+      "created-by-me": "GitHub search by author",
+      "inbox": "Unread notifications",
+      "mentioned-me": "GitHub search by mention",
+      "needs-review": "GitHub search by review request"
+    },
+    "summary": {
+      "category": "Category",
+      "source": "Source",
+      "status": "Status"
+    },
+    "values": {
+      "placeholder": "Placeholder"
+    }
+  },
+  "issue": {
+    "description": "{repository} {number} is open as an issue workspace. Conversation, labels, and project data will be connected here later.",
+    "eyebrow": "Issue",
+    "sections": {
+      "activity": {
+        "description": "A future activity area can collect comments, assignments, and project updates.",
+        "title": "Activity"
+      },
+      "overview": {
+        "description": "This placeholder will become the issue overview with labels, assignees, and linked work.",
+        "title": "Overview"
+      }
+    },
+    "summary": {
+      "comments": "Comments",
+      "labels": "Labels",
+      "repository": "Repository"
+    },
+    "values": {
+      "placeholder": "Not connected"
+    }
+  },
+  "issueList": {
+    "description": "{category} is ready as an issue list workspace. The concrete issues are available from the sidebar tree.",
+    "eyebrow": "Issue List",
+    "sections": {
+      "overview": {
+        "description": "This placeholder will become the focused issue list for the selected category.",
+        "title": "List overview"
+      },
+      "sidebar": {
+        "description": "Expand the sidebar category to open individual issues from this list.",
+        "title": "Sidebar items"
+      }
+    },
+    "sources": {
+      "created-by-me": "GitHub search by author",
+      "inbox": "Unread notifications",
+      "mentioned-me": "GitHub search by mention"
+    },
+    "summary": {
+      "category": "Category",
+      "source": "Source",
+      "status": "Status"
+    },
+    "values": {
+      "placeholder": "Placeholder"
+    }
+  },
   "workspace": {
     "title": "Workspace",
     "bookmarks": {
@@ -117,7 +216,11 @@
       "settings": "Settings"
     },
     "sidebar": {
+      "collapseGroup": "Collapse {title}",
+      "expandGroup": "Expand {title}",
       "groups": {
+        "issues": "Issues",
+        "pullRequests": "Pull Requests",
         "organizations": "Organizations"
       },
       "items": {
@@ -128,6 +231,25 @@
         "empty": "No organizations",
         "error": "Could not load organizations",
         "loading": "Loading organizations"
+      },
+      "pullRequests": {
+        "empty": "No pull requests",
+        "error": "Could not load pull requests"
+      },
+      "pullRequestCategories": {
+        "created-by-me": "Created by Me",
+        "inbox": "Inbox",
+        "mentioned-me": "Mentioned Me",
+        "needs-review": "Needs Review"
+      },
+      "issues": {
+        "empty": "No issues",
+        "error": "Could not load issues"
+      },
+      "issueCategories": {
+        "created-by-me": "Created by Me",
+        "inbox": "Inbox",
+        "mentioned-me": "Mentioned Me"
       },
       "repositories": {
         "empty": "No repositories",
@@ -212,6 +334,10 @@
         "draft": "New tabs open as local placeholder pages until real workspace data is connected.",
         "inbox": "Collect notifications, mentions, and review requests into a clean workspace entry point.",
         "org": "{owner} is open as an organization tab. This version only keeps URL, type, and placeholder state.",
+        "pullRequest": "Pull request data for {owner}/{repo} #{number} will be connected here.",
+        "pullRequestList": "Pull requests in this category are listed from the sidebar tree. A full list view can be connected here later.",
+        "issue": "Issue data for {owner}/{repo} #{number} will be connected here.",
+        "issueList": "Issues in this category are listed from the sidebar tree. A full list view can be connected here later.",
         "repo": "{owner}/{repo} is open as a repository tab. This version only keeps URL, type, and placeholder state.",
         "reviews": "Keep pull requests and merge checks in a focused tab that can grow into real data later."
       },
@@ -219,7 +345,11 @@
         "account": "Account",
         "activity": "Activity",
         "draft": "Draft",
+        "issue": "Issue",
+        "issueList": "Issue List",
         "org": "Organization",
+        "pullRequest": "Pull Request",
+        "pullRequestList": "Pull Request List",
         "repo": "Repository",
         "review": "Review",
         "triage": "Triage"
@@ -229,7 +359,11 @@
         "activity": "Activity",
         "draft": "New workspace page",
         "inbox": "Inbox",
+        "issue": "{owner}/{repo} #{number}",
+        "issueList": "{title}",
         "org": "{owner}",
+        "pullRequest": "{owner}/{repo} #{number}",
+        "pullRequestList": "{title}",
         "repo": "{owner}/{repo}",
         "reviews": "Review Queue"
       },
@@ -237,8 +371,10 @@
         "account": "Account",
         "alerts": "Alerts",
         "assigned": "Assigned",
+        "category": "Category",
         "drafts": "Drafts",
         "mentions": "Mentions",
+        "number": "Number",
         "organization": "Organization",
         "owner": "Owner",
         "repos": "Repositories",
@@ -256,7 +392,12 @@
         "account": "Account",
         "alerts": "0",
         "assigned": "0",
+        "createdByMe": "Created by Me",
         "drafts": "1",
+        "githubSearch": "GitHub Search",
+        "inbox": "Inbox",
+        "mentionedMe": "Mentioned Me",
+        "needsReview": "Needs Review",
         "mentions": "0",
         "org": "Organization",
         "placeholder": "Not connected",

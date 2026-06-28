@@ -39,6 +39,52 @@ type GitHubRepository = {
   url: string
 }
 
+type GitHubCiState = 'pending' | 'success' | 'failure'
+
+type GitHubPullRequestState = 'draft' | 'merged' | 'open' | 'cannot_merge'
+
+type GitHubIssueState = 'open' | 'completed' | 'not_planned'
+
+type GitHubPullRequestCategory = 'created-by-me' | 'needs-review' | 'inbox' | 'mentioned-me'
+
+type GitHubIssueCategory = 'created-by-me' | 'inbox' | 'mentioned-me'
+
+type GitHubActor = {
+  login: string
+  avatarUrl?: string
+}
+
+type GitHubPullRequest = {
+  id: string
+  owner: string
+  repo: string
+  repository: string
+  number: number
+  title: string
+  state: GitHubPullRequestState
+  ciState: GitHubCiState | null
+  author: GitHubActor
+  updatedAt: string
+  labels: string[]
+  url: string
+  hasUpdates: boolean
+}
+
+type GitHubIssue = {
+  id: string
+  owner: string
+  repo: string
+  repository: string
+  number: number
+  title: string
+  state: GitHubIssueState
+  author: GitHubActor
+  updatedAt: string
+  labels: string[]
+  url: string
+  hasUpdates: boolean
+}
+
 type AuthState = {
   isAuthenticated: boolean
   path: string
@@ -67,6 +113,16 @@ interface Window {
     accounts: {
       listOrganizations: () => Promise<GitHubOrganization[]>
       listOrganizationRepositories: (owner: string) => Promise<GitHubRepository[]>
+    }
+    issues: {
+      listIssueCategory: (category: GitHubIssueCategory) => Promise<GitHubIssue[]>
+      listViewerIssues: () => Promise<GitHubIssue[]>
+      listRepositoryIssues: (owner: string, repo: string) => Promise<GitHubIssue[]>
+    }
+    pulls: {
+      listPullRequestCategory: (category: GitHubPullRequestCategory) => Promise<GitHubPullRequest[]>
+      listViewerPullRequests: () => Promise<GitHubPullRequest[]>
+      listRepositoryPullRequests: (owner: string, repo: string) => Promise<GitHubPullRequest[]>
     }
     auth: {
       get: () => Promise<AuthState>

@@ -87,6 +87,105 @@
       "placeholder": "未接入"
     }
   },
+  "pullRequest": {
+    "description": "{repository} {number} 已作为 Pull Request 工作页打开。Review、检查和讨论数据会在这里继续接入。",
+    "eyebrow": "Pull Request",
+    "sections": {
+      "activity": {
+        "description": "后续可以把评论、review 请求和时间线事件收束到这里。",
+        "title": "动态"
+      },
+      "overview": {
+        "description": "这里会成为 PR 概览，后续补上状态、reviewers 和合并准备情况。",
+        "title": "概览"
+      }
+    },
+    "summary": {
+      "checks": "检查",
+      "repository": "仓库",
+      "status": "状态"
+    },
+    "values": {
+      "placeholder": "未接入"
+    }
+  },
+  "pullRequestList": {
+    "description": "{category} 已作为 Pull Request 列表工作页打开。具体 PR 可以在左侧分类树中展开。",
+    "eyebrow": "Pull Request 列表",
+    "sections": {
+      "overview": {
+        "description": "这里会成为所选分类的 Pull Request 列表视图。",
+        "title": "列表概览"
+      },
+      "sidebar": {
+        "description": "展开左侧分类即可打开其中的具体 Pull Request。",
+        "title": "侧边栏条目"
+      }
+    },
+    "sources": {
+      "created-by-me": "按创建者搜索 GitHub",
+      "inbox": "未读通知",
+      "mentioned-me": "按提及搜索 GitHub",
+      "needs-review": "按 Review 请求搜索 GitHub"
+    },
+    "summary": {
+      "category": "分类",
+      "source": "来源",
+      "status": "状态"
+    },
+    "values": {
+      "placeholder": "占位"
+    }
+  },
+  "issue": {
+    "description": "{repository} {number} 已作为 Issue 工作页打开。讨论、标签和项目数据会在这里继续接入。",
+    "eyebrow": "Issue",
+    "sections": {
+      "activity": {
+        "description": "后续可以把评论、分配和项目更新收束到这里。",
+        "title": "动态"
+      },
+      "overview": {
+        "description": "这里会成为 Issue 概览，后续补上标签、负责人和关联工作。",
+        "title": "概览"
+      }
+    },
+    "summary": {
+      "comments": "评论",
+      "labels": "标签",
+      "repository": "仓库"
+    },
+    "values": {
+      "placeholder": "未接入"
+    }
+  },
+  "issueList": {
+    "description": "{category} 已作为 Issue 列表工作页打开。具体 Issue 可以在左侧分类树中展开。",
+    "eyebrow": "Issue 列表",
+    "sections": {
+      "overview": {
+        "description": "这里会成为所选分类的 Issue 列表视图。",
+        "title": "列表概览"
+      },
+      "sidebar": {
+        "description": "展开左侧分类即可打开其中的具体 Issue。",
+        "title": "侧边栏条目"
+      }
+    },
+    "sources": {
+      "created-by-me": "按创建者搜索 GitHub",
+      "inbox": "未读通知",
+      "mentioned-me": "按提及搜索 GitHub"
+    },
+    "summary": {
+      "category": "分类",
+      "source": "来源",
+      "status": "状态"
+    },
+    "values": {
+      "placeholder": "占位"
+    }
+  },
   "workspace": {
     "title": "Workspace",
     "bookmarks": {
@@ -117,7 +216,11 @@
       "settings": "设置"
     },
     "sidebar": {
+      "collapseGroup": "收起{title}",
+      "expandGroup": "展开{title}",
       "groups": {
+        "issues": "Issues",
+        "pullRequests": "Pull Requests",
         "organizations": "Organizations"
       },
       "items": {
@@ -128,6 +231,25 @@
         "empty": "没有组织",
         "error": "无法加载组织",
         "loading": "正在加载组织"
+      },
+      "pullRequests": {
+        "empty": "没有 Pull Requests",
+        "error": "无法加载 Pull Requests"
+      },
+      "pullRequestCategories": {
+        "created-by-me": "我创建的",
+        "inbox": "收件箱",
+        "mentioned-me": "提及我的",
+        "needs-review": "需要 Review"
+      },
+      "issues": {
+        "empty": "没有 Issues",
+        "error": "无法加载 Issues"
+      },
+      "issueCategories": {
+        "created-by-me": "我创建的",
+        "inbox": "收件箱",
+        "mentioned-me": "提及我的"
       },
       "repositories": {
         "empty": "没有仓库",
@@ -212,6 +334,10 @@
         "draft": "新的 tab 会先作为本地占位页打开，后续可以接入真实 workspace 数据。",
         "inbox": "把通知、mention 和 review 请求收束到一个干净的工作区入口。",
         "org": "{owner} 已作为组织 tab 打开。本次只保留 URL、类型和占位面板。",
+        "pullRequest": "{owner}/{repo} #{number} 的 Pull Request 数据会在这里继续接入。",
+        "pullRequestList": "这个分类下的 Pull Request 会从左侧树里展开，完整列表视图后续再接入。",
+        "issue": "{owner}/{repo} #{number} 的 Issue 数据会在这里继续接入。",
+        "issueList": "这个分类下的 Issue 会从左侧树里展开，完整列表视图后续再接入。",
         "repo": "{owner}/{repo} 已作为仓库 tab 打开。本次只保留 URL、类型和占位面板。",
         "reviews": "把等待你处理的拉取请求和合并前检查放在一个可切换 tab 中。"
       },
@@ -219,7 +345,11 @@
         "account": "Account",
         "activity": "Activity",
         "draft": "Draft",
+        "issue": "Issue",
+        "issueList": "Issue 列表",
         "org": "Organization",
+        "pullRequest": "Pull Request",
+        "pullRequestList": "Pull Request 列表",
         "repo": "Repository",
         "review": "Review",
         "triage": "Triage"
@@ -229,7 +359,11 @@
         "activity": "活动",
         "draft": "新工作页",
         "inbox": "收件箱",
+        "issue": "{owner}/{repo} #{number}",
+        "issueList": "{title}",
         "org": "{owner}",
+        "pullRequest": "{owner}/{repo} #{number}",
+        "pullRequestList": "{title}",
         "repo": "{owner}/{repo}",
         "reviews": "Review Queue"
       },
@@ -237,8 +371,10 @@
         "account": "账号",
         "alerts": "告警",
         "assigned": "指派",
+        "category": "分类",
         "drafts": "草稿",
         "mentions": "Mentions",
+        "number": "编号",
         "organization": "组织",
         "owner": "Owner",
         "repos": "仓库",
@@ -256,7 +392,12 @@
         "account": "账号",
         "alerts": "0",
         "assigned": "0",
+        "createdByMe": "我创建的",
         "drafts": "1",
+        "githubSearch": "GitHub Search",
+        "inbox": "收件箱",
+        "mentionedMe": "提及我的",
+        "needsReview": "需要 Review",
         "mentions": "0",
         "org": "组织",
         "placeholder": "未接入",

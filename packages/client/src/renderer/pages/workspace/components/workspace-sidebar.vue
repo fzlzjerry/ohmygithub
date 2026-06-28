@@ -7,7 +7,7 @@ import type {
 import type { CreateBookmarkFolderResult } from '../composables/use-workspace-bookmarks'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { Folder, Inbox, Plus, Search } from 'lucide-vue-next'
+import { ChevronDown, ChevronRight, Folder, Inbox, Plus, Search } from 'lucide-vue-next'
 import {
   Button,
   Dialog,
@@ -30,9 +30,18 @@ import {
   SidebarMenuSkeleton,
   useSidebar,
 } from '@oh-my-github/ui'
+import {
+  bookmarkToTreeItem,
+  organizationToTreeItem,
+} from '../sidebar-tree-items'
+import {
+  ISSUE_CATEGORIES,
+  PULL_REQUEST_CATEGORIES,
+  issueCategoryToTreeItem,
+  pullRequestCategoryToTreeItem,
+} from '../sidebar-work-items'
 import WorkspaceSidebarTree from './workspace-sidebar-tree.vue'
 import WorkspaceUserPanel from './workspace-user-panel.vue'
-import { getWorkspaceTabView } from '../tab-presentation'
 
 const props = defineProps<{
   activeUrl: string
@@ -47,6 +56,9 @@ const props = defineProps<{
   width: number
 }>()
 
+type WorkspaceSidebarSectionId = 'bookmarks' | 'pull-requests' | 'issues' | 'organizations'
+const INBOX_ITEM_ID = 'workspace-sidebar:inbox'
+
 const emit = defineEmits<{
   select: [url: string]
   startResize: [event: PointerEvent]
@@ -55,7 +67,13 @@ const emit = defineEmits<{
 const { t } = useI18n()
 const { state } = useSidebar()
 const expandedIds = reactive(new Set<string>())
+const autoExpandedIds = reactive(new Set<string>())
+const manuallyExpandedIds = reactive(new Set<string>())
+const collapsedSectionIds = reactive(new Set<WorkspaceSidebarSectionId>())
 const visibleCounts = reactive(new Map<string, number>())
+const activeItemId = ref<string | null>(null)
+const activeItemUrl = ref<string | null>(null)
+const pendingSelectedUrl = ref<string | null>(null)
 const isBookmarkFolderDialogOpen = ref(false)
 const bookmarkFolderTitle = ref('')
 const bookmarkFolderError = ref<'duplicate' | 'empty' | null>(null)
@@ -65,6 +83,10 @@ const showOrganizationsError = computed(() => props.organizationsError && !hasOr
 const showOrganizationsEmpty = computed(() =>
   !props.organizationsLoading && !props.organizationsError && !hasOrganizations.value,
 )
+const treeLabels = computed(() => ({
+  issues: t('workspace.sidebar.groups.issues'),
+  pullRequests: t('workspace.sidebar.groups.pullRequests'),
+}))
 const sidebarStyle = computed<Record<string, string>>(() => ({
   width: `${props.width}px`,
   marginLeft: state.value === 'expanded' ? '0px' : `-${props.width}px`,
@@ -75,7 +97,11 @@ const bookmarkItems = computed<WorkspaceSidebarTreeItem[]>(() => {
   const folderItems = props.bookmarkFolders.map((folder) => {
     const children = props.bookmarks
       .filter((bookmark) => bookmark.folderId === folder.id)
-      .map(bookmarkToTreeItem)
+      .map((bookmark) => bookmarkToTreeItem(bookmark, {
+        activeItemId: activeItemId.value,
+        activeUrl: props.activeUrl,
+        labels: treeLabels.value,
+      }))
 
     return {
       id: `bookmark-folder:${folder.id}`,
@@ -89,7 +115,11 @@ const bookmarkItems = computed<WorkspaceSidebarTreeItem[]>(() => {
 
   return [
     ...folderItems,
-    ...rootBookmarks.value.map(bookmarkToTreeItem),
+    ...rootBookmarks.value.map((bookmark) => bookmarkToTreeItem(bookmark, {
+      activeItemId: activeItemId.value,
+      activeUrl: props.activeUrl,
+      labels: treeLabels.value,
+    })),
   ]
 })
 const showBookmarksEmpty = computed(() => props.bookmarkFolders.length === 0 && props.bookmarks.length === 0)
@@ -97,47 +127,112 @@ const bookmarkFolderErrorMessage = computed(() => {
   if (!bookmarkFolderError.value) return ''
   return t(`workspace.bookmarks.folderErrors.${bookmarkFolderError.value}`)
 })
-
-const organizationItems = computed<WorkspaceSidebarTreeItem[]>(() => {
-  return props.organizations.map((organization) => {
-    const url = organizationUrl(organization.login)
-
-    return {
-      id: `org:${organization.login}`,
-      label: organization.login,
-      url,
-      avatarUrl: organization.avatarUrl,
-      avatarFallback: organizationFallback(organization.login),
-      isActive: props.activeUrl === url,
-      canExpand: true,
-      forceExpanded: props.activeUrl.startsWith(`/${organization.login}/`),
-      childrenLoader: {
-        type: 'organization-repositories',
-        owner: organization.login,
-      },
-    }
-  })
+const pullRequestItems = computed<WorkspaceSidebarTreeItem[]>(() => {
+  return PULL_REQUEST_CATEGORIES.map((category) =>
+    pullRequestCategoryToTreeItem(
+      category,
+      t(`workspace.sidebar.pullRequestCategories.${category}`),
+      activeItemId.value,
+      props.activeUrl,
+    )
+  )
+})
+const issueItems = computed<WorkspaceSidebarTreeItem[]>(() => {
+  return ISSUE_CATEGORIES.map((category) =>
+    issueCategoryToTreeItem(
+      category,
+      t(`workspace.sidebar.issueCategories.${category}`),
+      activeItemId.value,
+      props.activeUrl,
+    )
+  )
 })
 
-function organizationUrl(login: string): string {
-  return `/${login}?type=org`
-}
-
-function organizationFallback(login: string): string {
-  return login.slice(0, 1).toUpperCase()
-}
+const organizationItems = computed<WorkspaceSidebarTreeItem[]>(() => {
+  return props.organizations.map((organization) =>
+    organizationToTreeItem(organization, {
+      activeItemId: activeItemId.value,
+      activeUrl: props.activeUrl,
+      labels: treeLabels.value,
+      scope: 'organizations',
+    })
+  )
+})
 
 function toggleExpanded(id: string): void {
-  if (expandedIds.has(id)) {
-    expandedIds.delete(id)
+  autoExpandedIds.delete(id)
+
+  if (manuallyExpandedIds.has(id)) {
+    manuallyExpandedIds.delete(id)
+    syncExpandedId(id)
     return
   }
 
-  expandedIds.add(id)
+  manuallyExpandedIds.add(id)
+  syncExpandedId(id)
+}
+
+function toggleSection(id: WorkspaceSidebarSectionId): void {
+  if (collapsedSectionIds.has(id)) {
+    collapsedSectionIds.delete(id)
+    return
+  }
+
+  collapsedSectionIds.add(id)
+}
+
+function isSectionExpanded(id: WorkspaceSidebarSectionId): boolean {
+  return !collapsedSectionIds.has(id)
+}
+
+function sectionToggleLabel(id: WorkspaceSidebarSectionId, title: string): string {
+  return t(isSectionExpanded(id) ? 'workspace.sidebar.collapseGroup' : 'workspace.sidebar.expandGroup', {
+    title,
+  })
 }
 
 function setVisibleCount(listId: string, visibleCount: number): void {
   visibleCounts.set(listId, visibleCount)
+}
+
+function syncExpandedId(id: string): void {
+  if (autoExpandedIds.has(id) || manuallyExpandedIds.has(id)) {
+    expandedIds.add(id)
+    return
+  }
+
+  expandedIds.delete(id)
+}
+
+function autoExpand(id: string): void {
+  autoExpandedIds.add(id)
+  syncExpandedId(id)
+}
+
+function applyAutoExpandedIds(ids: string[]): void {
+  const nextIds = new Set(ids)
+
+  for (const id of [...autoExpandedIds]) {
+    if (!nextIds.has(id)) {
+      autoExpandedIds.delete(id)
+      syncExpandedId(id)
+    }
+  }
+
+  for (const id of nextIds) {
+    autoExpand(id)
+  }
+}
+
+function selectSidebarItem(url: string, itemId: string): void {
+  activeItemId.value = itemId
+  activeItemUrl.value = url
+  pendingSelectedUrl.value = url === props.activeUrl ? null : url
+  emit('select', url)
+}
+
+function isInboxActive(): boolean {
+  return activeItemId.value ? activeItemId.value === INBOX_ITEM_ID : props.activeUrl === '/inbox'
 }
 
 function collectForceExpandedIds(items: WorkspaceSidebarTreeItem[]): string[] {
@@ -157,23 +252,53 @@ function collectForceExpandedIds(items: WorkspaceSidebarTreeItem[]): string[] {
 }
 
 function expandActiveAncestors(): void {
-  for (const id of collectForceExpandedIds([...bookmarkItems.value, ...organizationItems.value])) {
-    expandedIds.add(id)
-  }
+  applyAutoExpandedIds(collectForceExpandedIds([
+    ...bookmarkItems.value,
+    ...pullRequestItems.value,
+    ...issueItems.value,
+    ...organizationItems.value,
+  ]))
 }
 
-function bookmarkToTreeItem(bookmark: WorkspaceBookmark): WorkspaceSidebarTreeItem {
-  const view = getWorkspaceTabView(bookmark)
+function syncActiveItem(): void {
+  if (pendingSelectedUrl.value) {
+    if (pendingSelectedUrl.value === props.activeUrl) {
+      pendingSelectedUrl.value = null
+    }
 
-  return {
-    id: `bookmark:${bookmark.id}`,
-    label: bookmark.title,
-    url: bookmark.url,
-    icon: bookmark.avatarUrl ? undefined : view.icon,
-    avatarUrl: bookmark.avatarUrl,
-    avatarFallback: bookmark.avatarFallback,
-    isActive: props.activeUrl === bookmark.url,
+    return
   }
+
+  if (activeItemId.value && activeItemUrl.value === props.activeUrl) {
+    return
+  }
+
+  const nextItemId = props.activeUrl === '/inbox'
+    ? INBOX_ITEM_ID
+    : findFirstItemIdByUrl([
+      ...bookmarkItems.value,
+      ...pullRequestItems.value,
+      ...issueItems.value,
+      ...organizationItems.value,
+    ], props.activeUrl)
+
+  activeItemId.value = nextItemId
+  activeItemUrl.value = nextItemId ? props.activeUrl : null
+}
+
+function findFirstItemIdByUrl(items: WorkspaceSidebarTreeItem[], url: string): string | null {
+  for (const item of items) {
+    if (item.url === url) {
+      return item.id
+    }
+
+    if (item.children?.length) {
+      const childItemId = findFirstItemIdByUrl(item.children, url)
+      if (childItemId) return childItemId
+    }
+  }
+
+  return null
 }
 
 function submitBookmarkFolder(): void {
@@ -203,8 +328,11 @@ watch(bookmarkFolderTitle, () => {
 })
 
 watch(
-  () => [props.activeUrl, bookmarkItems.value, organizationItems.value],
-  expandActiveAncestors,
+  () => [props.activeUrl, bookmarkItems.value, pullRequestItems.value, issueItems.value, organizationItems.value],
+  () => {
+    syncActiveItem()
+    expandActiveAncestors()
+  },
   { immediate: true },
 )
 </script>
@@ -241,10 +369,10 @@ watch(
           <SidebarMenuButton
             class="before:hidden"
             size="sm"
-            :is-active="activeUrl === '/inbox'"
+            :is-active="isInboxActive()"
             :tooltip="t('workspace.sidebar.items.inbox')"
             type="button"
-            @click="emit('select', '/inbox')"
+            @click="selectSidebarItem('/inbox', INBOX_ITEM_ID)"
           >
             <Inbox />
             <span>{{ t('workspace.sidebar.items.inbox') }}</span>
@@ -267,9 +395,24 @@ watch(
           >
             <Plus class="size-3.5" />
           </button>
+          <button
+            :aria-label="sectionToggleLabel('bookmarks', t('workspace.bookmarks.title'))"
+            class="flex size-5 shrink-0 items-center justify-center text-muted-foreground outline-hidden transition-colors hover:text-foreground focus-visible:text-foreground"
+            type="button"
+            @click="toggleSection('bookmarks')"
+          >
+            <ChevronDown
+              v-if="isSectionExpanded('bookmarks')"
+              class="size-3.5"
+            />
+            <ChevronRight
+              v-else
+              class="size-3.5"
+            />
+          </button>
         </div>
 
-        <SidebarGroupContent>
+        <SidebarGroupContent v-if="isSectionExpanded('bookmarks')">
           <p
             v-if="showBookmarksEmpty"
             class="px-2 py-1.5 text-caption text-muted-foreground"
@@ -279,12 +422,14 @@ watch(
 
           <WorkspaceSidebarTree
             v-else
+            :active-item-id="activeItemId"
             :active-url="activeUrl"
             :expanded-ids="expandedIds"
             :items="bookmarkItems"
             list-id="bookmarks"
             :visible-counts="visibleCounts"
-            @select="emit('select', $event)"
+            @auto-expand="autoExpand"
+            @select="selectSidebarItem"
             @show-more="setVisibleCount"
             @toggle="toggleExpanded"
           />
@@ -292,10 +437,103 @@ watch(
       </SidebarGroup>
 
       <SidebarGroup class="px-2 py-1">
-        <SidebarGroupLabel class="h-6 px-2 text-caption">
-          {{ t('workspace.sidebar.groups.organizations') }}
-        </SidebarGroupLabel>
-        <SidebarGroupContent>
+        <div class="flex h-7 items-center gap-1 px-2 pr-1">
+          <SidebarGroupLabel class="h-6 flex-1 px-0 text-caption">
+            {{ t('workspace.sidebar.groups.pullRequests') }}
+          </SidebarGroupLabel>
+          <button
+            :aria-label="sectionToggleLabel('pull-requests', t('workspace.sidebar.groups.pullRequests'))"
+            class="flex size-5 shrink-0 items-center justify-center text-muted-foreground outline-hidden transition-colors hover:text-foreground focus-visible:text-foreground"
+            type="button"
+            @click="toggleSection('pull-requests')"
+          >
+            <ChevronDown
+              v-if="isSectionExpanded('pull-requests')"
+              class="size-3.5"
+            />
+            <ChevronRight
+              v-else
+              class="size-3.5"
+            />
+          </button>
+        </div>
+
+        <SidebarGroupContent v-if="isSectionExpanded('pull-requests')">
+          <WorkspaceSidebarTree
+            :active-item-id="activeItemId"
+            :active-url="activeUrl"
+            :expanded-ids="expandedIds"
+            :items="pullRequestItems"
+            list-id="viewer-pull-requests"
+            :visible-counts="visibleCounts"
+            @auto-expand="autoExpand"
+            @select="selectSidebarItem"
+            @show-more="setVisibleCount"
+            @toggle="toggleExpanded"
+          />
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarGroup class="px-2 py-1">
+        <div class="flex h-7 items-center gap-1 px-2 pr-1">
+          <SidebarGroupLabel class="h-6 flex-1 px-0 text-caption">
+            {{ t('workspace.sidebar.groups.issues') }}
+          </SidebarGroupLabel>
+          <button
+            :aria-label="sectionToggleLabel('issues', t('workspace.sidebar.groups.issues'))"
+            class="flex size-5 shrink-0 items-center justify-center text-muted-foreground outline-hidden transition-colors hover:text-foreground focus-visible:text-foreground"
+            type="button"
+            @click="toggleSection('issues')"
+          >
+            <ChevronDown
+              v-if="isSectionExpanded('issues')"
+              class="size-3.5"
+            />
+            <ChevronRight
+              v-else
+              class="size-3.5"
+            />
+          </button>
+        </div>
+
+        <SidebarGroupContent v-if="isSectionExpanded('issues')">
+          <WorkspaceSidebarTree
+            :active-item-id="activeItemId"
+            :active-url="activeUrl"
+            :expanded-ids="expandedIds"
+            :items="issueItems"
+            list-id="viewer-issues"
+            :visible-counts="visibleCounts"
+            @auto-expand="autoExpand"
+            @select="selectSidebarItem"
+            @show-more="setVisibleCount"
+            @toggle="toggleExpanded"
+          />
+        </SidebarGroupContent>
+      </SidebarGroup>
+
+      <SidebarGroup class="px-2 py-1">
+        <div class="flex h-7 items-center gap-1 px-2 pr-1">
+          <SidebarGroupLabel class="h-6 flex-1 px-0 text-caption">
+            {{ t('workspace.sidebar.groups.organizations') }}
+          </SidebarGroupLabel>
+          <button
+            :aria-label="sectionToggleLabel('organizations', t('workspace.sidebar.groups.organizations'))"
+            class="flex size-5 shrink-0 items-center justify-center text-muted-foreground outline-hidden transition-colors hover:text-foreground focus-visible:text-foreground"
+            type="button"
+            @click="toggleSection('organizations')"
+          >
+            <ChevronDown
+              v-if="isSectionExpanded('organizations')"
+              class="size-3.5"
+            />
+            <ChevronRight
+              v-else
+              class="size-3.5"
+            />
+          </button>
+        </div>
+        <SidebarGroupContent v-if="isSectionExpanded('organizations')">
           <SidebarMenu v-if="showOrganizationsLoading">
             <SidebarMenuItem
               v-for="index in 3"
@@ -321,12 +559,14 @@ watch(
 
           <WorkspaceSidebarTree
             v-else
+            :active-item-id="activeItemId"
             :active-url="activeUrl"
             :expanded-ids="expandedIds"
             :items="organizationItems"
             list-id="organizations"
             :visible-counts="visibleCounts"
-            @select="emit('select', $event)"
+            @auto-expand="autoExpand"
+            @select="selectSidebarItem"
             @show-more="setVisibleCount"
             @toggle="toggleExpanded"
           />

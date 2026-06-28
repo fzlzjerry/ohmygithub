@@ -4,6 +4,18 @@ import type { WorkspaceTab, WorkspaceTabType } from './types'
 export const DEFAULT_WORKSPACE_URL = '/inbox'
 
 const INTERNAL_TYPES = new Set<WorkspaceTabType>(['inbox', 'reviews', 'activity'])
+const INTERNAL_PATHS = new Set(['draft', 'pull-requests', 'issues'])
+const PULL_REQUEST_CATEGORIES = new Set<GitHubPullRequestCategory>([
+  'created-by-me',
+  'needs-review',
+  'inbox',
+  'mentioned-me',
+])
+const ISSUE_CATEGORIES = new Set<GitHubIssueCategory>([
+  'created-by-me',
+  'inbox',
+  'mentioned-me',
+])
 const VALID_TYPES = new Set<WorkspaceTabType>([
   'inbox',
   'reviews',
@@ -12,6 +24,10 @@ const VALID_TYPES = new Set<WorkspaceTabType>([
   'account',
   'org',
   'repo',
+  'pull-request-list',
+  'issue-list',
+  'pull-request',
+  'issue',
 ])
 
 export function isWorkspaceTabType(value: string): value is WorkspaceTabType {
@@ -52,7 +68,7 @@ export function normalizeWorkspaceUrl(url: string): string {
 
 export function isReservedInternalPath(path: string): boolean {
   const [firstSegment] = normalizeWorkspacePath(path).split('/').filter(Boolean)
-  return firstSegment === 'draft' || INTERNAL_TYPES.has(firstSegment as WorkspaceTabType)
+  return INTERNAL_PATHS.has(firstSegment) || INTERNAL_TYPES.has(firstSegment as WorkspaceTabType)
 }
 
 function parseWorkspaceUrl(url: string): Omit<WorkspaceTab, 'title'> {
@@ -85,8 +101,50 @@ function parseWorkspaceUrl(url: string): Omit<WorkspaceTab, 'title'> {
     }
   }
 
+  if (firstSegment === 'pull-requests') {
+    const category = sanitizePullRequestCategory(segments[1])
+
+    return {
+      url: `/pull-requests/${category}`,
+      type: 'pull-request-list',
+      pullRequestCategory: category,
+    }
+  }
+
+  if (firstSegment === 'issues') {
+    const category = sanitizeIssueCategory(segments[1])
+
+    return {
+      url: `/issues/${category}`,
+      type: 'issue-list',
+      issueCategory: category,
+    }
+  }
+
   const owner = sanitizeSegment(firstSegment)
   const repo = sanitizeSegment(segments[1])
+  const resourceType = sanitizeSegment(segments[2])
+  const resourceNumber = sanitizeNumber(segments[3])
+
+  if (owner && repo && resourceType === 'pull' && resourceNumber) {
+    return {
+      url: `/${owner}/${repo}/pull/${resourceNumber}`,
+      type: 'pull-request',
+      owner,
+      repo,
+      number: resourceNumber,
+    }
+  }
+
+  if (owner && repo && resourceType === 'issues' && resourceNumber) {
+    return {
+      url: `/${owner}/${repo}/issues/${resourceNumber}`,
+      type: 'issue',
+      owner,
+      repo,
+      number: resourceNumber,
+    }
+  }
 
   if (owner && repo) {
     return {
@@ -111,9 +169,26 @@ function titleForWorkspaceTab(tab: Omit<WorkspaceTab, 'title'>): string {
   if (tab.type === 'reviews') return 'Review Queue'
   if (tab.type === 'activity') return 'Activity'
   if (tab.type === 'draft') return `Draft ${tab.draftId ?? '1'}`
+  if (tab.type === 'pull-request-list') return titleForPullRequestCategory(tab.pullRequestCategory)
+  if (tab.type === 'issue-list') return titleForIssueCategory(tab.issueCategory)
+  if (tab.type === 'pull-request') return `${tab.owner}/${tab.repo}#${tab.number ?? ''}`
+  if (tab.type === 'issue') return `${tab.owner}/${tab.repo}#${tab.number ?? ''}`
   if (tab.type === 'repo') return `${tab.owner}/${tab.repo}`
   if (tab.type === 'org') return tab.owner ?? 'Organization'
   return tab.owner ?? 'Account'
+}
+
+function titleForPullRequestCategory(category: GitHubPullRequestCategory | undefined): string {
+  if (category === 'created-by-me') return 'Created by Me'
+  if (category === 'needs-review') return 'Needs Review'
+  if (category === 'mentioned-me') return 'Mentioned Me'
+  return 'Inbox'
+}
+
+function titleForIssueCategory(category: GitHubIssueCategory | undefined): string {
+  if (category === 'created-by-me') return 'Created by Me'
+  if (category === 'mentioned-me') return 'Mentioned Me'
+  return 'Inbox'
 }
 
 function normalizeWorkspacePath(path: string): string {
@@ -124,4 +199,21 @@ function normalizeWorkspacePath(path: string): string {
 
 function sanitizeSegment(value: string | undefined): string {
   return String(value ?? '').trim()
+}
+
+function sanitizeNumber(value: string | undefined): number | null {
+  const parsed = Number(value)
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+}
+
+function sanitizePullRequestCategory(value: string | undefined): GitHubPullRequestCategory {
+  return PULL_REQUEST_CATEGORIES.has(value as GitHubPullRequestCategory)
+    ? value as GitHubPullRequestCategory
+    : 'inbox'
+}
+
+function sanitizeIssueCategory(value: string | undefined): GitHubIssueCategory {
+  return ISSUE_CATEGORIES.has(value as GitHubIssueCategory)
+    ? value as GitHubIssueCategory
+    : 'inbox'
 }

@@ -72,6 +72,9 @@ export function useWorkspaceBookmarks() {
       owner: tab.owner,
       repo: tab.repo,
       draftId: tab.draftId,
+      number: tab.number,
+      pullRequestCategory: tab.pullRequestCategory,
+      issueCategory: tab.issueCategory,
       avatarUrl: input.organization?.avatarUrl ?? existing?.avatarUrl,
       avatarFallback: input.organization?.login.slice(0, 1).toUpperCase() ?? existing?.avatarFallback,
     }
@@ -190,6 +193,9 @@ function coerceStoredBookmark(value: unknown, folderIds: Set<string>): Workspace
     owner: tab.owner,
     repo: tab.repo,
     draftId: tab.draftId,
+    number: tab.number,
+    pullRequestCategory: tab.pullRequestCategory,
+    issueCategory: tab.issueCategory,
     avatarUrl: typeof value.avatarUrl === 'string' ? value.avatarUrl : undefined,
     avatarFallback: typeof value.avatarFallback === 'string' ? value.avatarFallback : undefined,
   }

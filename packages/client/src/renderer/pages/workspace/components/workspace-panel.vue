@@ -3,7 +3,11 @@ import type { WorkspaceMessageParams, WorkspaceTab } from '../types'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Badge } from '@oh-my-github/ui'
+import IssueListPage from '../../issue-list/issue-list-page.vue'
+import IssuePage from '../../issue/issue-page.vue'
 import OrganizationPage from '../../organization/organization-page.vue'
+import PullRequestListPage from '../../pull-request-list/pull-request-list-page.vue'
+import PullRequestPage from '../../pull-request/pull-request-page.vue'
 import RepositoryPage from '../../repository/repository-page.vue'
 import { getWorkspaceTabView } from '../tab-presentation'
 
@@ -27,6 +31,26 @@ function translate(key: string, params?: WorkspaceMessageParams): string {
 
   <RepositoryPage
     v-else-if="tab.type === 'repo'"
+    :tab="tab"
+  />
+
+  <PullRequestPage
+    v-else-if="tab.type === 'pull-request'"
+    :tab="tab"
+  />
+
+  <PullRequestListPage
+    v-else-if="tab.type === 'pull-request-list'"
+    :tab="tab"
+  />
+
+  <IssuePage
+    v-else-if="tab.type === 'issue'"
+    :tab="tab"
+  />
+
+  <IssueListPage
+    v-else-if="tab.type === 'issue-list'"
     :tab="tab"
   />
 

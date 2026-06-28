@@ -3,6 +3,7 @@ import {
   Bell,
   Building2,
   Book,
+  CircleDot,
   FileText,
   GitPullRequest,
   Inbox,
@@ -103,6 +104,64 @@ export function getWorkspaceTabView(tab: WorkspaceTab): WorkspaceTabView {
     }
   }
 
+  if (tab.type === 'pull-request') {
+    return createResourceView(tab, {
+      icon: GitPullRequest,
+      eyebrowKey: 'workspace.panel.eyebrows.pullRequest',
+      headingKey: 'workspace.panel.headings.pullRequest',
+      descriptionKey: 'workspace.panel.descriptions.pullRequest',
+      stats: [
+        { id: 'repository', labelKey: 'workspace.panel.stats.repository', value: `${tab.owner ?? ''}/${tab.repo ?? ''}` },
+        { id: 'number', labelKey: 'workspace.panel.stats.number', value: `#${tab.number ?? ''}` },
+        { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
+      ],
+    })
+  }
+
+  if (tab.type === 'pull-request-list') {
+    return createResourceView(tab, {
+      icon: GitPullRequest,
+      titleKey: pullRequestCategoryTitleKey(tab.pullRequestCategory),
+      eyebrowKey: 'workspace.panel.eyebrows.pullRequestList',
+      headingKey: 'workspace.panel.headings.pullRequestList',
+      descriptionKey: 'workspace.panel.descriptions.pullRequestList',
+      stats: [
+        { id: 'category', labelKey: 'workspace.panel.stats.category', valueKey: pullRequestCategoryValueKey(tab.pullRequestCategory) },
+        { id: 'source', labelKey: 'workspace.panel.stats.source', valueKey: 'workspace.panel.values.githubSearch' },
+        { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
+      ],
+    })
+  }
+
+  if (tab.type === 'issue') {
+    return createResourceView(tab, {
+      icon: CircleDot,
+      eyebrowKey: 'workspace.panel.eyebrows.issue',
+      headingKey: 'workspace.panel.headings.issue',
+      descriptionKey: 'workspace.panel.descriptions.issue',
+      stats: [
+        { id: 'repository', labelKey: 'workspace.panel.stats.repository', value: `${tab.owner ?? ''}/${tab.repo ?? ''}` },
+        { id: 'number', labelKey: 'workspace.panel.stats.number', value: `#${tab.number ?? ''}` },
+        { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
+      ],
+    })
+  }
+
+  if (tab.type === 'issue-list') {
+    return createResourceView(tab, {
+      icon: CircleDot,
+      titleKey: issueCategoryTitleKey(tab.issueCategory),
+      eyebrowKey: 'workspace.panel.eyebrows.issueList',
+      headingKey: 'workspace.panel.headings.issueList',
+      descriptionKey: 'workspace.panel.descriptions.issueList',
+      stats: [
+        { id: 'category', labelKey: 'workspace.panel.stats.category', valueKey: issueCategoryValueKey(tab.issueCategory) },
+        { id: 'source', labelKey: 'workspace.panel.stats.source', valueKey: 'workspace.panel.values.githubSearch' },
+        { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
+      ],
+    })
+  }
+
   if (tab.type === 'repo') {
     return createResourceView(tab, {
       icon: Book,
@@ -178,7 +237,8 @@ export function getWorkspaceTabView(tab: WorkspaceTab): WorkspaceTabView {
 
 function createResourceView(
   tab: WorkspaceTab,
-  details: Pick<WorkspaceTabView, 'descriptionKey' | 'eyebrowKey' | 'headingKey' | 'icon' | 'stats'>,
+  details: Pick<WorkspaceTabView, 'descriptionKey' | 'eyebrowKey' | 'headingKey' | 'icon' | 'stats'>
+    & Partial<Pick<WorkspaceTabView, 'titleKey' | 'titleParams'>>,
 ): WorkspaceTabView {
   return {
     tab,
@@ -186,11 +246,13 @@ function createResourceView(
     title: tab.title,
     headingParams: {
       owner: tab.owner ?? '',
+      number: tab.number ?? '',
       repo: tab.repo ?? '',
       title: tab.title,
     },
     descriptionParams: {
       owner: tab.owner ?? '',
+      number: tab.number ?? '',
       repo: tab.repo ?? '',
       title: tab.title,
     },
@@ -209,4 +271,25 @@ function createResourceView(
       },
     ],
   }
+}
+
+function pullRequestCategoryTitleKey(category: GitHubPullRequestCategory | undefined): string {
+  return `workspace.sidebar.pullRequestCategories.${category ?? 'inbox'}`
+}
+
+function issueCategoryTitleKey(category: GitHubIssueCategory | undefined): string {
+  return `workspace.sidebar.issueCategories.${category ?? 'inbox'}`
+}
+
+function pullRequestCategoryValueKey(category: GitHubPullRequestCategory | undefined): string {
+  if (category === 'created-by-me') return 'workspace.panel.values.createdByMe'
+  if (category === 'needs-review') return 'workspace.panel.values.needsReview'
+  if (category === 'mentioned-me') return 'workspace.panel.values.mentionedMe'
+  return 'workspace.panel.values.inbox'
+}
+
+function issueCategoryValueKey(category: GitHubIssueCategory | undefined): string {
+  if (category === 'created-by-me') return 'workspace.panel.values.createdByMe'
+  if (category === 'mentioned-me') return 'workspace.panel.values.mentionedMe'
+  return 'workspace.panel.values.inbox'
 }

@@ -1,4 +1,14 @@
-import type { GitHubClient, GitHubOrganization, GitHubRepository, GitHubWorkspaceItem } from './types'
+import type {
+  GitHubClient,
+  GitHubIssue,
+  GitHubOrganization,
+  GitHubPullRequest,
+  GitHubRepository,
+  GitHubWorkspaceItem,
+  ListIssueCategoryOptions,
+  ListPullRequestCategoryOptions,
+  ListRepositoryWorkspaceItemsOptions
+} from './types'
 
 const items: GitHubWorkspaceItem[] = [
   {
@@ -104,6 +114,18 @@ const repositoriesByOrganization: Record<string, GitHubRepository[]> = {
   octokit: createMockRepositories('octokit', ['octokit.js', 'rest.js', 'graphql.js']),
 }
 
+const pullRequestsByRepository: Record<string, GitHubPullRequest[]> = {
+  'oh-my-github/client': createMockPullRequests('oh-my-github', 'client', ['Wire workspace sidebar states', 'Polish Electron titlebar', 'Draft issue detail routes']),
+  'oh-my-github/api': createMockPullRequests('oh-my-github', 'api', ['Add typed GitHub modules', 'Normalize notification updates']),
+  'vuejs/core': createMockPullRequests('vuejs', 'core', ['Improve scheduler traces', 'Draft compiler warning copy']),
+}
+
+const issuesByRepository: Record<string, GitHubIssue[]> = {
+  'oh-my-github/client': createMockIssues('oh-my-github', 'client', ['Sidebar active item is too tall', 'Bookmark menu needs keyboard polish']),
+  'oh-my-github/ui': createMockIssues('oh-my-github', 'ui', ['Document compact menu sizing']),
+  'vuejs/core': createMockIssues('vuejs', 'core', ['Regression in suspense hydration']),
+}
+
 export class MockGitHubClient implements GitHubClient {
   async listViewerOrganizations(): Promise<GitHubOrganization[]> {
     return organizations
@@ -111,6 +133,54 @@ export class MockGitHubClient implements GitHubClient {
 
   async listOrganizationRepositories(owner: string): Promise<GitHubRepository[]> {
     return repositoriesByOrganization[owner] ?? []
+  }
+
+  async listViewerPullRequests(): Promise<GitHubPullRequest[]> {
+    return Object.values(pullRequestsByRepository).flat().slice(0, 8)
+  }
+
+  async listPullRequestCategory(options: ListPullRequestCategoryOptions): Promise<GitHubPullRequest[]> {
+    const pullRequests = Object.values(pullRequestsByRepository).flat()
+
+    if (options.category === 'created-by-me') {
+      return pullRequests.filter((pullRequest) => pullRequest.author.login === 'acbox')
+    }
+
+    if (options.category === 'needs-review') {
+      return pullRequests.filter((pullRequest) => pullRequest.state !== 'draft')
+    }
+
+    if (options.category === 'inbox') {
+      return pullRequests.filter((pullRequest) => pullRequest.hasUpdates)
+    }
+
+    return pullRequests.filter((pullRequest) => pullRequest.labels.includes('review'))
+  }
+
+  async listRepositoryPullRequests(options: ListRepositoryWorkspaceItemsOptions): Promise<GitHubPullRequest[]> {
+    return pullRequestsByRepository[`${options.owner}/${options.repo}`] ?? []
+  }
+
+  async listViewerIssues(): Promise<GitHubIssue[]> {
+    return Object.values(issuesByRepository).flat().slice(0, 8)
+  }
+
+  async listIssueCategory(options: ListIssueCategoryOptions): Promise<GitHubIssue[]> {
+    const issues = Object.values(issuesByRepository).flat()
+
+    if (options.category === 'created-by-me') {
+      return issues.filter((issue) => issue.author.login === 'acbox')
+    }
+
+    if (options.category === 'inbox') {
+      return issues.filter((issue) => issue.hasUpdates)
+    }
+
+    return issues.filter((issue) => issue.labels.includes('triage'))
+  }
+
+  async listRepositoryIssues(options: ListRepositoryWorkspaceItemsOptions): Promise<GitHubIssue[]> {
+    return issuesByRepository[`${options.owner}/${options.repo}`] ?? []
   }
 
   async listNotifications(): Promise<GitHubWorkspaceItem[]> {
@@ -136,5 +206,40 @@ function createMockRepositories(owner: string, names: string[]): GitHubRepositor
     isPrivate: index % 5 === 0,
     updatedAt: new Date(Date.UTC(2026, 5, 27 - index)).toISOString(),
     url: `https://github.com/${owner}/${name}`,
+  }))
+}
+
+function createMockPullRequests(owner: string, repo: string, titles: string[]): GitHubPullRequest[] {
+  return titles.map((title, index) => ({
+    id: `mock-pr:${owner}/${repo}:${index + 1}`,
+    owner,
+    repo,
+    repository: `${owner}/${repo}`,
+    number: index + 11,
+    title,
+    state: index === 2 ? 'draft' : index === 1 ? 'cannot_merge' : 'open',
+    ciState: index === 0 ? 'success' : index === 1 ? 'failure' : 'pending',
+    author: { login: index % 2 === 0 ? 'acbox' : 'octo-lina' },
+    updatedAt: new Date(Date.UTC(2026, 5, 27 - index, 8)).toISOString(),
+    labels: index === 0 ? ['workspace'] : ['review'],
+    url: `https://github.com/${owner}/${repo}/pull/${index + 11}`,
+    hasUpdates: index === 0,
+  }))
+}
+
+function createMockIssues(owner: string, repo: string, titles: string[]): GitHubIssue[] {
+  return titles.map((title, index) => ({
+    id: `mock-issue:${owner}/${repo}:${index + 1}`,
+    owner,
+    repo,
+    repository: `${owner}/${repo}`,
+    number: index + 31,
+    title,
+    state: 'open',
+    author: { login: index % 2 === 0 ? 'acbox' : 'arden' },
+    updatedAt: new Date(Date.UTC(2026, 5, 26 - index, 10)).toISOString(),
+    labels: index === 0 ? ['bug'] : ['triage'],
+    url: `https://github.com/${owner}/${repo}/issues/${index + 31}`,
+    hasUpdates: index === 1,
   }))
 }

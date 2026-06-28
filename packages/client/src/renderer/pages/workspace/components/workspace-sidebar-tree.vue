@@ -14,6 +14,7 @@ const ROOT_VISIBLE_STEP = 4
 
 const props = defineProps<{
   items: WorkspaceSidebarTreeItemData[]
+  activeItemId: string | null
   expandedIds: Set<string>
   visibleCounts: Map<string, number>
   listId: string
@@ -21,7 +22,8 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  select: [url: string]
+  autoExpand: [id: string]
+  select: [url: string, itemId: string]
   showMore: [listId: string, visibleCount: number]
   toggle: [id: string]
 }>()
@@ -42,12 +44,14 @@ function showMoreItems(): void {
     <WorkspaceSidebarTreeItemComponent
       v-for="item in visibleItems"
       :key="item.id"
+      :active-item-id="activeItemId"
       :active-url="activeUrl"
       :expanded-ids="expandedIds"
       :item="item"
       :level="0"
       :visible-counts="visibleCounts"
-      @select="emit('select', $event)"
+      @auto-expand="emit('autoExpand', $event)"
+      @select="(url: string, itemId: string) => emit('select', url, itemId)"
       @show-more="(listId: string, visibleCount: number) => emit('showMore', listId, visibleCount)"
       @toggle="emit('toggle', $event)"
     />

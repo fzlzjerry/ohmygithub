@@ -11,6 +11,18 @@ const api = {
     listOrganizationRepositories: (owner: string) =>
       ipcRenderer.invoke('accounts:list-organization-repositories', owner)
   },
+  issues: {
+    listIssueCategory: (category: string) => ipcRenderer.invoke('issues:list-category', category),
+    listViewerIssues: () => ipcRenderer.invoke('issues:list-viewer'),
+    listRepositoryIssues: (owner: string, repo: string) =>
+      ipcRenderer.invoke('issues:list-repository', owner, repo)
+  },
+  pulls: {
+    listPullRequestCategory: (category: string) => ipcRenderer.invoke('pulls:list-category', category),
+    listViewerPullRequests: () => ipcRenderer.invoke('pulls:list-viewer'),
+    listRepositoryPullRequests: (owner: string, repo: string) =>
+      ipcRenderer.invoke('pulls:list-repository', owner, repo)
+  },
   auth: {
     get: () => ipcRenderer.invoke('auth:get'),
     startDeviceFlow: async (onStarted?: (details: unknown) => void) => {
