@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
       },
       plugins: [externalizeDepsPlugin({ exclude: ['@oh-my-github/api'] })],
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           input: resolve(__dirname, 'src/main/index.ts')
         }
       }
@@ -29,7 +29,7 @@ export default defineConfig(({ mode }) => {
     preload: {
       plugins: [externalizeDepsPlugin()],
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           input: resolve(__dirname, 'src/preload/index.ts')
         }
       }
@@ -49,26 +49,26 @@ export default defineConfig(({ mode }) => {
         include: ['monaco-editor', 'stream-monaco', 'shiki']
       },
       build: {
-        rollupOptions: {
+        rolldownOptions: {
           input: resolve(__dirname, 'src/renderer/index.html'),
           output: {
-            manualChunks(id) {
-              if (id.includes('monaco-editor') || id.includes('stream-monaco')) {
-                return 'monaco-editor'
-              }
-
-              if (
-                id.includes('markstream-vue') ||
-                id.includes('stream-markdown') ||
-                id.includes('mermaid') ||
-                id.includes('katex') ||
-                id.includes('shiki') ||
-                id.includes('@shikijs')
-              ) {
-                return 'rich-content'
-              }
-
-              return undefined
+            codeSplitting: {
+              groups: [
+                {
+                  name: 'monaco-editor',
+                  test: (id) => id.includes('monaco-editor') || id.includes('stream-monaco')
+                },
+                {
+                  name: 'rich-content',
+                  test: (id) =>
+                    id.includes('markstream-vue') ||
+                    id.includes('stream-markdown') ||
+                    id.includes('mermaid') ||
+                    id.includes('katex') ||
+                    id.includes('shiki') ||
+                    id.includes('@shikijs')
+                }
+              ]
             }
           }
         }

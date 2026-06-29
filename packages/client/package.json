@@ -49,12 +49,12 @@
     "zod": "^3.25.76"
   },
   "devDependencies": {
-    "@vitejs/plugin-vue": "^6.0.1",
+    "@vitejs/plugin-vue": "^6.0.7",
     "electron": "^42.5.0",
     "electron-builder": "^26.15.3",
-    "electron-vite": "^5.0.0",
+    "electron-vite": "6.0.0-beta.1",
     "typescript": "^5.8.3",
-    "vite": "^7.3.6",
+    "vite": "^8.1.0",
     "vue-tsc": "^3.0.4"
   }
 }
