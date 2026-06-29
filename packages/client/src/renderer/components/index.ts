@@ -1,4 +1,7 @@
 export { default as MonacoCodeEditor } from "./editor/monaco-code-editor.vue";
+export { default as GitHubActorLink } from "./github/github-actor-link.vue";
+export { default as GitHubMarkdownRenderer } from "./github/github-markdown-renderer.vue";
+export { default as GitHubReferenceLink } from "./github/github-reference-link.vue";
 export { default as MarkdownRenderer } from "./markdown/markdown-renderer.vue";
 export { default as MermaidRenderer } from "./mermaid/mermaid-renderer.vue";
 export { default as ShikiCode } from "./code/shiki-code.vue";
@@ -11,6 +14,7 @@ export { default as ConversationReactionBar } from "./conversation/conversation-
 export { default as ConversationTimeline } from "./conversation/conversation-timeline.vue";
 export { default as WorkItemLabelList } from "./work-item/work-item-label-list.vue";
 export { default as WorkItemSidebarSection } from "./work-item/work-item-sidebar-section.vue";
+export { default as WorkItemStateIcon } from "./work-item/work-item-state-icon.vue";
 export { default as WorkItemStateBadge } from "./work-item/work-item-state-badge.vue";
 
 export {
@@ -24,7 +28,17 @@ export type {
   ConversationBadge,
   ConversationComment,
   ConversationReaction,
+  ConversationReference,
   ConversationTimelineEvent,
   ConversationTimelineItem,
 } from "./conversation/types";
-export type { WorkItemLabel, WorkItemLabelInput, WorkItemState } from "./work-item/types";
+export {
+  createAccountWorkspaceUrl,
+  createGitHubAvatarUrl,
+  createReferenceWorkspaceUrl,
+  parseGitHubReferenceUrl,
+  trimUrlCandidate,
+  type ParsedGitHubReference,
+} from "./github/github-reference";
+export type { GitHubMarkdownContext } from "./github/github-markdown-context";
+export type { WorkItemKind, WorkItemLabel, WorkItemLabelInput, WorkItemState } from "./work-item/types";

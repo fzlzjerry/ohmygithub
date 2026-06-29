@@ -23,7 +23,7 @@ const badgeCountVariants = cva(
   // "9+", "99+") get breathing room, because a fixed pad would inflate the single-digit
   // circle. font-bold keeps the tiny white numeral legible on the saturated fill;
   // leading-none + tabular-nums keep it crisp.
-  'inline-flex items-center justify-center rounded-full h-[0.9375rem] min-w-[0.9375rem] text-caption font-bold font-sans tabular-nums leading-none',
+  'inline-flex select-none items-center justify-center rounded-full h-[0.9375rem] min-w-[0.9375rem] text-caption font-bold font-sans tabular-nums leading-none',
   {
     variants: {
       variant: {

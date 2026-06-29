@@ -131,10 +131,10 @@ function refetch(): void {
           <Search />
           {{ t('searchResult.eyebrow') }}
         </Badge>
-        <h1 class="truncate text-heading font-semibold text-foreground">
+        <h1 class="select-none truncate text-heading font-semibold text-foreground">
           {{ t('searchResult.title', { query }) }}
         </h1>
-        <p class="max-w-2xl text-label text-muted-foreground">
+        <p class="max-w-2xl select-none text-label text-muted-foreground">
           {{ t(`searchResult.descriptions.${mode}`) }}
         </p>
       </div>
@@ -210,13 +210,13 @@ function refetch(): void {
                 v-if="group.items.length > 0"
                 class="grid"
               >
-                <div class="border-b border-border px-4 py-2 text-body font-medium text-muted-foreground">
+                <div class="select-none border-b border-border px-4 py-2 text-body font-medium text-muted-foreground">
                   {{ group.title }}
                 </div>
                 <button
                   v-for="item in group.items"
                   :key="`${item.kind}:${item.id}`"
-                  class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] gap-3 p-4 text-left outline-hidden transition-colors hover:bg-[color:var(--ui-hover)] focus-visible:bg-[color:var(--ui-hover)] focus-visible:ring-2 focus-visible:ring-ring/30"
+                  class="grid w-full select-none grid-cols-[auto_minmax(0,1fr)_auto] gap-3 p-4 text-left outline-hidden transition-colors hover:bg-[color:var(--ui-hover)] focus-visible:bg-[color:var(--ui-hover)] focus-visible:ring-2 focus-visible:ring-ring/30"
                   type="button"
                   @click="openItem(item)"
                 >
@@ -259,7 +259,7 @@ function refetch(): void {
             <button
               v-for="item in items"
               :key="`${item.kind}:${item.id}`"
-              class="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] gap-3 p-4 text-left outline-hidden transition-colors hover:bg-[color:var(--ui-hover)] focus-visible:bg-[color:var(--ui-hover)] focus-visible:ring-2 focus-visible:ring-ring/30"
+              class="grid w-full select-none grid-cols-[auto_minmax(0,1fr)_auto] gap-3 p-4 text-left outline-hidden transition-colors hover:bg-[color:var(--ui-hover)] focus-visible:bg-[color:var(--ui-hover)] focus-visible:ring-2 focus-visible:ring-ring/30"
               type="button"
               @click="openItem(item)"
             >

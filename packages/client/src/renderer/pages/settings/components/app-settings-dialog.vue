@@ -68,13 +68,13 @@ function handleOpenChange(isOpen: boolean): void {
           class="min-h-0 flex-1 overflow-auto"
         >
           <div class="space-y-1">
-            <p class="px-2 pb-1 text-caption font-medium text-muted-foreground">
+            <p class="select-none px-2 pb-1 text-caption font-medium text-muted-foreground">
               {{ t('settings.sections.interface') }}
             </p>
             <button
               v-for="tab in tabs"
               :key="tab.id"
-              class="flex h-9 w-full items-center gap-2 rounded-md px-2 text-left text-control outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
+              class="flex h-9 w-full select-none items-center gap-2 rounded-md px-2 text-left text-control outline-hidden transition-colors hover:bg-accent hover:text-accent-foreground focus-visible:ring-2 focus-visible:ring-ring"
               :class="activeTab === tab.id ? 'bg-accent text-accent-foreground' : 'text-muted-foreground'"
               type="button"
               @click="emit('selectTab', tab.id)"
@@ -93,7 +93,7 @@ function handleOpenChange(isOpen: boolean): void {
 
       <section class="min-h-0 overflow-auto p-6 pr-12">
         <header class="mb-6">
-          <h2 class="truncate text-heading font-semibold text-foreground">
+          <h2 class="select-none truncate text-heading font-semibold text-foreground">
             {{ activeTabTitle }}
           </h2>
         </header>

@@ -7,6 +7,7 @@ import type {
 } from './types'
 import { computed } from 'vue'
 import { Card } from '@oh-my-github/ui'
+import GitHubMarkdownRenderer from '../github/github-markdown-renderer.vue'
 import MarkdownRenderer from '../markdown/markdown-renderer.vue'
 import ConversationActorLine from './conversation-actor-line.vue'
 import ConversationReactionBar from './conversation-reaction-bar.vue'
@@ -24,6 +25,8 @@ const props = defineProps<{
   reactions?: ConversationReaction[]
   emptyLabel?: string
   showAvatar?: boolean
+  owner?: string | null
+  repo?: string | null
 }>()
 
 const resolvedCommentId = computed(() => {
@@ -80,9 +83,16 @@ const hasReactions = computed(() => resolvedReactions.value.some((reaction) => r
       class="min-w-0 px-3 py-2"
     >
       <MarkdownRenderer
-        v-if="hasBody"
+        v-if="hasBody && !(owner && repo)"
         class="rich-content-markdown--compact"
         :content="resolvedBody"
+      />
+      <GitHubMarkdownRenderer
+        v-else-if="hasBody"
+        class="rich-content-markdown--compact"
+        :content="resolvedBody"
+        :owner="owner"
+        :repo="repo"
       />
       <p
         v-else-if="emptyLabel"

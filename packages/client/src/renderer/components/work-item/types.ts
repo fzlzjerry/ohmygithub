@@ -5,6 +5,8 @@ export interface WorkItemLabel {
 
 export type WorkItemLabelInput = string | WorkItemLabel
 
+export type WorkItemKind = 'issue' | 'pull-request'
+
 export type WorkItemState =
   | 'open'
   | 'closed'

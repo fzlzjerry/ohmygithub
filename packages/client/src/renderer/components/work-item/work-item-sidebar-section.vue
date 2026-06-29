@@ -8,7 +8,7 @@ defineProps<{
 <template>
   <section class="grid min-w-0 gap-2 border-b border-border py-3 last:border-b-0">
     <header class="flex min-w-0 items-center justify-between gap-2">
-      <h2 class="min-w-0 truncate text-label font-medium text-foreground">
+      <h2 class="min-w-0 select-none truncate text-label font-medium text-foreground">
         {{ title }}
       </h2>
 

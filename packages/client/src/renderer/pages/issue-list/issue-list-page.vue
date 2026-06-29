@@ -47,10 +47,10 @@ const summaryItems = computed(() => [
           <CircleDot />
           {{ t('issueList.eyebrow') }}
         </Badge>
-        <h1 class="truncate text-heading font-semibold text-foreground">
+        <h1 class="select-none truncate text-heading font-semibold text-foreground">
           {{ categoryLabel }}
         </h1>
-        <p class="max-w-2xl text-label text-muted-foreground">
+        <p class="max-w-2xl select-none text-label text-muted-foreground">
           {{ t('issueList.description', { category: categoryLabel }) }}
         </p>
       </div>
@@ -61,7 +61,7 @@ const summaryItems = computed(() => [
           :key="item.id"
           class="grid gap-2 rounded-lg border border-border bg-card p-3"
         >
-          <div class="flex min-w-0 items-center gap-2 text-body font-medium text-muted-foreground">
+          <div class="flex min-w-0 select-none items-center gap-2 text-body font-medium text-muted-foreground">
             <component
               :is="item.icon"
               class="size-4 shrink-0"
@@ -76,7 +76,7 @@ const summaryItems = computed(() => [
 
       <div class="grid gap-2 lg:grid-cols-[minmax(0,1.4fr)_minmax(18rem,0.8fr)]">
         <div class="grid gap-2 rounded-lg border border-border bg-card p-3">
-          <div class="text-label font-medium text-foreground">
+          <div class="select-none text-label font-medium text-foreground">
             {{ t('issueList.sections.overview.title') }}
           </div>
           <p class="text-body text-muted-foreground">
@@ -85,7 +85,7 @@ const summaryItems = computed(() => [
         </div>
 
         <div class="grid gap-2 rounded-lg border border-border bg-card p-3">
-          <div class="text-label font-medium text-foreground">
+          <div class="select-none text-label font-medium text-foreground">
             {{ t('issueList.sections.sidebar.title') }}
           </div>
           <p class="text-body text-muted-foreground">

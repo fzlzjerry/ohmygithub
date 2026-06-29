@@ -3,6 +3,7 @@ import type { WorkspaceMessageParams, WorkspaceTab } from '../types'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Badge } from '@oh-my-github/ui'
+import AccountPage from '../../account/account-page.vue'
 import IssueListPage from '../../issue-list/issue-list-page.vue'
 import IssuePage from '../../issue/issue-page.vue'
 import OrganizationPage from '../../organization/organization-page.vue'
@@ -34,6 +35,11 @@ function translate(key: string, params?: WorkspaceMessageParams): string {
 <template>
   <OrganizationPage
     v-if="tab.type === 'org'"
+    :tab="tab"
+  />
+
+  <AccountPage
+    v-else-if="tab.type === 'account'"
     :tab="tab"
   />
 
@@ -88,10 +94,10 @@ function translate(key: string, params?: WorkspaceMessageParams): string {
           <component :is="view.icon" />
           {{ translate(view.eyebrowKey) }}
         </Badge>
-        <h1 class="truncate text-heading font-semibold text-foreground">
+        <h1 class="select-none truncate text-heading font-semibold text-foreground">
           {{ translate(view.headingKey, view.headingParams) }}
         </h1>
-        <p class="max-w-2xl text-label text-muted-foreground">
+        <p class="max-w-2xl select-none text-label text-muted-foreground">
           {{ translate(view.descriptionKey, view.descriptionParams) }}
         </p>
       </div>
@@ -102,7 +108,7 @@ function translate(key: string, params?: WorkspaceMessageParams): string {
           :key="stat.id"
           class="grid gap-1 rounded-lg border border-border bg-card p-3"
         >
-          <div class="text-body font-medium text-muted-foreground">
+          <div class="select-none text-body font-medium text-muted-foreground">
             {{ translate(stat.labelKey) }}
           </div>
           <div class="truncate text-control font-semibold text-foreground">
@@ -118,10 +124,10 @@ function translate(key: string, params?: WorkspaceMessageParams): string {
           class="grid gap-1 rounded-lg border border-border bg-card p-3"
         >
           <div class="flex min-w-0 items-center gap-2">
-            <div class="min-w-0 flex-1 truncate text-label font-medium text-foreground">
+            <div class="min-w-0 flex-1 select-none truncate text-label font-medium text-foreground">
               {{ translate(block.titleKey) }}
             </div>
-            <div class="shrink-0 text-body text-muted-foreground">
+            <div class="shrink-0 select-none text-body text-muted-foreground">
               {{ translate(block.metaKey) }}
             </div>
           </div>

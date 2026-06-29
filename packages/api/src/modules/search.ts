@@ -1,9 +1,14 @@
 import type { GitHubOctokit } from '../transport'
 import type {
+  GitHubIssueState,
+  GitHubPullRequestState,
+  GitHubRepositoryReferenceKind,
+  GitHubRepositoryReferenceResolution,
   GitHubWorkspaceGotoResult,
   GitHubWorkspaceSearchItem,
   GitHubWorkspaceSearchMode,
   GitHubWorkspaceSearchResult,
+  ResolveRepositoryReferenceOptions,
   SearchWorkspaceOptions,
 } from '../types'
 
@@ -23,6 +28,23 @@ interface RepositoryResponse {
   description?: string | null
   private?: boolean
   updated_at?: string | null
+  html_url?: string | null
+}
+
+interface IssueReferenceResponse {
+  number?: number
+  title?: string | null
+  state?: string | null
+  state_reason?: string | null
+  html_url?: string | null
+  pull_request?: unknown
+}
+
+interface PullRequestReferenceResponse {
+  title?: string | null
+  state?: string | null
+  draft?: boolean | null
+  merged?: boolean | null
   html_url?: string | null
 }
 
@@ -133,6 +155,66 @@ export class SearchApi {
     return this.searchUsers(mode, query, page, perPage)
   }
 
+  async resolveRepositoryReference(
+    options: ResolveRepositoryReferenceOptions,
+  ): Promise<GitHubRepositoryReferenceResolution> {
+    const owner = options.owner.trim()
+    const repo = options.repo.trim()
+    const number = Math.floor(Number(options.number))
+    const repository = `${owner}/${repo}`
+
+    try {
+      const issue = await this.getIssueReference(owner, repo, number)
+      const isPullRequest = Boolean(issue.pull_request)
+      const kind: GitHubRepositoryReferenceKind = isPullRequest ? 'pull-request' : 'issue'
+
+      if (kind === 'pull-request') {
+        const pullRequest = await this.getPullRequestReference(owner, repo, number)
+          .catch(() => null)
+        const title = pullRequest?.title?.trim() || issue.title?.trim() || `${repository}#${number}`
+        const url = pullRequest?.html_url ?? issue.html_url ?? `https://github.com/${repository}/pull/${number}`
+
+        return {
+          status: 'found',
+          owner,
+          repo,
+          repository,
+          number,
+          kind,
+          state: mapPullRequestState(pullRequest, issue),
+          title,
+          url,
+          workspaceUrl: createWorkItemWorkspaceUrl(owner, repo, 'pull-request', number),
+        }
+      }
+
+      return {
+        status: 'found',
+        owner,
+        repo,
+        repository,
+        number,
+        kind,
+        state: mapIssueState(issue),
+        title: issue.title?.trim() || `${repository}#${number}`,
+        url: issue.html_url ?? `https://github.com/${repository}/issues/${number}`,
+        workspaceUrl: createWorkItemWorkspaceUrl(owner, repo, 'issue', number),
+      }
+    } catch (error) {
+      if (isNotFoundError(error)) {
+        return {
+          status: 'not_found',
+          owner,
+          repo,
+          repository,
+          number,
+        }
+      }
+
+      throw error
+    }
+  }
+
   private async searchAll(query: string, page: number, perPage: number): Promise<GitHubWorkspaceSearchResult> {
     const perKind = Math.min(perPage, ALL_SEARCH_PER_KIND_LIMIT)
     const [users, orgs, repos] = await Promise.all([
@@ -224,6 +306,30 @@ export class SearchApi {
 
     return response.data as RepositoryResponse
   }
+
+  private async getIssueReference(owner: string, repo: string, number: number): Promise<IssueReferenceResponse> {
+    const response = await this.octokit.request('GET /repos/{owner}/{repo}/issues/{issue_number}', {
+      owner,
+      repo,
+      issue_number: number,
+    })
+
+    return response.data as IssueReferenceResponse
+  }
+
+  private async getPullRequestReference(
+    owner: string,
+    repo: string,
+    number: number,
+  ): Promise<PullRequestReferenceResponse> {
+    const response = await this.octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', {
+      owner,
+      repo,
+      pull_number: number,
+    })
+
+    return response.data as PullRequestReferenceResponse
+  }
 }
 
 function parseGotoInput(input: string): ParsedGotoInput | null {
@@ -256,6 +362,37 @@ function segmentsToGotoInput(segments: string[]): ParsedGotoInput | null {
 
 function sanitizePathSegment(value: string | undefined): string {
   return String(value ?? '').trim()
+}
+
+function mapIssueState(issue: IssueReferenceResponse): GitHubIssueState {
+  if (issue.state !== 'closed') return 'open'
+  if (issue.state_reason === 'not_planned') return 'not_planned'
+
+  return 'completed'
+}
+
+function mapPullRequestState(
+  pullRequest: PullRequestReferenceResponse | null,
+  issue: IssueReferenceResponse,
+): GitHubPullRequestState {
+  if (pullRequest?.merged) return 'merged'
+  if (pullRequest?.draft) return 'draft'
+  if ((pullRequest?.state ?? issue.state) === 'closed') return 'closed'
+
+  return 'open'
+}
+
+function createWorkItemWorkspaceUrl(
+  owner: string,
+  repo: string,
+  kind: GitHubRepositoryReferenceKind,
+  number: number,
+): string {
+  const ownerPath = encodeURIComponent(owner)
+  const repoPath = encodeURIComponent(repo)
+  const pathKind = kind === 'pull-request' ? 'pull' : 'issues'
+
+  return `/${ownerPath}/${repoPath}/${pathKind}/${encodeURIComponent(String(number))}`
 }
 
 function mapUserSearchItem(user: UserResponse, mode: 'users' | 'orgs'): GitHubWorkspaceSearchItem {

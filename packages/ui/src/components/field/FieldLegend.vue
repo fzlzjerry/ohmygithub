@@ -17,7 +17,7 @@ const props = withDefaults(defineProps<{
     data-slot="field-legend"
     :data-variant="variant"
     :class="cn(
-      'p-0 text-foreground',
+      'select-none p-0 text-foreground',
       variant === 'title' ? 'text-control font-medium' : 'text-label font-medium',
       props.class,
     )"

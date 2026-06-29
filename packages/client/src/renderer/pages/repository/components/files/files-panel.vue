@@ -64,6 +64,8 @@ async function selectFile(item: GitHubRepositoryFileNode): Promise<void> {
   openRightPanel({
     type: 'markdown',
     content: t('repository.files.preview.loading'),
+    owner: props.owner,
+    repo: props.repo,
     title: item.path,
   })
 
@@ -94,6 +96,8 @@ function toRightPanelContent(preview: GitHubRepositoryFilePreview) {
     return {
       type: 'markdown' as const,
       content: preview.content,
+      owner: props.owner,
+      repo: props.repo,
       title: preview.title,
     }
   }
@@ -155,7 +159,7 @@ watch(
     <header class="flex min-h-11 items-center justify-between gap-3 border-b border-border px-4">
       <div class="flex min-w-0 items-center gap-2">
         <Folder class="size-4 shrink-0 text-muted-foreground" />
-        <h2 class="truncate text-label font-medium text-foreground">
+        <h2 class="select-none truncate text-label font-medium text-foreground">
           {{ t('repository.files.title') }}
         </h2>
       </div>

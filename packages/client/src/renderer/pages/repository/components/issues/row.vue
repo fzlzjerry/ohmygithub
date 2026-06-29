@@ -1,18 +1,10 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  CircleCheck,
-  CircleDot,
-  CircleSlash,
-} from 'lucide-vue-next'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Badge,
 } from '@oh-my-github/ui'
+import { GitHubActorLink, WorkItemStateIcon } from '../../../../components'
 
 const props = defineProps<{
   issue: GitHubIssue
@@ -24,23 +16,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const stateIcon = computed<Component>(() => {
-  if (props.issue.state === 'completed') return CircleCheck
-  if (props.issue.state === 'not_planned') return CircleSlash
-
-  return CircleDot
-})
-
-const stateIconClass = computed(() => {
-  if (props.issue.state === 'completed') return 'text-[color:var(--accent-purple)]'
-  if (props.issue.state === 'not_planned') return 'text-muted-foreground'
-
-  return 'text-success'
-})
-
 const stateLabel = computed(() => t(`repository.issues.states.${props.issue.state}`))
 const updatedAt = computed(() => formatDate(props.issue.updatedAt))
-const authorFallback = computed(() => props.issue.author.login.slice(0, 2).toUpperCase())
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -56,17 +33,19 @@ function selectIssue(): void {
 </script>
 
 <template>
-  <button
+  <div
     class="grid w-full grid-cols-[auto_minmax(0,1fr)] gap-3 p-4 text-left outline-hidden transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/30"
-    type="button"
+    role="button"
+    tabindex="0"
     @click="selectIssue"
+    @keydown.enter.prevent="selectIssue"
+    @keydown.space.prevent="selectIssue"
   >
     <div class="relative mt-0.5 flex size-5 items-center justify-center">
-      <component
-        :is="stateIcon"
-        class="size-4"
-        :class="stateIconClass"
-        :stroke-width="1.8"
+      <WorkItemStateIcon
+        kind="issue"
+        size="md"
+        :state="issue.state"
       />
       <span
         v-if="issue.hasUpdates"
@@ -88,19 +67,11 @@ function selectIssue(): void {
               {{ stateLabel }}
             </Badge>
             <span>{{ t('repository.issues.meta.updated', { date: updatedAt }) }}</span>
-            <span class="inline-flex min-w-0 items-center gap-1">
-              <Avatar class="size-4">
-                <AvatarImage
-                  v-if="issue.author.avatarUrl"
-                  :alt="issue.author.login"
-                  :src="issue.author.avatarUrl"
-                />
-                <AvatarFallback class="text-[9px]">
-                  {{ authorFallback }}
-                </AvatarFallback>
-              </Avatar>
-              <span class="truncate">{{ issue.author.login }}</span>
-            </span>
+            <GitHubActorLink
+              avatar-size="xs"
+              :avatar-url="issue.author.avatarUrl"
+              :login="issue.author.login"
+            />
           </div>
         </div>
       </div>
@@ -119,5 +90,5 @@ function selectIssue(): void {
         </Badge>
       </div>
     </div>
-  </button>
+  </div>
 </template>

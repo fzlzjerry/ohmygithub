@@ -18,7 +18,7 @@ defineProps<{
         class="mt-0.5 size-4 shrink-0 text-muted-foreground"
       />
       <div class="grid min-w-0 gap-1">
-        <div class="truncate text-body text-muted-foreground">
+        <div class="select-none truncate text-body text-muted-foreground">
           {{ item.label }}
         </div>
         <a

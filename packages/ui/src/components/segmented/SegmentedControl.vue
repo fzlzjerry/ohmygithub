@@ -97,7 +97,7 @@ function clearPress() {
     data-slot="segmented"
     role="radiogroup"
     :aria-label="ariaLabel"
-    :class="cn(props.class)"
+    :class="cn('select-none', props.class)"
   >
     <div
       data-segment-thumb

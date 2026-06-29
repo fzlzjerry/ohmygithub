@@ -5,6 +5,7 @@
       "eyebrow": "调试",
       "sample": {
         "body": "这个 Markdown 预览会复用统一的代码渲染器，并通过 Mermaid renderer 渲染流程图。",
+        "githubSyntax": "GitHub 语法：@sheepbox8646、#595、https://github.com/memohai/Memoh/issues/595，以及 [linked PR](https://github.com/memohai/Memoh/pull/595)。行内代码保持原样：`#595 @sheepbox8646 https://github.com/memohai/Memoh/issues/595`。",
         "heading": "Markdown 预览",
         "inlineMath": "行内公式",
         "mermaid": {
@@ -202,6 +203,28 @@
     },
     "values": {
       "placeholder": "未接入"
+    }
+  },
+  "account": {
+    "empty": {
+      "description": "打开带有 GitHub login 的账号 tab 后，才会加载个人资料。",
+      "title": "账号不可用"
+    },
+    "error": {
+      "description": "无法从 GitHub 加载账号资料。请检查连接后重试。",
+      "retry": "重试",
+      "title": "无法加载账号"
+    },
+    "eyebrow": "账号",
+    "profile": {
+      "blog": "网站",
+      "company": "公司",
+      "followers": "关注者",
+      "following": "正在关注",
+      "githubProfile": "在 GitHub 打开",
+      "location": "位置",
+      "publicRepos": "公开仓库",
+      "type": "{type}"
     }
   },
   "repository": {
@@ -520,6 +543,8 @@
     "loading": "正在加载 Issue...",
     "meta": {
       "createdBy": "{author} 于 {date} 打开",
+      "createdByDate": "于 {date} 打开",
+      "createdByPrefix": "由",
       "updated": "更新于 {date}"
     },
     "sections": {
@@ -569,6 +594,7 @@
       "assigned": "指派给 {target}",
       "closed": "关闭了这个 Issue",
       "crossReferenced": "引用了 {source}",
+      "crossReferencedAction": "引用了",
       "generic": "更新了时间线",
       "labeled": "添加了 {label}",
       "mentioned": "提及了这个 Issue",

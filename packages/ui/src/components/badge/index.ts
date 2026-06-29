@@ -11,7 +11,7 @@ export const badgeVariants = cva(
   // adapts in dark mode (the ramp flips to a translucent dark tint + light text), so
   // one set of tokens covers both themes. Box metrics (px/py) live in `size`; text
   // size is size-invariant (text-caption) so it sits here in the base.
-  'inline-flex items-center justify-center rounded-full text-caption font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-colors overflow-hidden',
+  'inline-flex select-none items-center justify-center rounded-full text-caption font-medium w-fit whitespace-nowrap shrink-0 [&>svg]:size-3 gap-1 [&>svg]:pointer-events-none transition-colors overflow-hidden',
   {
     variants: {
       variant: {

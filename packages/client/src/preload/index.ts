@@ -7,6 +7,7 @@ const api = {
     version: '0.1.0'
   },
   accounts: {
+    getProfile: (login: string) => ipcRenderer.invoke('accounts:get-profile', login),
     listOrganizations: () => ipcRenderer.invoke('accounts:list-organizations'),
     listOrganizationRepositories: (owner: string) =>
       ipcRenderer.invoke('accounts:list-organization-repositories', owner)
@@ -47,6 +48,8 @@ const api = {
   },
   search: {
     resolveGoto: (input: string) => ipcRenderer.invoke('search:resolve-goto', input),
+    resolveRepositoryReference: (options: unknown) =>
+      ipcRenderer.invoke('search:resolve-repository-reference', options),
     searchWorkspace: (options: unknown) => ipcRenderer.invoke('search:workspace', options)
   },
   auth: {

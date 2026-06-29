@@ -2,6 +2,7 @@
 import type { IssueDetail } from './types'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import {
   Button,
   DropdownMenu,
@@ -10,7 +11,7 @@ import {
   DropdownMenuTrigger,
 } from '@oh-my-github/ui'
 import { Copy, ExternalLink, MoreHorizontal } from 'lucide-vue-next'
-import { WorkItemStateBadge } from '../../../components'
+import { GitHubActorLink, WorkItemStateBadge } from '../../../components'
 
 const props = defineProps<{
   issue: IssueDetail
@@ -18,6 +19,7 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 const issueNumber = computed(() => `#${props.issue.number}`)
 const createdAt = computed(() => formatDate(props.issue.createdAt))
@@ -27,23 +29,27 @@ const stateLabel = computed(() => {
 
   return t(`issue.states.${state}`)
 })
-const authorLogin = computed(() => props.issue.author.login)
-const createdMeta = computed(() =>
-  t('issue.meta.createdBy', {
-    author: authorLogin.value,
-    date: createdAt.value,
-  })
-)
 const updatedMeta = computed(() =>
   t('issue.meta.updated', {
     date: updatedAt.value,
   })
+)
+const repositoryUrl = computed(() =>
+  props.issue.owner && props.issue.repo
+    ? `/${encodeURIComponent(props.issue.owner)}/${encodeURIComponent(props.issue.repo)}`
+    : null
 )
 
 async function copyIssueUrl(): Promise<void> {
   if (!props.issue.url || !navigator.clipboard) return
 
   await navigator.clipboard.writeText(props.issue.url)
+}
+
+function openRepository(): void {
+  if (!repositoryUrl.value) return
+
+  void router.push(repositoryUrl.value)
 }
 
 function formatDate(value: string | null | undefined): string {
@@ -72,10 +78,22 @@ function normalizeState(state: string): 'open' | 'completed' | 'not_planned' | '
       <div class="grid min-w-0 gap-2">
         <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <WorkItemStateBadge
+            kind="issue"
             :label="stateLabel"
             :state="issue.state"
           />
-          <span class="truncate text-body text-muted-foreground">
+          <button
+            v-if="repositoryUrl"
+            class="truncate rounded-sm text-body text-muted-foreground outline-hidden underline-offset-4 hover:text-foreground hover:underline focus-visible:text-foreground focus-visible:underline focus-visible:ring-2 focus-visible:ring-ring/30"
+            type="button"
+            @click="openRepository"
+          >
+            {{ repository }} {{ issueNumber }}
+          </button>
+          <span
+            v-else
+            class="truncate text-body text-muted-foreground"
+          >
             {{ repository }} {{ issueNumber }}
           </span>
         </div>
@@ -123,7 +141,14 @@ function normalizeState(state: string): 'open' | 'completed' | 'not_planned' | '
     </div>
 
     <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-body text-muted-foreground">
-      <span class="truncate">{{ createdMeta }}</span>
+      <span class="shrink-0">{{ t('issue.meta.createdByPrefix') }}</span>
+      <GitHubActorLink
+        class="text-body"
+        :avatar-url="issue.author.avatarUrl"
+        :login="issue.author.login"
+        :show-avatar="false"
+      />
+      <span class="truncate">{{ t('issue.meta.createdByDate', { date: createdAt }) }}</span>
       <span aria-hidden="true">·</span>
       <span class="truncate">{{ updatedMeta }}</span>
     </div>

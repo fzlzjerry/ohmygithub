@@ -131,8 +131,8 @@ function resolveErrorMessage(error: unknown): string {
     <Card class="w-full max-w-sm">
       <CardContent class="grid gap-4">
         <div class="grid gap-2 text-center">
-          <h1 class="text-title font-semibold text-foreground">{{ t('auth.title') }}</h1>
-          <p class="text-body text-muted-foreground">{{ t('auth.subtitle') }}</p>
+          <h1 class="select-none text-title font-semibold text-foreground">{{ t('auth.title') }}</h1>
+          <p class="select-none text-body text-muted-foreground">{{ t('auth.subtitle') }}</p>
         </div>
 
         <Button
@@ -161,8 +161,8 @@ function resolveErrorMessage(error: unknown): string {
           v-if="!showTokenForm && deviceCode"
           class="grid gap-2 rounded-lg border border-border bg-card p-4 text-center"
         >
-          <p class="text-body text-muted-foreground">{{ t('auth.browserOpened') }}</p>
-          <div class="rounded-md bg-accent px-3 py-2 text-title font-semibold text-foreground">
+          <p class="select-none text-body text-muted-foreground">{{ t('auth.browserOpened') }}</p>
+          <div class="select-text rounded-md bg-accent px-3 py-2 text-title font-semibold text-foreground">
             {{ deviceCode }}
           </div>
           <Button

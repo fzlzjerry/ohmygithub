@@ -4,9 +4,6 @@ import type { IssueDetail } from './components/types'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Button,
   Empty,
   EmptyDescription,
@@ -21,6 +18,7 @@ import {
   ConversationCommentCard,
   ConversationEventRow,
   ConversationTimeline,
+  GitHubActorLink,
 } from '../../components'
 import { createIssueComment, useIssueDetailQuery } from '../../composables/github/use-issues'
 import IssueCommentComposer from './components/issue-comment-composer.vue'
@@ -63,10 +61,6 @@ const showUnavailable = computed(() =>
 
 function retryIssue(): void {
   void issueQuery.refetch()
-}
-
-function actorFallback(actor: { login: string }): string {
-  return actor.login.slice(0, 1).toUpperCase()
 }
 
 async function submitIssueComment(): Promise<void> {
@@ -192,6 +186,8 @@ async function submitIssueComment(): Promise<void> {
               :body="issue.body ?? ''"
               :created-at="issue.createdAt"
               :empty-label="t('issue.empty.body')"
+              :owner="owner"
+              :repo="repo"
               :reactions="issue.reactions ?? []"
               :updated-at="issue.updatedAt"
             />
@@ -210,17 +206,13 @@ async function submitIssueComment(): Promise<void> {
                       v-if="item.kind === 'comment'"
                       class="grid min-w-0 grid-cols-[2rem_minmax(0,1fr)] gap-3"
                     >
-                      <div class="flex justify-center pt-1">
-                        <Avatar class="size-8 border border-border bg-background">
-                          <AvatarImage
-                            v-if="item.actor.avatarUrl"
-                            :alt="item.actor.login"
-                            :src="item.actor.avatarUrl"
-                          />
-                          <AvatarFallback class="text-caption">
-                            {{ actorFallback(item.actor) }}
-                          </AvatarFallback>
-                        </Avatar>
+                      <div class="flex h-10 items-center justify-center">
+                        <GitHubActorLink
+                          avatar-size="lg"
+                          :avatar-url="item.actor.avatarUrl"
+                          :login="item.actor.login"
+                          :show-username="false"
+                        />
                       </div>
                       <ConversationCommentCard
                         :actor="item.actor"
@@ -228,6 +220,8 @@ async function submitIssueComment(): Promise<void> {
                         :body="item.body"
                         :comment-id="item.commentId"
                         :created-at="item.createdAt"
+                        :owner="owner"
+                        :repo="repo"
                         :reactions="item.reactions"
                         :show-avatar="false"
                         :updated-at="item.updatedAt"
@@ -250,6 +244,8 @@ async function submitIssueComment(): Promise<void> {
                   v-model="commentBody"
                   :error="commentError"
                   :is-submitting="isSubmittingComment"
+                  :owner="owner"
+                  :repo="repo"
                   @submit="submitIssueComment"
                 />
               </div>

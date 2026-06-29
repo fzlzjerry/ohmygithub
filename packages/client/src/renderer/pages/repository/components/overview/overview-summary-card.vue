@@ -21,7 +21,7 @@ const { t } = useI18n()
   <section class="overflow-hidden rounded-xl border border-border bg-card">
     <div class="grid gap-4 p-4">
       <div class="flex min-w-0 items-center justify-between gap-3">
-        <h2 class="truncate text-label font-medium text-foreground">
+        <h2 class="select-none truncate text-label font-medium text-foreground">
           {{ t('repository.overview.title') }}
         </h2>
         <a
@@ -78,7 +78,7 @@ const { t } = useI18n()
         >
           <AlertTriangle class="mt-0.5 size-4 shrink-0 text-warning" />
           <div class="grid gap-1">
-            <div class="font-medium">
+            <div class="select-none font-medium">
               {{ t('repository.overview.missingScopes.title') }}
             </div>
             <p class="text-muted-foreground">
@@ -128,7 +128,7 @@ const { t } = useI18n()
           v-if="overview.customProperties.length > 0"
           class="grid gap-2 rounded-lg border border-border p-3"
         >
-          <div class="text-body font-medium text-muted-foreground">
+          <div class="select-none text-body font-medium text-muted-foreground">
             {{ t('repository.overview.customProperties') }}
           </div>
           <div class="grid gap-1 sm:grid-cols-2">

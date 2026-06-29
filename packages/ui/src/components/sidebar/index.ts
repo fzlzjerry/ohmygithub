@@ -38,7 +38,7 @@ export { useSidebar } from './utils'
 
 export const sidebarMenuButtonVariants = cva(
   [
-    'peer/menu-button relative flex w-full items-center gap-2 overflow-hidden rounded-lg p-2 text-left outline-hidden ring-sidebar-ring text-muted-foreground',
+    'peer/menu-button relative flex w-full select-none items-center gap-2 overflow-hidden rounded-lg p-2 text-left outline-hidden ring-sidebar-ring text-muted-foreground',
     'transition-[width,height,padding] focus-visible:ring-2',
     'disabled:pointer-events-none disabled:opacity-40 aria-disabled:pointer-events-none aria-disabled:opacity-40',
     'group-has-data-[sidebar=menu-action]/menu-item:pr-8',

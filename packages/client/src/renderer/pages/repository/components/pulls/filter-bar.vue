@@ -57,7 +57,7 @@ function updateSearch(value: string | number): void {
       <label
         v-for="option in stateOptions"
         :key="option.value"
-        class="flex h-8 items-center gap-2 text-body font-medium text-foreground"
+        class="flex h-8 select-none items-center gap-2 text-body font-medium text-foreground"
         :class="disabled ? 'cursor-not-allowed opacity-40' : 'cursor-pointer'"
       >
         <RadioGroupItem :value="option.value" />

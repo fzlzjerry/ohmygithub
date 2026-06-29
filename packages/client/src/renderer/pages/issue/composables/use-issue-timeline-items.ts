@@ -7,7 +7,12 @@ import type {
   IssueTimelineItem,
   IssueTimelineReference,
 } from '../components/types'
-import type { ConversationActor, ConversationReaction, ConversationTimelineEvent } from '../../../components'
+import type {
+  ConversationActor,
+  ConversationReaction,
+  ConversationReference,
+  ConversationTimelineEvent,
+} from '../../../components'
 import { computed, toValue } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -21,6 +26,7 @@ import {
   UserMinus,
   UserPlus,
 } from 'lucide-vue-next'
+import { parseGitHubReferenceUrl } from '../../../components/github/github-reference'
 
 export function useIssueTimelineItems(
   issue: MaybeRefOrGetter<IssueDetail | null | undefined>,
@@ -46,7 +52,7 @@ export function useIssueTimelineItems(
     const events = (currentIssue.timelineEvents ?? []).map<IssueTimelineItem>((event) => ({
       id: `event-${event.id}`,
       kind: 'event',
-      event: toConversationEvent(event, t),
+      event: toConversationEvent(event, currentIssue, t),
     }))
 
     return [...comments, ...events].sort((left, right) =>
@@ -76,8 +82,13 @@ function toConversationReactions(
   }))
 }
 
-function toConversationEvent(event: IssueTimelineEvent, t: Translate): ConversationTimelineEvent {
+function toConversationEvent(
+  event: IssueTimelineEvent,
+  currentIssue: IssueDetail,
+  t: Translate,
+): ConversationTimelineEvent {
   const eventConfig = timelineEventConfig(event)
+  const reference = toConversationReference(event.source, currentIssue)
 
   return {
     id: String(event.id),
@@ -85,7 +96,8 @@ function toConversationEvent(event: IssueTimelineEvent, t: Translate): Conversat
     createdAt: event.createdAt,
     icon: eventConfig.icon,
     iconClass: eventConfig.iconClass,
-    text: timelineEventText(event, t),
+    text: timelineEventText(event, t, Boolean(reference)),
+    reference,
   }
 }
 
@@ -113,7 +125,7 @@ function timelineEventConfig(event: IssueTimelineEvent): Pick<ConversationTimeli
   }
 }
 
-function timelineEventText(event: IssueTimelineEvent, t: Translate): string {
+function timelineEventText(event: IssueTimelineEvent, t: Translate, hasReference = false): string {
   const fallback = event.text?.trim() || event.body?.trim() || t('issue.timeline.generic')
 
   switch (event.type) {
@@ -135,12 +147,54 @@ function timelineEventText(event: IssueTimelineEvent, t: Translate): string {
         to: event.to ?? t('issue.values.unknown'),
       })
     case 'cross-referenced':
+      if (hasReference) return t('issue.timeline.crossReferencedAction')
+
       return t('issue.timeline.crossReferenced', { source: referenceText(event.source, t) })
     case 'mentioned':
       return t('issue.timeline.mentioned')
     default:
       return fallback
   }
+}
+
+function toConversationReference(
+  source: IssueTimelineReference | string | null | undefined,
+  currentIssue: IssueDetail,
+): ConversationReference | null {
+  if (!source || typeof source === 'string') return null
+
+  const parsedUrl = source.url ? parseGitHubReferenceUrl(source.url) : null
+  const [sourceOwner, sourceRepo] = splitRepository(source.repository)
+  const owner = parsedUrl?.owner ?? sourceOwner ?? currentIssue.owner
+  const repo = parsedUrl?.repo ?? sourceRepo ?? currentIssue.repo
+  const number = parsedUrl?.number ?? source.number ?? null
+
+  if (!owner || !repo || !number || number <= 0) return null
+
+  const kindHint = parsedUrl?.kindHint ?? normalizeReferenceKind(source.type)
+
+  return {
+    owner,
+    repo,
+    number,
+    kindHint,
+    kind: kindHint,
+    title: source.title ?? null,
+    url: source.url ?? parsedUrl?.url ?? null,
+  }
+}
+
+function normalizeReferenceKind(type: IssueTimelineReference['type']): GitHubRepositoryReferenceKind | undefined {
+  if (type === 'pull-request') return 'pull-request'
+  if (type === 'issue') return 'issue'
+
+  return undefined
+}
+
+function splitRepository(repository: string | null | undefined): [string | null, string | null] {
+  const [owner, repo] = String(repository ?? '').split('/')
+
+  return owner && repo ? [owner, repo] : [null, null]
 }
 
 function labelName(label: IssueTimelineEvent['label'], t: Translate): string {

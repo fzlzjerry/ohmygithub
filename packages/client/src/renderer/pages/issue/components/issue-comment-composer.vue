@@ -6,14 +6,18 @@ import {
   Textarea,
 } from '@oh-my-github/ui'
 import { Send } from 'lucide-vue-next'
-import { MarkdownRenderer } from '../../../components'
+import { GitHubMarkdownRenderer, MarkdownRenderer } from '../../../components'
 
 const props = withDefaults(defineProps<{
   modelValue: string
   isSubmitting?: boolean
   error?: string | null
+  owner?: string | null
+  repo?: string | null
 }>(), {
   error: null,
+  owner: null,
+  repo: null,
 })
 
 const emit = defineEmits<{
@@ -44,7 +48,7 @@ function submitComment(): void {
   >
     <div class="grid min-w-0 gap-3 md:grid-cols-2">
       <div class="grid min-w-0 gap-1.5">
-        <div class="text-label font-medium text-foreground">
+        <div class="select-none text-label font-medium text-foreground">
           {{ t('issue.comment.write') }}
         </div>
         <Textarea
@@ -58,14 +62,21 @@ function submitComment(): void {
       </div>
 
       <div class="grid min-w-0 gap-1.5">
-        <div class="text-label font-medium text-foreground">
+        <div class="select-none text-label font-medium text-foreground">
           {{ t('issue.comment.preview') }}
         </div>
         <div class="min-h-32 min-w-0 overflow-auto rounded-md border border-border bg-background/60 p-3">
           <MarkdownRenderer
-            v-if="hasBody"
+            v-if="hasBody && !(owner && repo)"
             class="rich-content-markdown--compact"
             :content="body"
+          />
+          <GitHubMarkdownRenderer
+            v-else-if="hasBody"
+            class="rich-content-markdown--compact"
+            :content="body"
+            :owner="owner"
+            :repo="repo"
           />
           <p
             v-else

@@ -14,7 +14,7 @@ withDefaults(defineProps<{
     >
       <h3
         v-if="title"
-        class="text-caption font-medium text-muted-foreground"
+        class="select-none text-caption font-medium text-muted-foreground"
       >
         {{ title }}
       </h3>

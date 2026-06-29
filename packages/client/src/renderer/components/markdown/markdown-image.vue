@@ -21,16 +21,13 @@ const displaySrc = computed(() => fallbackSrc.value ?? props.node.src)
 const imageStyle = computed(() => {
   const height = dimensionAttributeToCssValue(rawAttributeValue('height'))
   const width = dimensionAttributeToCssValue(rawAttributeValue('width'))
-  const style: Record<string, string> = {}
-
-  if (height) {
-    style.height = height
-    if (!width) style.width = 'auto'
+  const style: Record<string, string> = {
+    height: 'auto',
+    maxWidth: '100%',
   }
 
-  if (width) {
-    style.width = width
-  }
+  if (width) style.width = width
+  else if (height) style.maxHeight = height
 
   return style
 })

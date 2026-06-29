@@ -18,6 +18,17 @@ export interface ConversationBadge {
   variant?: BadgeVariants['variant']
 }
 
+export interface ConversationReference {
+  owner: string
+  repo: string
+  number: number
+  kindHint?: GitHubRepositoryReferenceKind
+  title?: string | null
+  state?: GitHubRepositoryReferenceState | null
+  kind?: GitHubRepositoryReferenceKind | null
+  url?: string | null
+}
+
 export interface ConversationComment {
   id?: string | number
   actor?: ConversationActor | null
@@ -36,6 +47,7 @@ export interface ConversationTimelineEvent {
   text: string
   actor?: ConversationActor | null
   createdAt?: string | null
+  reference?: ConversationReference | null
 }
 
 export interface ConversationTimelineItem {

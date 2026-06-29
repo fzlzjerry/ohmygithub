@@ -42,6 +42,24 @@ type GitHubOrganization = {
   description: string | null
 }
 
+type GitHubAccountProfileType = 'User' | 'Organization' | 'Bot' | (string & {})
+
+type GitHubAccountProfile = {
+  id: number
+  login: string
+  name: string | null
+  avatarUrl: string
+  bio: string | null
+  company: string | null
+  location: string | null
+  blog: string | null
+  url: string
+  followers: number
+  following: number
+  publicRepos: number
+  type: GitHubAccountProfileType
+}
+
 type GitHubRepository = {
   id: number
   name: string
@@ -262,6 +280,31 @@ type GitHubIssueState = 'open' | 'completed' | 'not_planned'
 
 type GitHubIssueSearchState = 'open' | 'closed' | 'all'
 
+type GitHubRepositoryReferenceKind = 'issue' | 'pull-request'
+
+type GitHubRepositoryReferenceState = GitHubIssueState | GitHubPullRequestState
+
+type GitHubRepositoryReferenceResolution =
+  | {
+      status: 'found'
+      owner: string
+      repo: string
+      repository: string
+      number: number
+      kind: GitHubRepositoryReferenceKind
+      state: GitHubRepositoryReferenceState
+      title: string
+      url: string
+      workspaceUrl: string
+    }
+  | {
+      status: 'not_found'
+      owner: string
+      repo: string
+      repository: string
+      number: number
+    }
+
 type GitHubPullRequestCategory = 'created-by-me' | 'needs-review' | 'inbox' | 'mentioned-me'
 
 type GitHubIssueCategory = 'created-by-me' | 'inbox' | 'mentioned-me'
@@ -301,6 +344,13 @@ type SearchWorkspaceOptions = {
   query: string
   page?: number
   perPage?: number
+}
+
+type ResolveRepositoryReferenceOptions = {
+  owner: string
+  repo: string
+  number: number
+  kindHint?: GitHubRepositoryReferenceKind
 }
 
 type GitHubPullRequestSearchResult = {
@@ -457,6 +507,7 @@ interface Window {
       version: string
     }
     accounts: {
+      getProfile: (login: string) => Promise<GitHubAccountProfile>
       listOrganizations: () => Promise<GitHubOrganization[]>
       listOrganizationRepositories: (owner: string) => Promise<GitHubRepository[]>
     }
@@ -496,6 +547,9 @@ interface Window {
     }
     search: {
       resolveGoto: (input: string) => Promise<GitHubWorkspaceGotoResult>
+      resolveRepositoryReference: (
+        options: ResolveRepositoryReferenceOptions
+      ) => Promise<GitHubRepositoryReferenceResolution>
       searchWorkspace: (options: SearchWorkspaceOptions) => Promise<GitHubWorkspaceSearchResult>
     }
     auth: {

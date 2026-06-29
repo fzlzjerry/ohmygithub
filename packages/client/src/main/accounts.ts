@@ -4,10 +4,23 @@ import { getAuthenticatedAccessToken } from './auth'
 import { resolveGitHubProxyUrl } from './proxy'
 
 export function registerAccountsIpc(): void {
+  ipcMain.handle('accounts:get-profile', (_event, login: string) => getAccountProfile(login))
   ipcMain.handle('accounts:list-organizations', () => listViewerOrganizations())
   ipcMain.handle('accounts:list-organization-repositories', (_event, owner: string) =>
     listOrganizationRepositories(owner)
   )
+}
+
+async function getAccountProfile(login: string) {
+  const normalizedLogin = String(login ?? '').trim()
+
+  if (!normalizedLogin) {
+    throw new Error('Account login is required')
+  }
+
+  const api = await createAuthenticatedGitHubApi()
+
+  return api.accounts.getProfile(normalizedLogin)
 }
 
 async function listViewerOrganizations() {

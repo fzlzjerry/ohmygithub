@@ -10,9 +10,11 @@ defineProps<{
   hasOverviewError: boolean
   isOverviewLoading: boolean
   missingScopesText: string
+  owner: string
   overview: GitHubRepositoryOverview | null
   overviewDescription: string
   overviewInfoItems: RepositoryOverviewInfoItem[]
+  repo: string
 }>()
 
 const emit = defineEmits<{
@@ -36,7 +38,9 @@ const emit = defineEmits<{
     :available-documents="availableDocuments"
     :has-overview-error="hasOverviewError"
     :is-overview-loading="isOverviewLoading"
+    :owner="owner"
     :overview="overview"
+    :repo="repo"
     @update:active-document-kind="emit('update:activeDocumentKind', $event)"
   />
 </template>

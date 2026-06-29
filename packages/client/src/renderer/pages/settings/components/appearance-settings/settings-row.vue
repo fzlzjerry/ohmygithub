@@ -10,7 +10,7 @@ withDefaults(defineProps<{
 <template>
   <div class="mx-4 flex min-h-[3.75rem] items-center justify-between gap-4 border-b border-border py-3 last:border-b-0">
     <div class="min-w-0">
-      <div class="text-control font-medium text-foreground">
+      <div class="select-none text-control font-medium text-foreground">
         {{ label }}
       </div>
       <p

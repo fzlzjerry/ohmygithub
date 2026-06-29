@@ -2,6 +2,7 @@
 import type { ConversationActor, ConversationBadge, ConversationReaction } from './types'
 import { computed } from 'vue'
 import { Card } from '@oh-my-github/ui'
+import GitHubMarkdownRenderer from '../github/github-markdown-renderer.vue'
 import MarkdownRenderer from '../markdown/markdown-renderer.vue'
 import ConversationActorLine from './conversation-actor-line.vue'
 import ConversationReactionBar from './conversation-reaction-bar.vue'
@@ -16,6 +17,8 @@ const props = defineProps<{
   badges?: ConversationBadge[]
   reactions?: ConversationReaction[]
   emptyLabel?: string
+  owner?: string | null
+  repo?: string | null
 }>()
 
 const resolvedActor = computed(() => props.actor ?? props.author ?? null)
@@ -54,9 +57,16 @@ const hasReactions = computed(() => resolvedReactions.value.some((reaction) => r
       class="min-w-0 px-3 py-2"
     >
       <MarkdownRenderer
-        v-if="hasBody"
+        v-if="hasBody && !(owner && repo)"
         class="rich-content-markdown--compact"
         :content="resolvedBody"
+      />
+      <GitHubMarkdownRenderer
+        v-else-if="hasBody"
+        class="rich-content-markdown--compact"
+        :content="resolvedBody"
+        :owner="owner"
+        :repo="repo"
       />
       <p
         v-else-if="emptyLabel"

@@ -18,7 +18,7 @@ const forwardedProps = useForwardProps(delegatedProps)
     :class="cn(
       // shared shell — the active indicator is the sliding bar / thumb owned by
       // TabsList, so the trigger itself only carries text + layout.
-      'inline-flex cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap transition-colors',
+      'inline-flex cursor-pointer select-none items-center justify-center gap-1.5 whitespace-nowrap transition-colors',
       'disabled:pointer-events-none disabled:opacity-40',
       '[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*=size-])]:size-4',
       // underline skin (keyed off the list root) — transparent border keeps the

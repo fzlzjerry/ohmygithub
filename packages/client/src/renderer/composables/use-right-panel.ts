@@ -11,6 +11,8 @@ export type RightPanelContent =
   | {
       type: 'markdown'
       content: string
+      owner?: string | null
+      repo?: string | null
       title?: string
     }
   | {

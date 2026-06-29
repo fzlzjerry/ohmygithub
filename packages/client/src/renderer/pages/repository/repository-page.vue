@@ -451,9 +451,11 @@ watch(
           :has-overview-error="hasOverviewError"
           :is-overview-loading="isOverviewLoading"
           :missing-scopes-text="missingScopesText"
+          :owner="owner"
           :overview="overview"
           :overview-description="overviewDescription"
           :overview-info-items="overviewInfoItems"
+          :repo="repository"
         />
 
         <FilesPanel

@@ -5,6 +5,7 @@
       "eyebrow": "Debug",
       "sample": {
         "body": "This Markdown preview uses the shared code renderer and the Mermaid renderer.",
+        "githubSyntax": "GitHub syntax: @sheepbox8646, #595, https://github.com/memohai/Memoh/issues/595, and [linked PR](https://github.com/memohai/Memoh/pull/595). Inline code stays literal: `#595 @sheepbox8646 https://github.com/memohai/Memoh/issues/595`.",
         "heading": "Markdown preview",
         "inlineMath": "Inline math",
         "mermaid": {
@@ -202,6 +203,28 @@
     },
     "values": {
       "placeholder": "Not connected"
+    }
+  },
+  "account": {
+    "empty": {
+      "description": "Open an account tab with a GitHub login to load the profile.",
+      "title": "Account is not available"
+    },
+    "error": {
+      "description": "GitHub profile data could not be loaded. Check the connection and try again.",
+      "retry": "Retry",
+      "title": "Could not load account"
+    },
+    "eyebrow": "Account",
+    "profile": {
+      "blog": "Website",
+      "company": "Company",
+      "followers": "Followers",
+      "following": "Following",
+      "githubProfile": "Open on GitHub",
+      "location": "Location",
+      "publicRepos": "Public repositories",
+      "type": "{type}"
     }
   },
   "repository": {
@@ -520,6 +543,8 @@
     "loading": "Loading issue...",
     "meta": {
       "createdBy": "Opened by {author} on {date}",
+      "createdByDate": "on {date}",
+      "createdByPrefix": "Opened by",
       "updated": "Updated {date}"
     },
     "sections": {
@@ -569,6 +594,7 @@
       "assigned": "assigned {target}",
       "closed": "closed this issue",
       "crossReferenced": "referenced {source}",
+      "crossReferencedAction": "referenced",
       "generic": "updated the timeline",
       "labeled": "added {label}",
       "mentioned": "mentioned this issue",

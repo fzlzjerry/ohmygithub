@@ -57,7 +57,7 @@ function openSettings(): void {
   <DropdownMenu>
     <DropdownMenuTrigger as-child>
       <button
-        class="flex w-full min-w-0 items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sidebar-foreground outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+        class="flex w-full min-w-0 select-none items-center gap-2.5 rounded-md px-2 py-1.5 text-left text-sidebar-foreground outline-hidden transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring"
         type="button"
       >
         <Avatar class="size-7">

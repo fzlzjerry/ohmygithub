@@ -47,7 +47,7 @@ function handleKeydown(event: KeyboardEvent): void {
   <button
     ref="target"
     data-shortcut-recorder
-    class="grid min-h-14 w-full gap-1 rounded-lg border border-border bg-card px-3 py-2 text-left outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring"
+    class="grid min-h-14 w-full select-none gap-1 rounded-lg border border-border bg-card px-3 py-2 text-left outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring"
     type="button"
     @keydown.capture="handleKeydown"
   >

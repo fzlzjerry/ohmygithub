@@ -1,22 +1,15 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   Check,
   Circle,
-  GitMerge,
-  GitPullRequest,
-  GitPullRequestClosed,
-  GitPullRequestDraft,
   X,
 } from 'lucide-vue-next'
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
   Badge,
 } from '@oh-my-github/ui'
+import { GitHubActorLink, WorkItemStateIcon } from '../../../../components'
 
 const props = defineProps<{
   pullRequest: GitHubPullRequest
@@ -28,25 +21,8 @@ const emit = defineEmits<{
 
 const { t } = useI18n()
 
-const stateIcon = computed<Component>(() => {
-  if (props.pullRequest.state === 'draft') return GitPullRequestDraft
-  if (props.pullRequest.state === 'merged') return GitMerge
-  if (props.pullRequest.state === 'closed') return GitPullRequestClosed
-
-  return GitPullRequest
-})
-
-const stateIconClass = computed(() => {
-  if (props.pullRequest.state === 'draft') return 'text-muted-foreground'
-  if (props.pullRequest.state === 'merged') return 'text-[color:var(--accent-purple)]'
-  if (props.pullRequest.state === 'closed') return 'text-destructive'
-
-  return 'text-success'
-})
-
 const stateLabel = computed(() => t(`repository.pullRequests.states.${props.pullRequest.state}`))
 const updatedAt = computed(() => formatDate(props.pullRequest.updatedAt))
-const authorFallback = computed(() => props.pullRequest.author.login.slice(0, 2).toUpperCase())
 
 function formatDate(value: string): string {
   return new Intl.DateTimeFormat(undefined, {
@@ -62,17 +38,19 @@ function selectPullRequest(): void {
 </script>
 
 <template>
-  <button
+  <div
     class="grid w-full grid-cols-[auto_minmax(0,1fr)] gap-3 p-4 text-left outline-hidden transition-colors hover:bg-muted/50 focus-visible:bg-muted/50 focus-visible:ring-2 focus-visible:ring-ring/30"
-    type="button"
+    role="button"
+    tabindex="0"
     @click="selectPullRequest"
+    @keydown.enter.prevent="selectPullRequest"
+    @keydown.space.prevent="selectPullRequest"
   >
     <div class="relative mt-0.5 flex size-5 items-center justify-center">
-      <component
-        :is="stateIcon"
-        class="size-4"
-        :class="stateIconClass"
-        :stroke-width="1.8"
+      <WorkItemStateIcon
+        kind="pull-request"
+        size="md"
+        :state="pullRequest.state"
       />
       <span
         v-if="pullRequest.hasUpdates"
@@ -117,19 +95,11 @@ function selectPullRequest(): void {
               {{ stateLabel }}
             </Badge>
             <span>{{ t('repository.pullRequests.meta.updated', { date: updatedAt }) }}</span>
-            <span class="inline-flex min-w-0 items-center gap-1">
-              <Avatar class="size-4">
-                <AvatarImage
-                  v-if="pullRequest.author.avatarUrl"
-                  :alt="pullRequest.author.login"
-                  :src="pullRequest.author.avatarUrl"
-                />
-                <AvatarFallback class="text-[9px]">
-                  {{ authorFallback }}
-                </AvatarFallback>
-              </Avatar>
-              <span class="truncate">{{ pullRequest.author.login }}</span>
-            </span>
+            <GitHubActorLink
+              avatar-size="xs"
+              :avatar-url="pullRequest.author.avatarUrl"
+              :login="pullRequest.author.login"
+            />
           </div>
         </div>
       </div>
@@ -148,5 +118,5 @@ function selectPullRequest(): void {
         </Badge>
       </div>
     </div>
-  </button>
+  </div>
 </template>

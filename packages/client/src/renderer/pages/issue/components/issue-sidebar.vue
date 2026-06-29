@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import type {
-  IssueActorSummary,
   IssueDetail,
   IssueLabelSummary,
+  IssueLinkedWorkSummary,
 } from './types'
 import type { Component } from 'vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@oh-my-github/ui'
 import { CalendarDays, GitBranch, GitCommitHorizontal, GitPullRequest } from 'lucide-vue-next'
-import { WorkItemLabelList, WorkItemSidebarSection } from '../../../components'
+import {
+  GitHubActorLink,
+  GitHubReferenceLink,
+  WorkItemLabelList,
+  WorkItemSidebarSection,
+  parseGitHubReferenceUrl,
+} from '../../../components'
 
 const props = defineProps<{
   issue: IssueDetail
@@ -26,6 +27,16 @@ interface DevelopmentItem {
   value: string
 }
 
+interface LinkedPullRequestReference {
+  id: string
+  owner: string
+  repo: string
+  number: number
+  title: string | null
+  state: GitHubRepositoryReferenceState | null
+  url: string | null
+}
+
 const { t } = useI18n()
 
 const assignees = computed(() => props.issue.assignees ?? [])
@@ -35,19 +46,13 @@ const participants = computed(() => props.issue.participants ?? [])
 const linkedPullRequests = computed(() =>
   props.issue.development?.pullRequests ?? props.issue.linkedWork ?? []
 )
+const linkedPullRequestReferences = computed(() =>
+  linkedPullRequests.value.flatMap((item) => toLinkedPullRequestReference(item, props.issue))
+)
 const developmentItems = computed<DevelopmentItem[]>(() => {
   const branches = props.issue.development?.branches
   const commits = props.issue.development?.commits
   const items: DevelopmentItem[] = []
-
-  if (linkedPullRequests.value.length > 0) {
-    items.push({
-      id: 'pullRequests',
-      icon: GitPullRequest,
-      label: t('issue.sidebar.development.pullRequests'),
-      value: formatCount(linkedPullRequests.value.length),
-    })
-  }
 
   if (isLinkedCount(branches)) {
     items.push({
@@ -69,7 +74,9 @@ const developmentItems = computed<DevelopmentItem[]>(() => {
 
   return items
 })
-const shouldShowDevelopment = computed(() => developmentItems.value.length > 0)
+const shouldShowDevelopment = computed(() =>
+  linkedPullRequestReferences.value.length > 0 || developmentItems.value.length > 0
+)
 const dates = computed(() => [
   {
     id: 'created',
@@ -89,10 +96,6 @@ const dates = computed(() => [
       }
     : null,
 ].filter(isDateItem))
-
-function actorFallback(actor: IssueActorSummary): string {
-  return actor.login.slice(0, 2).toUpperCase()
-}
 
 function formatDate(value: string | null | undefined): string {
   if (!value) return t('issue.values.unknown')
@@ -134,6 +137,36 @@ function isDateItem(
   return value !== null
 }
 
+function toLinkedPullRequestReference(
+  item: IssueLinkedWorkSummary,
+  issue: IssueDetail,
+): LinkedPullRequestReference[] {
+  const parsed = item.url ? parseGitHubReferenceUrl(item.url) : null
+  const number = parsed?.number ?? item.number
+  const owner = parsed?.owner ?? issue.owner
+  const repo = parsed?.repo ?? issue.repo
+
+  if (!owner || !repo || !number || number <= 0) return []
+
+  return [{
+    id: String(item.id ?? `${owner}/${repo}#${number}`),
+    owner,
+    repo,
+    number,
+    title: item.title || null,
+    state: normalizePullRequestState(item.state),
+    url: item.url ?? parsed?.url ?? null,
+  }]
+}
+
+function normalizePullRequestState(value: string | null | undefined): GitHubRepositoryReferenceState | null {
+  if (value === 'open' || value === 'draft' || value === 'merged' || value === 'closed') {
+    return value
+  }
+
+  return null
+}
+
 </script>
 
 <template>
@@ -146,19 +179,12 @@ function isDateItem(
         <div
           v-for="assignee in assignees"
           :key="assignee.login"
-          class="flex min-w-0 items-center gap-2 text-body text-foreground"
+          class="flex min-w-0 text-body"
         >
-          <Avatar class="size-5">
-            <AvatarImage
-              v-if="assignee.avatarUrl"
-              :alt="assignee.login"
-              :src="assignee.avatarUrl"
-            />
-            <AvatarFallback class="text-[10px]">
-              {{ actorFallback(assignee) }}
-            </AvatarFallback>
-          </Avatar>
-          <span class="truncate">{{ assignee.login }}</span>
+          <GitHubActorLink
+            :avatar-url="assignee.avatarUrl"
+            :login="assignee.login"
+          />
         </div>
       </div>
       <p
@@ -236,21 +262,14 @@ function isDateItem(
         v-if="participants.length > 0"
         class="flex min-w-0 flex-wrap gap-2"
       >
-        <Avatar
+        <GitHubActorLink
           v-for="participant in participants"
           :key="participant.login"
-          class="size-6"
-          :title="participant.login"
-        >
-          <AvatarImage
-            v-if="participant.avatarUrl"
-            :alt="participant.login"
-            :src="participant.avatarUrl"
-          />
-          <AvatarFallback class="text-[10px]">
-            {{ actorFallback(participant) }}
-          </AvatarFallback>
-        </Avatar>
+          avatar-size="md"
+          :avatar-url="participant.avatarUrl"
+          :login="participant.login"
+          :show-username="false"
+        />
       </div>
       <p
         v-else
@@ -265,6 +284,31 @@ function isDateItem(
       :title="t('issue.sidebar.sections.development')"
     >
       <div class="grid gap-2.5">
+        <div
+          v-if="linkedPullRequestReferences.length > 0"
+          class="grid min-w-0 gap-1.5"
+        >
+          <span class="inline-flex min-w-0 items-center gap-2 text-body text-muted-foreground">
+            <GitPullRequest class="size-3.5 shrink-0" />
+            <span class="truncate">{{ t('issue.sidebar.development.pullRequests') }}</span>
+          </span>
+          <GitHubReferenceLink
+            v-for="reference in linkedPullRequestReferences"
+            :key="reference.id"
+            class="text-body"
+            :current-owner="issue.owner"
+            :current-repo="issue.repo"
+            :fallback-href="reference.url"
+            initial-kind="pull-request"
+            :initial-state="reference.state"
+            :initial-title="reference.title"
+            kind-hint="pull-request"
+            :number="reference.number"
+            :owner="reference.owner"
+            :repo="reference.repo"
+          />
+        </div>
+
         <div
           v-for="item in developmentItems"
           :key="item.id"

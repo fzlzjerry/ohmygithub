@@ -12,7 +12,7 @@ const language = computed(() => props.node.language ?? 'plaintext')
 </script>
 
 <template>
-  <div class="my-3 overflow-hidden rounded-lg border border-border">
+  <div class="my-3 overflow-hidden rounded-lg">
     <ShikiCode
       :code="code"
       :language="language"

@@ -1,56 +1,50 @@
 <script setup lang="ts">
-import type { Component } from 'vue'
 import type { BadgeVariants } from '@oh-my-github/ui'
-import type { WorkItemState } from './types'
+import type { WorkItemKind, WorkItemState } from './types'
 import { computed } from 'vue'
 import { Badge } from '@oh-my-github/ui'
-import {
-  Ban,
-  CheckCircle2,
-  CircleDot,
-  GitMerge,
-  GitPullRequestDraft,
-  XCircle,
-} from 'lucide-vue-next'
+import WorkItemStateIcon from './work-item-state-icon.vue'
 
 const props = defineProps<{
   state: WorkItemState
   label: string
+  kind?: WorkItemKind
 }>()
 
-interface StateBadgeConfig {
-  icon: Component
-  variant: BadgeVariants['variant']
-}
+const resolvedKind = computed<WorkItemKind>(() => props.kind ?? inferKind(props.state))
 
-const stateConfig = computed<StateBadgeConfig>(() => {
+const variant = computed<BadgeVariants['variant']>(() => {
   switch (props.state) {
     case 'open':
-      return { icon: CircleDot, variant: 'success' }
     case 'completed':
-      return { icon: CheckCircle2, variant: 'success' }
+      return 'success'
     case 'merged':
-      return { icon: GitMerge, variant: 'info' }
+      return 'info'
     case 'draft':
-      return { icon: GitPullRequestDraft, variant: 'secondary' }
+      return 'secondary'
     case 'not_planned':
-      return { icon: Ban, variant: 'warning' }
+      return 'warning'
     case 'closed':
-      return { icon: XCircle, variant: 'destructive' }
+      return 'destructive'
     default:
-      return { icon: CircleDot, variant: 'outline' }
+      return 'outline'
   }
 })
+
+function inferKind(state: WorkItemState): WorkItemKind {
+  return state === 'draft' || state === 'merged' ? 'pull-request' : 'issue'
+}
 </script>
 
 <template>
   <Badge
     class="max-w-full"
-    :variant="stateConfig.variant"
+    :variant="variant"
   >
-    <component
-      :is="stateConfig.icon"
-      class="size-3 shrink-0"
+    <WorkItemStateIcon
+      :kind="resolvedKind"
+      size="xs"
+      :state="state"
     />
     <span class="truncate">{{ label }}</span>
   </Badge>

@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { Download } from 'lucide-vue-next'
 import { Button } from '@oh-my-github/ui'
 import { useRightPanel } from '../../../composables/use-right-panel'
-import { MarkdownRenderer, ShikiCode } from '../../../components'
+import { GitHubMarkdownRenderer, MarkdownRenderer, ShikiCode } from '../../../components'
 
 const props = defineProps<{
   isResizing: boolean
@@ -67,7 +67,16 @@ const panelStyle = computed<Record<string, string>>(() => ({
           v-else-if="content.type === 'markdown'"
           class="p-4"
         >
-          <MarkdownRenderer :content="content.content" />
+          <MarkdownRenderer
+            v-if="!(content.owner && content.repo)"
+            :content="content.content"
+          />
+          <GitHubMarkdownRenderer
+            v-else
+            :content="content.content"
+            :owner="content.owner"
+            :repo="content.repo"
+          />
         </div>
 
         <div

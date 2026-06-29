@@ -1,10 +1,19 @@
-import { createGitHubApi, type GitHubWorkspaceSearchMode, type SearchWorkspaceOptions } from '@oh-my-github/api'
+import {
+  createGitHubApi,
+  type GitHubRepositoryReferenceKind,
+  type GitHubWorkspaceSearchMode,
+  type ResolveRepositoryReferenceOptions,
+  type SearchWorkspaceOptions,
+} from '@oh-my-github/api'
 import { ipcMain } from 'electron'
 import { getAuthenticatedAccessToken } from './auth'
 import { resolveGitHubProxyUrl } from './proxy'
 
 export function registerSearchIpc(): void {
   ipcMain.handle('search:resolve-goto', (_event, input: string) => resolveWorkspaceGoto(input))
+  ipcMain.handle('search:resolve-repository-reference', (_event, options: ResolveRepositoryReferenceOptions) =>
+    resolveRepositoryReference(options)
+  )
   ipcMain.handle('search:workspace', (_event, options: SearchWorkspaceOptions) => searchWorkspace(options))
 }
 
@@ -27,6 +36,13 @@ async function searchWorkspace(options: SearchWorkspaceOptions) {
   return api.search.searchWorkspace(normalizedOptions)
 }
 
+async function resolveRepositoryReference(options: ResolveRepositoryReferenceOptions) {
+  const normalizedOptions = normalizeReferenceOptions(options)
+  const api = await createAuthenticatedGitHubApi()
+
+  return api.search.resolveRepositoryReference(normalizedOptions)
+}
+
 function normalizeSearchOptions(options: SearchWorkspaceOptions): SearchWorkspaceOptions {
   const query = String(options?.query ?? '').trim()
 
@@ -40,6 +56,29 @@ function normalizeSearchOptions(options: SearchWorkspaceOptions): SearchWorkspac
     page: normalizePositiveInteger(options?.page),
     perPage: normalizePositiveInteger(options?.perPage),
   }
+}
+
+function normalizeReferenceOptions(options: ResolveRepositoryReferenceOptions): ResolveRepositoryReferenceOptions {
+  const owner = String(options?.owner ?? '').trim()
+  const repo = String(options?.repo ?? '').trim()
+  const number = Math.floor(Number(options?.number))
+
+  if (!owner || !repo || !Number.isFinite(number) || number <= 0) {
+    throw new Error('Repository reference owner, repo, and number are required')
+  }
+
+  return {
+    owner,
+    repo,
+    number,
+    kindHint: normalizeReferenceKind(options?.kindHint),
+  }
+}
+
+function normalizeReferenceKind(
+  kind: GitHubRepositoryReferenceKind | undefined,
+): GitHubRepositoryReferenceKind | undefined {
+  return kind === 'issue' || kind === 'pull-request' ? kind : undefined
 }
 
 function normalizeSearchMode(mode: GitHubWorkspaceSearchMode | undefined): GitHubWorkspaceSearchMode {

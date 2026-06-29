@@ -35,7 +35,7 @@ function saveShortcut(commandId: KeyboardShortcutCommandId, accelerator: string)
 
 <template>
   <section class="space-y-2.5">
-    <div class="px-2 text-caption font-medium text-muted-foreground">
+    <div class="select-none px-2 text-caption font-medium text-muted-foreground">
       {{ t(`settings.keyboard.groups.${group}`) }}
     </div>
     <div class="overflow-hidden rounded-[var(--radius-menu-shell)] border border-border bg-card">

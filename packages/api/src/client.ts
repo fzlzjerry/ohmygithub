@@ -8,6 +8,7 @@ import { SearchApi } from './modules/search'
 import { createOctokit, type GitHubOctokit } from './transport'
 import type {
   GitHubApiOptions,
+  GitHubAccountProfile,
   GitHubClient,
   GitHubWorkspaceGotoResult,
   GitHubIssue,
@@ -21,6 +22,7 @@ import type {
   GitHubRepositoryFilePreview,
   GitHubRepositoryFileTree,
   GitHubRepositoryOverview,
+  GitHubRepositoryReferenceResolution,
   GitHubWorkspaceSearchResult,
   GitHubWorkspaceItem
 } from './types'
@@ -55,9 +57,11 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
     pulls,
     repositories,
     search,
+    getAccountProfile: (login) => accounts.getProfile(login),
     listViewerOrganizations: () => accounts.listViewerOrganizations(),
     listOrganizationRepositories: (owner) => accounts.listOrganizationRepositories(owner),
     resolveWorkspaceGoto: (input) => search.resolveWorkspaceGoto(input),
+    resolveRepositoryReference: (options) => search.resolveRepositoryReference(options),
     searchWorkspace: (options) => search.searchWorkspace(options),
     getRepositoryViewerState: (options) => repositories.getViewerState(options),
     getRepositoryOverview: (options) => repositories.getOverview(options),
@@ -82,6 +86,7 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
 }
 
 export type {
+  GitHubAccountProfile,
   GitHubIssue,
   GitHubIssueSearchResult,
   GitHubIssueComment,
@@ -93,6 +98,7 @@ export type {
   GitHubRepositoryFilePreview,
   GitHubRepositoryFileTree,
   GitHubRepositoryOverview,
+  GitHubRepositoryReferenceResolution,
   GitHubWorkspaceGotoResult,
   GitHubWorkspaceSearchResult,
   GitHubWorkspaceItem

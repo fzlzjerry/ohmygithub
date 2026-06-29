@@ -451,6 +451,16 @@ grows (clipped controls, cramped rows, same-row controls that stop matching heig
 - Every interactive control sets `cursor-pointer` (Button, Switch, segmented
   item, …). Disabled flips to `cursor-not-allowed`.
 
+## Text Selection
+
+- Static UI chrome is non-selectable. Components that render controls, navigation,
+  tabs, badges, table headers, menu/command labels, dialog/card/empty titles,
+  shortcut hints, or sidebar labels should carry `select-none` by default.
+- Do not apply `select-none` to content surfaces or values users reasonably copy:
+  prose/markdown, code, comments, filenames, URLs, tokens, device codes, and other
+  repository/user-generated data should remain selectable or explicitly use
+  `select-text`.
+
 ## Dirty patterns — anti-examples (do NOT copy)
 
 A control reads "dirty" when it STACKS chrome instead of changing one layer in

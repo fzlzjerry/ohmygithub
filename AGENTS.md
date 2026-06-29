@@ -65,6 +65,7 @@ Prefer Pinia stores for client state such as settings, selected account, active 
 - Use semantic design tokens (`text-foreground`, `bg-card`, `border-border`, `text-muted-foreground`, etc.). Do not introduce raw colors or one-off themed CSS.
 - Prefer Tailwind utility classes and existing UI components. Avoid scoped `<style>` blocks in Vue pages unless the layout cannot be expressed cleanly through the existing system.
 - Keep the desktop-client UI dense and work-focused. This is an operational GitHub workspace, not a marketing site.
+- Static desktop chrome text should be non-selectable. Add `select-none` to page/section/card/dialog/empty-state titles, sidebar/nav/tab/menu labels, badges, table headers, form/settings labels, shortcut hints, and raw button/list-row labels; prefer putting it on shared `@oh-my-github/ui` primitives when the pattern is reusable. Do not block selection on user or repository content that people may copy: markdown, code, comments, issue/PR titles, filenames, URLs, tokens, and device codes should remain selectable or use `select-text` when needed.
 
 ## Data And IPC
 

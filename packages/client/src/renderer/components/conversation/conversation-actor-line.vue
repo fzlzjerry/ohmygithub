@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import type { ConversationActor, ConversationBadge } from './types'
 import { computed } from 'vue'
-import { Avatar, AvatarFallback, AvatarImage, Badge } from '@oh-my-github/ui'
+import { Badge } from '@oh-my-github/ui'
+import GitHubActorLink from '../github/github-actor-link.vue'
 import {
   formatConversationDate,
-  getActorFallback,
   toConversationDateTime,
 } from './format'
 
@@ -19,7 +19,6 @@ const props = withDefaults(defineProps<{
   showAvatar: true,
 })
 
-const actorFallback = computed(() => getActorFallback(props.actor))
 const createdLabel = computed(() => formatConversationDate(props.createdAt))
 const updatedLabel = computed(() => {
   if (!props.updatedAt || props.updatedAt === props.createdAt) return null
@@ -33,28 +32,27 @@ const visibleBadges = computed(() => props.badges.filter((badge) => badge.label.
 
 <template>
   <div class="flex min-w-0 items-center gap-2">
-    <Avatar
+    <GitHubActorLink
       v-if="showAvatar"
-      class="size-7"
-    >
-      <AvatarImage
-        v-if="actor.avatarUrl"
-        :src="actor.avatarUrl"
-        :alt="actor.login"
-      />
-      <AvatarFallback class="text-caption">
-        {{ actorFallback }}
-      </AvatarFallback>
-    </Avatar>
+      class="shrink-0"
+      avatar-size="md"
+      :avatar-url="actor.avatarUrl"
+      :login="actor.login"
+      :show-username="false"
+    />
 
-    <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
-      <span class="min-w-0 truncate text-label font-medium text-foreground">
-        {{ actor.login }}
-      </span>
+    <div class="flex min-w-0 flex-wrap items-baseline gap-x-2 gap-y-1">
+      <GitHubActorLink
+        class="text-label"
+        avatar-size="sm"
+        :avatar-url="actor.avatarUrl"
+        :login="actor.login"
+        :show-avatar="false"
+      />
 
       <span
         v-if="createdLabel || updatedLabel"
-        class="inline-flex min-w-0 items-center gap-1 text-caption text-muted-foreground"
+        class="inline-flex min-w-0 items-baseline gap-1 text-caption text-muted-foreground"
       >
         <time
           v-if="createdLabel"
@@ -78,7 +76,7 @@ const visibleBadges = computed(() => props.badges.filter((badge) => badge.label.
 
       <span
         v-if="visibleBadges.length > 0"
-        class="flex min-w-0 flex-wrap items-center gap-1"
+        class="flex min-w-0 flex-wrap items-center gap-1 self-center"
       >
         <Badge
           v-for="badge in visibleBadges"

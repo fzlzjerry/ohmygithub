@@ -3,7 +3,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Badge } from '@oh-my-github/ui'
 import {
-  MarkdownRenderer,
+  GitHubMarkdownRenderer,
   MonacoCodeEditor,
   ShikiCode,
   ShikiDiff
@@ -23,6 +23,8 @@ console.log(greet('Oh My GitHub'))
 const markdownContent = computed(() => `# ${t('debug.richContent.sample.heading')}
 
 ${t('debug.richContent.sample.body')}
+
+${t('debug.richContent.sample.githubSyntax')}
 
 \`\`\`ts
 ${editorCode.value.trim()}
@@ -69,17 +71,17 @@ index 1a2b3c4..5d6e7f8 100644
         >
           {{ t('debug.richContent.eyebrow') }}
         </Badge>
-        <h1 class="text-heading font-semibold text-foreground">
+        <h1 class="select-none text-heading font-semibold text-foreground">
           {{ t('debug.richContent.title') }}
         </h1>
-        <p class="max-w-2xl text-label text-muted-foreground">
+        <p class="max-w-2xl select-none text-label text-muted-foreground">
           {{ t('debug.richContent.description') }}
         </p>
       </div>
 
       <div class="grid min-h-[34rem] gap-3 lg:grid-cols-2">
         <section class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border bg-card">
-          <div class="border-b border-border px-3 py-2 text-label font-medium text-foreground">
+          <div class="select-none border-b border-border px-3 py-2 text-label font-medium text-foreground">
             {{ t('debug.richContent.sections.editor') }}
           </div>
           <div class="min-h-0">
@@ -91,7 +93,7 @@ index 1a2b3c4..5d6e7f8 100644
         </section>
 
         <section class="grid min-h-0 grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border bg-card">
-          <div class="border-b border-border px-3 py-2 text-label font-medium text-foreground">
+          <div class="select-none border-b border-border px-3 py-2 text-label font-medium text-foreground">
             {{ t('debug.richContent.sections.codePreview') }}
           </div>
           <div class="min-h-0 overflow-auto p-3">
@@ -105,16 +107,20 @@ index 1a2b3c4..5d6e7f8 100644
 
       <div class="grid gap-3 xl:grid-cols-[minmax(0,1fr)_minmax(20rem,0.7fr)]">
         <section class="grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border bg-card">
-          <div class="border-b border-border px-3 py-2 text-label font-medium text-foreground">
+          <div class="select-none border-b border-border px-3 py-2 text-label font-medium text-foreground">
             {{ t('debug.richContent.sections.markdown') }}
           </div>
           <div class="max-h-[38rem] overflow-auto p-4">
-            <MarkdownRenderer :content="markdownContent" />
+            <GitHubMarkdownRenderer
+              :content="markdownContent"
+              owner="memohai"
+              repo="Memoh"
+            />
           </div>
         </section>
 
         <section class="grid grid-rows-[auto_minmax(0,1fr)] overflow-hidden rounded-lg border border-border bg-card">
-          <div class="border-b border-border px-3 py-2 text-label font-medium text-foreground">
+          <div class="select-none border-b border-border px-3 py-2 text-label font-medium text-foreground">
             {{ t('debug.richContent.sections.diffPreview') }}
           </div>
           <div class="max-h-[38rem] overflow-auto p-3">

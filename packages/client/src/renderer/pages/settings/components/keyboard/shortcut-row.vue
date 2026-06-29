@@ -48,7 +48,7 @@ function toggleDisabled(): void {
 <template>
   <div class="mx-4 grid gap-3 border-b border-border py-3 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
     <div class="min-w-0">
-      <div class="text-label font-medium text-foreground">
+      <div class="select-none text-label font-medium text-foreground">
         {{ t(definition.labelKey) }}
       </div>
       <p class="mt-0.5 text-body text-muted-foreground">

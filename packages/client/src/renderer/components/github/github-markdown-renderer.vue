@@ -1,31 +1,46 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, provide, ref, watch } from 'vue'
 import MarkdownRender, { enableKatex, enableMermaid, setCustomComponents } from 'markstream-vue'
 import { useSettingsStore } from '../../stores/settings'
 import MermaidRenderer from '../mermaid/mermaid-renderer.vue'
-import MarkdownCodeBlock from './markdown-code-block.vue'
-import MarkdownImage from './markdown-image.vue'
+import MarkdownCodeBlock from '../markdown/markdown-code-block.vue'
+import MarkdownImage from '../markdown/markdown-image.vue'
+import GitHubMarkdownLink from './github-markdown-link.vue'
+import { GITHUB_MARKDOWN_CONTEXT_KEY } from './github-markdown-context'
+import GitHubMarkdownText from './github-markdown-text.vue'
 
-const RICH_CONTENT_MARKDOWN_ID = 'oh-my-github-rich-content'
+const GITHUB_MARKDOWN_ID = 'oh-my-github-github-rich-content'
 
 enableKatex()
 enableMermaid()
-setCustomComponents(RICH_CONTENT_MARKDOWN_ID, {
+setCustomComponents(GITHUB_MARKDOWN_ID, {
   code_block: MarkdownCodeBlock,
   image: MarkdownImage,
-  mermaid: MermaidRenderer
+  link: GitHubMarkdownLink,
+  mermaid: MermaidRenderer,
+  text: GitHubMarkdownText,
 })
 
 const props = withDefaults(defineProps<{
   content: string
   final?: boolean
+  owner?: string | null
+  repo?: string | null
 }>(), {
-  final: true
+  final: true,
+  owner: null,
+  repo: null,
 })
 
 const settings = useSettingsStore()
 const isDark = computed(() => settings.isDark)
 const markdownRoot = ref<HTMLElement | null>(null)
+const markdownContext = computed(() => ({
+  owner: props.owner,
+  repo: props.repo,
+}))
+
+provide(GITHUB_MARKDOWN_CONTEXT_KEY, markdownContext)
 
 let imageDimensionObserver: MutationObserver | null = null
 let pendingImageDimensionFrame: number | null = null
@@ -105,20 +120,20 @@ onBeforeUnmount(() => {
     class="rich-content-markdown min-w-0"
   >
     <MarkdownRender
+      :batch-rendering="false"
+      code-renderer="shiki"
+      :code-block-props="{ showHeader: false, showCopyButton: false }"
+      custom-id="oh-my-github-github-rich-content"
       :content="props.content"
+      :defer-nodes-until-visible="false"
       :fade="false"
       :final="props.final"
       :is-dark="isDark"
+      :mermaid-props="{ showTooltips: false, showHeader: false, showModeToggle: false, showCopyButton: false }"
+      mode="docs"
+      :node-virtual="false"
       :show-tooltips="false"
       :typewriter="false"
-      code-renderer="shiki"
-      :code-block-props="{ showHeader: false, showCopyButton: false }"
-      :batch-rendering="false"
-      :defer-nodes-until-visible="false"
-      :mermaid-props="{ showTooltips: false, showHeader: false, showModeToggle: false, showCopyButton: false }"
-      :node-virtual="false"
-      custom-id="oh-my-github-rich-content"
-      mode="docs"
     />
   </div>
 </template>

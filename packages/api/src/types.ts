@@ -21,6 +21,24 @@ export interface GitHubOrganization {
   description: string | null
 }
 
+export type GitHubAccountProfileType = 'User' | 'Organization' | 'Bot' | (string & {})
+
+export interface GitHubAccountProfile {
+  id: number
+  login: string
+  name: string | null
+  avatarUrl: string
+  bio: string | null
+  company: string | null
+  location: string | null
+  blog: string | null
+  url: string
+  followers: number
+  following: number
+  publicRepos: number
+  type: GitHubAccountProfileType
+}
+
 export interface GitHubRepository {
   id: number
   name: string
@@ -248,6 +266,31 @@ export type GitHubIssueState =
 
 export type GitHubIssueSearchState = 'open' | 'closed' | 'all'
 
+export type GitHubRepositoryReferenceKind = 'issue' | 'pull-request'
+
+export type GitHubRepositoryReferenceState = GitHubIssueState | GitHubPullRequestState
+
+export type GitHubRepositoryReferenceResolution =
+  | {
+      status: 'found'
+      owner: string
+      repo: string
+      repository: string
+      number: number
+      kind: GitHubRepositoryReferenceKind
+      state: GitHubRepositoryReferenceState
+      title: string
+      url: string
+      workspaceUrl: string
+    }
+  | {
+      status: 'not_found'
+      owner: string
+      repo: string
+      repository: string
+      number: number
+    }
+
 export type GitHubPullRequestCategory =
   | 'created-by-me'
   | 'needs-review'
@@ -460,9 +503,11 @@ export interface GitHubClient {
   searchRepositoryIssues(options: SearchRepositoryIssuesOptions): Promise<GitHubIssueSearchResult>
   getIssueDetail(options: GetIssueDetailOptions): Promise<GitHubIssueDetail>
   createIssueComment(options: CreateIssueCommentOptions): Promise<GitHubIssueComment>
+  getAccountProfile(login: string): Promise<GitHubAccountProfile>
   listViewerOrganizations(): Promise<GitHubOrganization[]>
   listOrganizationRepositories(owner: string): Promise<GitHubRepository[]>
   resolveWorkspaceGoto(input: string): Promise<GitHubWorkspaceGotoResult>
+  resolveRepositoryReference(options: ResolveRepositoryReferenceOptions): Promise<GitHubRepositoryReferenceResolution>
   searchWorkspace(options: SearchWorkspaceOptions): Promise<GitHubWorkspaceSearchResult>
   getRepositoryViewerState(options: RepositoryOptions): Promise<GitHubRepositoryViewerState>
   getRepositoryOverview(options: RepositoryOptions): Promise<GitHubRepositoryOverview>
@@ -538,6 +583,11 @@ export interface SearchWorkspaceOptions {
 export interface RepositoryOptions {
   owner: string
   repo: string
+}
+
+export interface ResolveRepositoryReferenceOptions extends RepositoryOptions {
+  number: number
+  kindHint?: GitHubRepositoryReferenceKind
 }
 
 export interface RepositoryFilesOptions extends RepositoryOptions {

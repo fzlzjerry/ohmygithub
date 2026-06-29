@@ -1,6 +1,7 @@
 import type {
   CreateIssueCommentOptions,
   GetIssueDetailOptions,
+  GitHubAccountProfile,
   GitHubClient,
   GitHubIssue,
   GitHubIssueSearchResult,
@@ -14,6 +15,7 @@ import type {
   GitHubRepositoryFilePreview,
   GitHubRepositoryFileTree,
   GitHubRepositoryOverview,
+  GitHubRepositoryReferenceResolution,
   GitHubRepositoryViewerState,
   GitHubWorkspaceGotoResult,
   GitHubWorkspaceSearchItem,
@@ -25,6 +27,7 @@ import type {
   RepositoryFilePreviewOptions,
   RepositoryFilesOptions,
   RepositoryOptions,
+  ResolveRepositoryReferenceOptions,
   SearchRepositoryIssuesOptions,
   SearchRepositoryPullRequestsOptions,
   SearchWorkspaceOptions,
@@ -173,6 +176,33 @@ const viewerStateByRepository = new Map<string, GitHubRepositoryViewerState>()
 const mockIssueCommentsByIssue = new Map<string, GitHubIssueComment[]>()
 
 export class MockGitHubClient implements GitHubClient {
+  async getAccountProfile(login: string): Promise<GitHubAccountProfile> {
+    const normalizedLogin = login.trim()
+    const user = users.find((item) => item.login.toLowerCase() === normalizedLogin.toLowerCase())
+    const organization = organizations.find((item) => item.login.toLowerCase() === normalizedLogin.toLowerCase())
+    const account = user ?? organization
+
+    if (!account) {
+      throw new Error('Account not found')
+    }
+
+    return {
+      id: account.id,
+      login: account.login,
+      name: account.login,
+      avatarUrl: account.avatarUrl,
+      bio: 'Mock GitHub account profile for local development.',
+      company: organization ? 'GitHub' : null,
+      location: 'Local workspace',
+      blog: `https://github.com/${account.login}`,
+      url: `https://github.com/${account.login}`,
+      followers: account.id * 2,
+      following: account.id,
+      publicRepos: repositoriesByOrganization[account.login]?.length ?? 12,
+      type: organization ? 'Organization' : 'User',
+    }
+  }
+
   async listViewerOrganizations(): Promise<GitHubOrganization[]> {
     return organizations
   }
@@ -297,6 +327,54 @@ export class MockGitHubClient implements GitHubClient {
       ...orgItems.slice(0, 8),
       ...repoItems.slice(0, 8),
     ], page, perPage)
+  }
+
+  async resolveRepositoryReference(
+    options: ResolveRepositoryReferenceOptions,
+  ): Promise<GitHubRepositoryReferenceResolution> {
+    const key = repositoryKey(options)
+    const number = options.number
+    const pullRequest = (pullRequestsByRepository[key] ?? []).find((item) => item.number === number)
+
+    if (pullRequest) {
+      return {
+        status: 'found',
+        owner: options.owner,
+        repo: options.repo,
+        repository: key,
+        number,
+        kind: 'pull-request',
+        state: pullRequest.state,
+        title: pullRequest.title,
+        url: pullRequest.url,
+        workspaceUrl: `/${encodeURIComponent(options.owner)}/${encodeURIComponent(options.repo)}/pull/${number}`,
+      }
+    }
+
+    const issue = (issuesByRepository[key] ?? []).find((item) => item.number === number)
+
+    if (issue) {
+      return {
+        status: 'found',
+        owner: options.owner,
+        repo: options.repo,
+        repository: key,
+        number,
+        kind: 'issue',
+        state: issue.state,
+        title: issue.title,
+        url: issue.url,
+        workspaceUrl: `/${encodeURIComponent(options.owner)}/${encodeURIComponent(options.repo)}/issues/${number}`,
+      }
+    }
+
+    return {
+      status: 'not_found',
+      owner: options.owner,
+      repo: options.repo,
+      repository: key,
+      number,
+    }
   }
 
   async listViewerPullRequests(): Promise<GitHubPullRequest[]> {

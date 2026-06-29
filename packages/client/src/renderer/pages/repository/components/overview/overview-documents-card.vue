@@ -8,7 +8,7 @@ import {
   EmptyTitle,
   Skeleton,
 } from '@oh-my-github/ui'
-import { MarkdownRenderer } from '../../../../components'
+import { GitHubMarkdownRenderer, MarkdownRenderer } from '../../../../components'
 
 defineProps<{
   activeDocument: GitHubRepositoryDocument | null
@@ -16,7 +16,9 @@ defineProps<{
   availableDocuments: GitHubRepositoryDocument[]
   hasOverviewError: boolean
   isOverviewLoading: boolean
+  owner: string
   overview: GitHubRepositoryOverview | null
+  repo: string
 }>()
 
 const emit = defineEmits<{
@@ -37,7 +39,7 @@ function documentTitle(kind: GitHubRepositoryDocumentKind): string {
         <button
           v-for="document in availableDocuments"
           :key="document.kind"
-          class="flex h-11 shrink-0 items-center gap-2 border-b-2 px-3 text-body font-medium outline-hidden transition-colors"
+          class="flex h-11 shrink-0 select-none items-center gap-2 border-b-2 px-3 text-body font-medium outline-hidden transition-colors"
           :class="activeDocument?.kind === document.kind
             ? 'border-foreground text-foreground'
             : 'border-transparent text-muted-foreground hover:text-foreground'"
@@ -49,7 +51,7 @@ function documentTitle(kind: GitHubRepositoryDocumentKind): string {
         </button>
         <div
           v-if="availableDocuments.length === 0"
-          class="flex h-11 items-center gap-2 px-3 text-body font-medium text-muted-foreground"
+          class="flex h-11 select-none items-center gap-2 px-3 text-body font-medium text-muted-foreground"
         >
           <FileText class="size-4" />
           {{ t('repository.documents.readme.title') }}
@@ -80,8 +82,14 @@ function documentTitle(kind: GitHubRepositoryDocumentKind): string {
       </div>
 
       <MarkdownRenderer
+        v-else-if="activeDocument?.format === 'markdown' && !(owner && repo)"
+        :content="activeDocument.content"
+      />
+      <GitHubMarkdownRenderer
         v-else-if="activeDocument?.format === 'markdown'"
         :content="activeDocument.content"
+        :owner="owner"
+        :repo="repo"
       />
 
       <pre
