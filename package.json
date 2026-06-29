@@ -10,7 +10,12 @@
     "build": "pnpm -r build",
     "build:client": "pnpm --filter @oh-my-github/client build",
     "package": "pnpm package:client",
-    "package:client": "pnpm --filter @oh-my-github/client build",
+    "package:client": "pnpm --filter @oh-my-github/client package",
+    "package:dir": "pnpm --filter @oh-my-github/client package:dir",
+    "package:mac": "pnpm --filter @oh-my-github/client package:mac",
+    "package:win": "pnpm --filter @oh-my-github/client package:win",
+    "package:win:arm64": "pnpm --filter @oh-my-github/client package:win:arm64",
+    "package:linux": "pnpm --filter @oh-my-github/client package:linux",
     "typecheck": "pnpm -r typecheck",
     "lint": "pnpm typecheck"
   },

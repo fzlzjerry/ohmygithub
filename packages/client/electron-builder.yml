@@ -1,0 +1,53 @@
+appId: dev.ohmygithub.app
+productName: Oh My GitHub
+copyright: Copyright © 2026 Oh My GitHub
+
+directories:
+  output: release/${version}
+
+files:
+  - out/**/*
+  - package.json
+  - '!**/*.map'
+
+asar: true
+npmRebuild: false
+
+mac:
+  category: public.app-category.developer-tools
+  identity: null
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+
+dmg:
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  artifactName: ${productName}-${version}-${arch}-setup.${ext}
+
+linux:
+  category: Development
+  target:
+    - target: AppImage
+      arch:
+        - x64
+        - arm64
+
+appImage:
+  artifactName: ${productName}-${version}-${arch}.${ext}

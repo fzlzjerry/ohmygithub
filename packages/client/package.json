@@ -2,11 +2,19 @@
   "name": "@oh-my-github/client",
   "version": "0.1.0",
   "private": true,
+  "description": "Electron desktop client for Oh My GitHub.",
+  "author": "Oh My GitHub",
   "type": "module",
   "main": "./out/main/index.js",
   "scripts": {
     "dev": "electron-vite dev",
     "build": "electron-vite build",
+    "package": "pnpm run build && electron-builder",
+    "package:dir": "pnpm run build && electron-builder --dir",
+    "package:mac": "pnpm run build && electron-builder --mac",
+    "package:win": "pnpm run build && electron-builder --win --x64",
+    "package:win:arm64": "pnpm run build && electron-builder --win --arm64",
+    "package:linux": "pnpm run build && electron-builder --linux",
     "typecheck": "vue-tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -43,6 +51,7 @@
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
     "electron": "^42.5.0",
+    "electron-builder": "^26.15.3",
     "electron-vite": "^5.0.0",
     "typescript": "^5.8.3",
     "vite": "^7.3.6",

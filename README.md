@@ -27,10 +27,17 @@ pnpm run env:setup
 pnpm dev
 pnpm typecheck
 pnpm build
+pnpm package
+pnpm package:mac
+pnpm package:win
 ```
 
 `pnpm run env:setup` installs workspace dependencies and explicitly downloads the Electron binary. The
 project pins `electron_mirror` in `.npmrc` so Electron installs reliably in local development.
+
+`pnpm package` builds an installable Electron package with `electron-builder`. Platform-specific
+installers are available through `pnpm package:mac` for `.dmg`/`.zip` and `pnpm package:win` for a
+Windows NSIS `.exe` installer. Release artifacts are written under `packages/client/release/`.
 
 ## Developer Debugging
 
