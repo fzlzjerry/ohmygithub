@@ -72,12 +72,18 @@ function readBookmarksInfo(): StoredWorkspaceBookmarksInfo {
 function readBookmarks(): StoredWorkspaceBookmarks {
   try {
     const raw = readFileSync(bookmarksPath, 'utf8')
-    if (!raw.trim()) return defaultBookmarks()
+    if (!raw.trim()) {
+      const bookmarks = defaultBookmarks()
+      writeBookmarks(bookmarks)
+      return bookmarks
+    }
 
     return normalizeBookmarks(JSON.parse(raw) as Partial<StoredWorkspaceBookmarks>)
   } catch (error) {
     if (isMissingFileError(error)) {
-      return defaultBookmarks()
+      const bookmarks = defaultBookmarks()
+      writeBookmarks(bookmarks)
+      return bookmarks
     }
 
     throw error

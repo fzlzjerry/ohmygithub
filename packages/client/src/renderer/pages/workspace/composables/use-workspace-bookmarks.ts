@@ -226,9 +226,12 @@ export function useWorkspaceBookmarks() {
       const legacyBookmarks = readLegacyStoredBookmarks()
       if (hasStoredBookmarksContent(legacyBookmarks)) {
         applyRestoredBookmarks(legacyBookmarks)
-        if (bookmarksBridge) {
+        try {
           await persistBookmarks(legacyBookmarks)
           localStorage.removeItem(LEGACY_STORAGE_KEY)
+        } catch (error) {
+          writeLegacyStoredBookmarks(legacyBookmarks)
+          console.error('Failed to migrate workspace bookmarks', error)
         }
         return
       }
@@ -253,7 +256,13 @@ export function useWorkspaceBookmarks() {
     void persistBookmarks({
       folders: folders.value,
       bookmarks: bookmarks.value,
+    }).then(() => {
+      localStorage.removeItem(LEGACY_STORAGE_KEY)
     }).catch((error) => {
+      writeLegacyStoredBookmarks({
+        folders: folders.value,
+        bookmarks: bookmarks.value,
+      })
       console.error('Failed to persist workspace bookmarks', error)
     })
   }
@@ -293,8 +302,13 @@ async function persistBookmarks(payload: Pick<StoredWorkspaceBookmarks, 'bookmar
     folders: payload.folders,
     bookmarks: dedupeBookmarks(payload.bookmarks),
   }
+  const bookmarksBridge = window.ohMyGithub?.bookmarks
+  if (!bookmarksBridge) {
+    writeLegacyStoredBookmarks(stored)
+    throw new Error('Workspace bookmarks bridge is not available')
+  }
 
-  await window.ohMyGithub?.bookmarks?.update?.(stored)
+  await bookmarksBridge.update(stored)
 }
 
 function readLegacyStoredBookmarks(): Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'> {
@@ -308,6 +322,16 @@ function readLegacyStoredBookmarks(): Pick<StoredWorkspaceBookmarks, 'bookmarks'
   } catch {
     return { folders: [], bookmarks: [] }
   }
+}
+
+function writeLegacyStoredBookmarks(payload: Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'>): void {
+  const stored: StoredWorkspaceBookmarks = {
+    version: STORAGE_VERSION,
+    folders: payload.folders,
+    bookmarks: dedupeBookmarks(payload.bookmarks),
+  }
+
+  localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(stored))
 }
 
 function coerceStoredBookmarks(value: unknown): Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'> {
