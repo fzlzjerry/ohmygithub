@@ -149,7 +149,7 @@ function addTabBookmark(input: {
   tab: WorkspaceTab
   title: string
 }): void {
-  const organization = input.tab.type === 'org' && input.tab.owner
+  const organization = input.tab.type === 'account' && input.tab.owner
     ? organizationsByLogin.value.get(input.tab.owner)
     : undefined
 

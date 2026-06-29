@@ -348,11 +348,12 @@ function coerceStoredFolder(value: unknown): WorkspaceBookmarkFolder | null {
 function coerceStoredBookmark(value: unknown, folderIds: Set<string>): WorkspaceBookmark | null {
   if (!isRecord(value)) return null
   if (typeof value.url !== 'string') return null
-  if (typeof value.type !== 'string' || !isWorkspaceTabType(value.type)) return null
+  const storedType = normalizeLegacyStoredBookmarkType(value.type)
+  if (!storedType) return null
   if (typeof value.title !== 'string') return null
 
   const tab = createWorkspaceTabFromUrl(value.url)
-  if (tab.type !== value.type) return null
+  if (tab.type !== storedType) return null
 
   const folderId = typeof value.folderId === 'string' && folderIds.has(value.folderId)
     ? value.folderId
@@ -378,6 +379,13 @@ function coerceStoredBookmark(value: unknown, folderIds: Set<string>): Workspace
     avatarUrl: typeof value.avatarUrl === 'string' ? value.avatarUrl : undefined,
     avatarFallback: typeof value.avatarFallback === 'string' ? value.avatarFallback : undefined,
   }
+}
+
+function normalizeLegacyStoredBookmarkType(value: unknown): WorkspaceBookmark['type'] | null {
+  if (value === 'org') return 'account'
+  if (typeof value !== 'string' || !isWorkspaceTabType(value)) return null
+
+  return value
 }
 
 function reorderBookmarksInFolder(

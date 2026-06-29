@@ -107,14 +107,13 @@ export class SearchApi {
     try {
       const user = await this.getUser(parsed.owner)
       const login = user.login?.trim() || parsed.owner
-      const isOrganization = user.type === 'Organization'
 
       return {
         status: 'found',
         input: normalizedInput,
-        type: isOrganization ? 'org' : 'account',
+        type: 'account',
         title: login,
-        url: isOrganization ? `/${encodeURIComponent(login)}?type=org` : `/${encodeURIComponent(login)}`,
+        url: `/${encodeURIComponent(login)}`,
       }
     } catch (error) {
       if (isNotFoundError(error)) {
@@ -404,7 +403,7 @@ function mapUserSearchItem(user: UserResponse, mode: 'users' | 'orgs'): GitHubWo
     title: login,
     description: null,
     url: user.html_url ?? `https://github.com/${login}`,
-    workspaceUrl: mode === 'orgs' ? `/${encodeURIComponent(login)}?type=org` : `/${encodeURIComponent(login)}`,
+    workspaceUrl: `/${encodeURIComponent(login)}`,
     avatarUrl: user.avatar_url ?? undefined,
   }
 }

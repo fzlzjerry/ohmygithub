@@ -1,7 +1,6 @@
 import type { WorkspaceTab, WorkspaceTabView } from './types'
 import {
   Bell,
-  Building2,
   Book,
   CircleDot,
   FileText,
@@ -202,20 +201,6 @@ export function getWorkspaceTabView(tab: WorkspaceTab): WorkspaceTabView {
         { id: 'query', labelKey: 'workspace.panel.stats.query', value: tab.notFoundInput ?? '' },
         { id: 'source', labelKey: 'workspace.panel.stats.source', valueKey: 'workspace.panel.values.githubSearch' },
         { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.notFound' },
-      ],
-    })
-  }
-
-  if (tab.type === 'org') {
-    return createResourceView(tab, {
-      icon: Building2,
-      eyebrowKey: 'workspace.panel.eyebrows.org',
-      headingKey: 'workspace.panel.headings.org',
-      descriptionKey: 'workspace.panel.descriptions.org',
-      stats: [
-        { id: 'owner', labelKey: 'workspace.panel.stats.organization', value: tab.owner ?? '' },
-        { id: 'type', labelKey: 'workspace.panel.stats.type', valueKey: 'workspace.panel.values.org' },
-        { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
       ],
     })
   }

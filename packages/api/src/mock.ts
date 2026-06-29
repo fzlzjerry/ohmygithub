@@ -390,9 +390,9 @@ export class MockGitHubClient implements GitHubClient {
       return {
         status: 'found',
         input: normalizedInput,
-        type: 'org',
+        type: 'account',
         title: organization.login,
-        url: `/${encodeURIComponent(organization.login)}?type=org`,
+        url: `/${encodeURIComponent(organization.login)}`,
       }
     }
 
@@ -439,7 +439,7 @@ export class MockGitHubClient implements GitHubClient {
         title: organization.login,
         description: organization.description,
         url: `https://github.com/${organization.login}`,
-        workspaceUrl: `/${encodeURIComponent(organization.login)}?type=org`,
+        workspaceUrl: `/${encodeURIComponent(organization.login)}`,
         avatarUrl: organization.avatarUrl,
       }))
     const repoItems = Object.values(repositoriesByOrganization)

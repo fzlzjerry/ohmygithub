@@ -10,10 +10,6 @@ export function workspaceTabToGitHubUrl(tab: WorkspaceTab): string | null {
     return accountGitHubUrl(tab.owner, tab.accountSection)
   }
 
-  if (tab.type === 'org' && tab.owner) {
-    return `${GITHUB_ORIGIN}/${pathSegment(tab.owner)}`
-  }
-
   if (tab.type === 'repo' && tab.owner && tab.repo) {
     return repositoryGitHubUrl(tab)
   }

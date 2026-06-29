@@ -40,7 +40,6 @@ export type {
 export {
   createAccountWorkspaceUrl,
   createGitHubAvatarUrl,
-  createOrganizationWorkspaceUrl,
   createReferenceWorkspaceUrl,
   parseGitHubReferenceUrl,
   trimUrlCandidate,

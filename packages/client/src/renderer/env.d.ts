@@ -203,7 +203,7 @@ type GitHubWorkspaceGotoResult =
   | {
       status: 'found'
       input: string
-      type: 'account' | 'org' | 'repo'
+      type: 'account' | 'repo'
       title: string
       url: string
     }

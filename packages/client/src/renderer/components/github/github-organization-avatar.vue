@@ -6,7 +6,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@oh-my-github/ui'
-import { createGitHubAvatarUrl, createOrganizationWorkspaceUrl } from './github-reference'
+import { createAccountWorkspaceUrl, createGitHubAvatarUrl } from './github-reference'
 
 defineOptions({
   inheritAttrs: false,
@@ -52,7 +52,7 @@ const rootClass = computed(() => [
 function openOrganization(): void {
   if (!props.interactive || !normalizedLogin.value) return
 
-  void router.push(createOrganizationWorkspaceUrl(normalizedLogin.value))
+  void router.push(createAccountWorkspaceUrl(normalizedLogin.value))
 }
 </script>
 

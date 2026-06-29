@@ -24,7 +24,6 @@ const VALID_TYPES = new Set<WorkspaceTabType>([
   'activity',
   'draft',
   'account',
-  'org',
   'repo',
   'pull-request-list',
   'issue-list',
@@ -55,11 +54,11 @@ export function routeToWorkspaceUrl(route: RouteLocationNormalizedLoaded): strin
     return createRepositoryUrlFromPath(path, typeof route.query.tab === 'string' ? route.query.tab : '')
   }
 
-  const type = typeof route.query.type === 'string' ? route.query.type : ''
-  if (!type && isAccountWorkspacePath(path)) {
+  if (isAccountWorkspacePath(path)) {
     return createAccountUrlFromPath(path, typeof route.query.tab === 'string' ? route.query.tab : '')
   }
 
+  const type = typeof route.query.type === 'string' ? route.query.type : ''
   if (!type || isReservedInternalPath(path)) return path
   if (!isWorkspaceTabType(type)) return path
 
@@ -78,8 +77,6 @@ export function normalizeWorkspaceUrl(url: string): string {
   const [rawPath, rawSearch = ''] = url.split('?')
   const path = normalizeWorkspacePath(rawPath)
   const search = new URLSearchParams(rawSearch)
-  const type = search.get('type')
-
   if (path === '/not-found') {
     return createNotFoundUrl(search.get('q') ?? '')
   }
@@ -93,15 +90,11 @@ export function normalizeWorkspaceUrl(url: string): string {
     return createRepositoryUrlFromPath(path, search.get('tab') ?? '')
   }
 
-  if (type !== 'org' && isAccountWorkspacePath(path)) {
+  if (isAccountWorkspacePath(path)) {
     return createAccountUrlFromPath(path, search.get('tab') ?? '')
   }
 
-  if (type !== 'org' || isReservedInternalPath(path)) {
-    return path
-  }
-
-  return `${path}?type=org`
+  return path
 }
 
 export function createRepositoryWorkspaceUrl(
@@ -132,7 +125,6 @@ function parseWorkspaceUrl(url: string): Omit<WorkspaceTab, 'title'> {
   const path = normalizeWorkspacePath(rawPath)
   const segments = path.split('/').filter(Boolean).map(decodeURIComponent)
   const query = new URLSearchParams(rawSearch)
-  const queryType = query.get('type')
 
   if (segments.length === 0) {
     return { url: DEFAULT_WORKSPACE_URL, type: 'inbox' }
@@ -235,14 +227,13 @@ function parseWorkspaceUrl(url: string): Omit<WorkspaceTab, 'title'> {
     }
   }
 
-  const ownerType = queryType === 'org' ? 'org' : 'account'
   const accountSection = sanitizeAccountSection(query.get('tab') ?? '')
 
   return {
-    url: ownerType === 'org' ? `/${owner}?type=org` : createAccountWorkspaceUrl(owner, accountSection),
-    type: ownerType,
+    url: createAccountWorkspaceUrl(owner, accountSection),
+    type: 'account',
     owner,
-    accountSection: ownerType === 'org' ? undefined : accountSection,
+    accountSection,
   }
 }
 
@@ -258,7 +249,6 @@ function titleForWorkspaceTab(tab: Omit<WorkspaceTab, 'title'>): string {
   if (tab.type === 'search-result') return tab.searchQuery ? `Search: ${tab.searchQuery}` : 'Search'
   if (tab.type === 'not-found') return tab.notFoundInput ? `Not Found: ${tab.notFoundInput}` : 'Not Found'
   if (tab.type === 'repo') return `${tab.owner}/${tab.repo}`
-  if (tab.type === 'org') return tab.owner ?? 'Organization'
   return tab.owner ?? 'Account'
 }
 

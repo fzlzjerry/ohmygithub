@@ -68,7 +68,7 @@ export function parseGitHubWorkspaceUrl(value: string): string | null {
     if (segments[0] === 'issues') return createIssueListWorkspaceUrl(segments[1])
     if (segments[0] === 'search') return createSearchWorkspaceUrl(url)
     if (segments[0] === 'orgs' && segments[1] && segments.length === 2) {
-      return createOrganizationWorkspaceUrl(segments[1])
+      return createAccountWorkspaceUrl(segments[1])
     }
 
     const [owner, repo, type, rawNumber] = segments
@@ -121,10 +121,6 @@ export function createGitHubAvatarUrl(login: string, size = 40): string {
 
 export function createAccountWorkspaceUrl(login: string): string {
   return `/${encodeURIComponent(login)}`
-}
-
-export function createOrganizationWorkspaceUrl(login: string): string {
-  return `/${encodeURIComponent(login)}?type=org`
 }
 
 export function createRepositoryWorkspaceUrl(

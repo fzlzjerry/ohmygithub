@@ -202,28 +202,6 @@
     },
     "title": "设置"
   },
-  "organization": {
-    "description": "{owner} 的组织页已经准备好承接专属导航。仓库、成员和动态数据会在这里继续接入。",
-    "eyebrow": "组织",
-    "sections": {
-      "activity": {
-        "description": "后续可以把这个组织的 review、通知和工作流信号收束成一个动态流。",
-        "title": "动态"
-      },
-      "repositories": {
-        "description": "这里会成为组织仓库入口，后续补上筛选和快速进入能力。",
-        "title": "仓库"
-      }
-    },
-    "summary": {
-      "activity": "动态",
-      "members": "成员",
-      "repositories": "仓库"
-    },
-    "values": {
-      "placeholder": "未接入"
-    }
-  },
   "account": {
     "actions": {
       "follow": "关注",
@@ -1102,7 +1080,6 @@
         "activity": "跟踪工作流、仓库动态和需要回看的项目状态。这里暂时只展示布局骨架。",
         "draft": "新的 tab 会先作为本地占位页打开，后续可以接入真实 workspace 数据。",
         "inbox": "把通知、mention 和 review 请求收束到一个干净的工作区入口。",
-        "org": "{owner} 已作为组织 tab 打开。本次只保留 URL、类型和占位面板。",
         "pullRequest": "{owner}/{repo} #{number} 的 Pull Request 数据会在这里继续接入。",
         "pullRequestList": "这个分类下的 Pull Request 会从左侧树里展开，完整列表视图后续再接入。",
         "issue": "{owner}/{repo} #{number} 的 Issue 数据会在这里继续接入。",
@@ -1119,7 +1096,6 @@
         "issue": "Issue",
         "issueList": "Issue 列表",
         "notFound": "未找到",
-        "org": "组织",
         "pullRequest": "Pull Request",
         "pullRequestList": "Pull Request 列表",
         "repo": "仓库",
@@ -1135,7 +1111,6 @@
         "issue": "{owner}/{repo} #{number}",
         "issueList": "{title}",
         "notFound": "{title}",
-        "org": "{owner}",
         "pullRequest": "{owner}/{repo} #{number}",
         "pullRequestList": "{title}",
         "repo": "{owner}/{repo}",
@@ -1176,7 +1151,6 @@
         "needsReview": "需要 Review",
         "mentions": "0",
         "notFound": "未找到",
-        "org": "组织",
         "placeholder": "未接入",
         "repos": "3",
         "reviews": "0",

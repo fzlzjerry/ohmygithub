@@ -6,7 +6,6 @@ import { Badge } from '@oh-my-github/ui'
 import AccountPage from '../../account/account-page.vue'
 import IssueListPage from '../../issue-list/issue-list-page.vue'
 import IssuePage from '../../issue/issue-page.vue'
-import OrganizationPage from '../../organization/organization-page.vue'
 import PullRequestListPage from '../../pull-request-list/pull-request-list-page.vue'
 import PullRequestPage from '../../pull-request/pull-request-page.vue'
 import RepositoryPage from '../../repository/repository-page.vue'
@@ -34,13 +33,8 @@ function translate(key: string, params?: WorkspaceMessageParams): string {
 </script>
 
 <template>
-  <OrganizationPage
-    v-if="tab.type === 'org'"
-    :tab="tab"
-  />
-
   <AccountPage
-    v-else-if="tab.type === 'account'"
+    v-if="tab.type === 'account'"
     :tab="tab"
     :viewer="viewer"
     @replace-active-url="emit('replaceActiveUrl', $event)"

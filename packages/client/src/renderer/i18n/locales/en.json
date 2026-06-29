@@ -202,28 +202,6 @@
     },
     "title": "Settings"
   },
-  "organization": {
-    "description": "{owner} is ready for organization-specific navigation. Repository, member, and activity data will be connected here.",
-    "eyebrow": "Organization",
-    "sections": {
-      "activity": {
-        "description": "A future activity stream can collect reviews, notifications, and workflow signals for this organization.",
-        "title": "Activity"
-      },
-      "repositories": {
-        "description": "This area will become the organization repository surface, with filters and quick entry points.",
-        "title": "Repositories"
-      }
-    },
-    "summary": {
-      "activity": "Activity",
-      "members": "Members",
-      "repositories": "Repositories"
-    },
-    "values": {
-      "placeholder": "Not connected"
-    }
-  },
   "account": {
     "actions": {
       "follow": "Follow",
@@ -1102,7 +1080,6 @@
         "activity": "Track workflows, repository movement, and project state worth revisiting. This version only renders the shell.",
         "draft": "New tabs open as local placeholder pages until real workspace data is connected.",
         "inbox": "Collect notifications, mentions, and review requests into a clean workspace entry point.",
-        "org": "{owner} is open as an organization tab. This version only keeps URL, type, and placeholder state.",
         "pullRequest": "Pull request data for {owner}/{repo} #{number} will be connected here.",
         "pullRequestList": "Pull requests in this category are listed from the sidebar tree. A full list view can be connected here later.",
         "issue": "Issue data for {owner}/{repo} #{number} will be connected here.",
@@ -1119,7 +1096,6 @@
         "issue": "Issue",
         "issueList": "Issue List",
         "notFound": "Not Found",
-        "org": "Organization",
         "pullRequest": "Pull Request",
         "pullRequestList": "Pull Request List",
         "repo": "Repository",
@@ -1135,7 +1111,6 @@
         "issue": "{owner}/{repo} #{number}",
         "issueList": "{title}",
         "notFound": "{title}",
-        "org": "{owner}",
         "pullRequest": "{owner}/{repo} #{number}",
         "pullRequestList": "{title}",
         "repo": "{owner}/{repo}",
@@ -1176,7 +1151,6 @@
         "needsReview": "Needs Review",
         "mentions": "0",
         "notFound": "Not found",
-        "org": "Organization",
         "placeholder": "Not connected",
         "repos": "3",
         "reviews": "0",

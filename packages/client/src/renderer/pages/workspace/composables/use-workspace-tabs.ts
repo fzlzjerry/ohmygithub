@@ -316,12 +316,20 @@ function readStoredTabs(): StoredWorkspaceTabs | null {
 function coerceStoredTab(value: unknown): WorkspaceTab | null {
   if (!isRecord(value)) return null
   if (typeof value.url !== 'string') return null
-  if (typeof value.type !== 'string' || !isWorkspaceTabType(value.type)) return null
+  const storedType = normalizeLegacyStoredTabType(value.type)
+  if (!storedType) return null
 
   const tab = createWorkspaceTabFromUrl(value.url)
-  if (!isReservedInternalPath(tab.url) && tab.type !== value.type) return null
+  if (!isReservedInternalPath(tab.url) && tab.type !== storedType) return null
 
   return tab
+}
+
+function normalizeLegacyStoredTabType(value: unknown): WorkspaceTab['type'] | null {
+  if (value === 'org') return 'account'
+  if (typeof value !== 'string' || !isWorkspaceTabType(value)) return null
+
+  return value
 }
 
 function persistTabs(tabs: WorkspaceTab[], activeUrl: string): void {

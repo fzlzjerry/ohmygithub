@@ -21,7 +21,6 @@ export type WorkspaceTabType =
   | 'activity'
   | 'draft'
   | 'account'
-  | 'org'
   | 'repo'
   | 'pull-request-list'
   | 'issue-list'

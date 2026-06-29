@@ -1,7 +1,6 @@
 import type { WorkspaceBookmark, WorkspaceSidebarTreeItem } from './types'
 import {
   Book,
-  Building2,
   CircleDot,
   GitPullRequest,
 } from 'lucide-vue-next'
@@ -36,7 +35,7 @@ interface RepositoryTreeItemOptions extends TreeItemContext {
 }
 
 export function organizationUrl(login: string): string {
-  return `/${login}?type=org`
+  return accountUrl(login)
 }
 
 export function organizationFallback(login: string): string {
@@ -105,28 +104,6 @@ export function bookmarkToTreeItem(
   bookmark: WorkspaceBookmark,
   context: Omit<TreeItemContext, 'scope'>,
 ): WorkspaceSidebarTreeItem {
-  if (bookmark.type === 'org' && bookmark.owner) {
-    const itemId = bookmarkItemId(bookmark)
-
-    return {
-      id: itemId,
-      label: bookmark.title,
-      url: bookmark.url,
-      actionContext: bookmarkActionContext(bookmark),
-      icon: bookmark.avatarUrl ? undefined : Building2,
-      avatarUrl: bookmark.avatarUrl,
-      avatarFallback: bookmark.avatarFallback ?? organizationFallback(bookmark.owner),
-      avatarShape: 'square',
-      isActive: isActiveItem(itemId, bookmark.url, context),
-      canExpand: true,
-      childrenLoader: {
-        type: 'organization-repositories',
-        owner: bookmark.owner,
-        scope: itemId,
-      },
-    }
-  }
-
   if (bookmark.type === 'repo' && bookmark.owner && bookmark.repo) {
     return repositoryToTreeItem(
       {
