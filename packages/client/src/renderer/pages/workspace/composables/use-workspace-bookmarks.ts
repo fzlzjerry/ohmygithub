@@ -7,6 +7,7 @@ export const BOOKMARK_ITEM_ID_PREFIX = 'bookmark:'
 export const BOOKMARK_FOLDER_LIST_PREFIX = 'bookmark-folder:'
 
 const LEGACY_STORAGE_KEY = 'oh-my-github:workspace-bookmarks:v1'
+const PENDING_STORAGE_KEY = 'oh-my-github:workspace-bookmarks-pending:v1'
 const STORAGE_VERSION = 1
 
 export type BookmarkMutationResult =
@@ -33,6 +34,8 @@ export function useWorkspaceBookmarks() {
   const bookmarks = ref<WorkspaceBookmark[]>([])
   const isRestored = ref(false)
   let hasLocalChanges = false
+  let persistQueue: Promise<void> = Promise.resolve()
+  let persistVersion = 0
 
   void restoreBookmarks()
 
@@ -214,6 +217,13 @@ export function useWorkspaceBookmarks() {
 
   async function restoreBookmarks(): Promise<void> {
     try {
+      const pendingBookmarks = readStoredBookmarksFromStorage(PENDING_STORAGE_KEY)
+      if (pendingBookmarks.exists) {
+        applyRestoredBookmarks(pendingBookmarks.bookmarks)
+        await recoverPendingBookmarks(pendingBookmarks.bookmarks)
+        return
+      }
+
       const bookmarksBridge = window.ohMyGithub?.bookmarks
       const info = await bookmarksBridge?.get?.()
       const fileBookmarks = coerceStoredBookmarks(info?.bookmarks)
@@ -253,18 +263,28 @@ export function useWorkspaceBookmarks() {
 
   function persist(): void {
     hasLocalChanges = true
-    void persistBookmarks({
+    const stored = createStoredBookmarks({
       folders: folders.value,
       bookmarks: bookmarks.value,
-    }).then(() => {
-      localStorage.removeItem(LEGACY_STORAGE_KEY)
-    }).catch((error) => {
-      writeLegacyStoredBookmarks({
-        folders: folders.value,
-        bookmarks: bookmarks.value,
-      })
-      console.error('Failed to persist workspace bookmarks', error)
     })
+    const version = ++persistVersion
+
+    writeStoredBookmarksToStorage(PENDING_STORAGE_KEY, stored)
+    persistQueue = persistQueue
+      .catch(() => undefined)
+      .then(async () => {
+        await persistBookmarks(stored)
+        if (version === persistVersion) {
+          localStorage.removeItem(PENDING_STORAGE_KEY)
+          localStorage.removeItem(LEGACY_STORAGE_KEY)
+        }
+      })
+      .catch((error) => {
+        if (version === persistVersion) {
+          writeStoredBookmarksToStorage(PENDING_STORAGE_KEY, stored)
+        }
+        console.error('Failed to persist workspace bookmarks', error)
+      })
   }
 
   function hasFolderTitle(title: string, excludeFolderId?: string): boolean {
@@ -297,41 +317,59 @@ export function useWorkspaceBookmarks() {
 }
 
 async function persistBookmarks(payload: Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'>): Promise<void> {
-  const stored: StoredWorkspaceBookmarks = {
-    version: STORAGE_VERSION,
-    folders: payload.folders,
-    bookmarks: dedupeBookmarks(payload.bookmarks),
-  }
+  const stored = createStoredBookmarks(payload)
   const bookmarksBridge = window.ohMyGithub?.bookmarks
   if (!bookmarksBridge) {
-    writeLegacyStoredBookmarks(stored)
+    writeStoredBookmarksToStorage(PENDING_STORAGE_KEY, stored)
     throw new Error('Workspace bookmarks bridge is not available')
   }
 
   await bookmarksBridge.update(stored)
 }
 
-function readLegacyStoredBookmarks(): Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'> {
+async function recoverPendingBookmarks(payload: Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'>): Promise<void> {
   try {
-    const raw = localStorage.getItem(LEGACY_STORAGE_KEY)
-    if (!raw) {
-      return { folders: [], bookmarks: [] }
-    }
+    await persistBookmarks(payload)
+    localStorage.removeItem(PENDING_STORAGE_KEY)
+    localStorage.removeItem(LEGACY_STORAGE_KEY)
+  } catch (error) {
+    writeStoredBookmarksToStorage(PENDING_STORAGE_KEY, payload)
+    console.error('Failed to recover pending workspace bookmarks', error)
+  }
+}
 
-    return coerceStoredBookmarks(JSON.parse(raw) as unknown)
+function readLegacyStoredBookmarks(): Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'> {
+  return readStoredBookmarksFromStorage(LEGACY_STORAGE_KEY).bookmarks
+}
+
+function readStoredBookmarksFromStorage(key: string): {
+  exists: boolean
+  bookmarks: Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'>
+} {
+  const raw = localStorage.getItem(key)
+  if (!raw) return { exists: false, bookmarks: { folders: [], bookmarks: [] } }
+
+  try {
+    return { exists: true, bookmarks: coerceStoredBookmarks(JSON.parse(raw) as unknown) }
   } catch {
-    return { folders: [], bookmarks: [] }
+    return { exists: true, bookmarks: { folders: [], bookmarks: [] } }
   }
 }
 
 function writeLegacyStoredBookmarks(payload: Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'>): void {
-  const stored: StoredWorkspaceBookmarks = {
+  writeStoredBookmarksToStorage(LEGACY_STORAGE_KEY, payload)
+}
+
+function writeStoredBookmarksToStorage(key: string, payload: Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'>): void {
+  localStorage.setItem(key, JSON.stringify(createStoredBookmarks(payload)))
+}
+
+function createStoredBookmarks(payload: Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'>): StoredWorkspaceBookmarks {
+  return {
     version: STORAGE_VERSION,
-    folders: payload.folders,
+    folders: payload.folders.map((folder) => ({ ...folder })),
     bookmarks: dedupeBookmarks(payload.bookmarks),
   }
-
-  localStorage.setItem(LEGACY_STORAGE_KEY, JSON.stringify(stored))
 }
 
 function coerceStoredBookmarks(value: unknown): Pick<StoredWorkspaceBookmarks, 'bookmarks' | 'folders'> {
@@ -406,7 +444,6 @@ function coerceStoredBookmark(value: unknown, folderIds: Set<string>): Workspace
 }
 
 function normalizeLegacyStoredBookmarkType(value: unknown): WorkspaceBookmark['type'] | null {
-  if (value === 'org') return 'account'
   if (typeof value !== 'string' || !isWorkspaceTabType(value)) return null
 
   return value
