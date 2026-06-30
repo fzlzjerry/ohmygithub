@@ -15,7 +15,8 @@
     "package:win": "pnpm run build && electron-builder --win --x64",
     "package:win:arm64": "pnpm run build && electron-builder --win --arm64",
     "package:linux": "pnpm run build && electron-builder --linux",
-    "typecheck": "vue-tsc -p tsconfig.json --noEmit"
+    "typecheck": "vue-tsc -p tsconfig.json --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@electron-toolkit/preload": "^3.0.2",
@@ -59,6 +60,7 @@
     "electron-vite": "6.0.0-beta.1",
     "typescript": "^5.8.3",
     "vite": "^8.1.0",
+    "vitest": "^4.1.9",
     "vue-tsc": "^3.0.4"
   }
 }
