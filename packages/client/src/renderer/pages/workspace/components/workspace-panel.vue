@@ -4,6 +4,8 @@ import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { Badge } from '@oh-my-github/ui'
 import AccountPage from '../../account/account-page.vue'
+import ActionRunPage from '../../action-run/action-run-page.vue'
+import CommitPage from '../../commit/commit-page.vue'
 import IssueListPage from '../../issue-list/issue-list-page.vue'
 import IssuePage from '../../issue/issue-page.vue'
 import PullRequestListPage from '../../pull-request-list/pull-request-list-page.vue'
@@ -59,6 +61,18 @@ function translate(key: string, params?: WorkspaceMessageParams): string {
 
   <IssuePage
     v-else-if="tab.type === 'issue'"
+    :tab="tab"
+  />
+
+  <ActionRunPage
+    v-else-if="tab.type === 'action-run'"
+    :is-active="isActive"
+    :tab="tab"
+    @replace-active-url="emit('replaceActiveUrl', $event)"
+  />
+
+  <CommitPage
+    v-else-if="tab.type === 'commit'"
     :tab="tab"
   />
 

@@ -42,7 +42,6 @@ const {
   canGoBack,
   canGoForward,
   closeTab,
-  createTab,
   goBack,
   goForward,
   openWorkspaceTab,
@@ -173,10 +172,6 @@ function registerWorkspaceShortcuts(): void {
       openSearchDialog()
       return true
     }, { enabled: () => canUseWorkspaceShortcuts.value }),
-    registerKeyboardShortcutHandler('workspace.newTab', () => {
-      void createTab()
-      return true
-    }, { enabled: () => canUseWorkspaceShortcuts.value }),
     registerKeyboardShortcutHandler('workspace.closeTab', () => {
       if (tabs.value.length <= 1) return false
 
@@ -220,6 +215,13 @@ async function copyActiveGitHubUrl(): Promise<void> {
   if (!url) return
 
   await copyGitHubUrl(url)
+}
+
+async function openActiveGitHubUrl(): Promise<void> {
+  const url = activeGithubUrl.value
+  if (!url) return
+
+  await openGitHubUrl(url)
 }
 
 async function copyGitHubUrl(url: string): Promise<void> {
@@ -351,7 +353,7 @@ async function writeClipboardText(value: string): Promise<void> {
           @bookmark="addTabBookmark"
           @close="closeTab"
           @copy-git-hub-url="copyActiveGitHubUrl"
-          @create="createTab"
+          @open-git-hub-url="openActiveGitHubUrl"
           @forward="goForward"
           @replace-active-url="replaceActiveTabUrl"
           @remove-bookmark="removeBookmark"

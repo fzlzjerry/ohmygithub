@@ -23,13 +23,17 @@ html {
 }
 
 .workspace-right-panel-scrollbar,
-.workspace-right-panel-scrollbar * {
+.workspace-right-panel-scrollbar *,
+.action-run-log-scrollbar,
+.action-run-log-scrollbar * {
   scrollbar-color: var(--scrollbar-thumb) transparent;
   scrollbar-width: thin;
 }
 
 .workspace-right-panel-scrollbar::-webkit-scrollbar,
-.workspace-right-panel-scrollbar *::-webkit-scrollbar {
+.workspace-right-panel-scrollbar *::-webkit-scrollbar,
+.action-run-log-scrollbar::-webkit-scrollbar,
+.action-run-log-scrollbar *::-webkit-scrollbar {
   display: block;
   width: 8px;
   height: 8px;
@@ -38,12 +42,18 @@ html {
 .workspace-right-panel-scrollbar::-webkit-scrollbar-track,
 .workspace-right-panel-scrollbar::-webkit-scrollbar-corner,
 .workspace-right-panel-scrollbar *::-webkit-scrollbar-track,
-.workspace-right-panel-scrollbar *::-webkit-scrollbar-corner {
+.workspace-right-panel-scrollbar *::-webkit-scrollbar-corner,
+.action-run-log-scrollbar::-webkit-scrollbar-track,
+.action-run-log-scrollbar::-webkit-scrollbar-corner,
+.action-run-log-scrollbar *::-webkit-scrollbar-track,
+.action-run-log-scrollbar *::-webkit-scrollbar-corner {
   background: transparent;
 }
 
 .workspace-right-panel-scrollbar::-webkit-scrollbar-thumb,
-.workspace-right-panel-scrollbar *::-webkit-scrollbar-thumb {
+.workspace-right-panel-scrollbar *::-webkit-scrollbar-thumb,
+.action-run-log-scrollbar::-webkit-scrollbar-thumb,
+.action-run-log-scrollbar *::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-thumb);
   background-clip: padding-box;
   border: 1px solid transparent;
@@ -51,7 +61,9 @@ html {
 }
 
 .workspace-right-panel-scrollbar::-webkit-scrollbar-thumb:hover,
-.workspace-right-panel-scrollbar *::-webkit-scrollbar-thumb:hover {
+.workspace-right-panel-scrollbar *::-webkit-scrollbar-thumb:hover,
+.action-run-log-scrollbar::-webkit-scrollbar-thumb:hover,
+.action-run-log-scrollbar *::-webkit-scrollbar-thumb:hover {
   background-color: var(--scrollbar-thumb-hover);
 }
 

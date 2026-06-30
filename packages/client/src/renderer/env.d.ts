@@ -1062,8 +1062,9 @@ type StoredWorkspaceBookmark = {
   folderId: string | null
   owner?: string
   repo?: string
-  draftId?: string
   number?: number
+  runId?: number
+  jobId?: number
   accountSection?: string
   repositorySection?: string
   pullRequestCategory?: string

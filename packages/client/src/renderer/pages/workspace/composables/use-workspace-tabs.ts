@@ -48,11 +48,6 @@ export function useWorkspaceTabs() {
     await pushWorkspaceUrl(url)
   }
 
-  async function createTab(): Promise<void> {
-    const url = nextDraftUrl(tabs.value)
-    await pushWorkspaceUrl(url)
-  }
-
   async function openWorkspaceTab(url: string, options: { activate?: boolean } = {}): Promise<void> {
     const tab = createWorkspaceTabFromUrl(url)
 
@@ -278,7 +273,6 @@ export function useWorkspaceTabs() {
     canGoBack,
     canGoForward,
     closeTab,
-    createTab,
     goBack,
     goForward,
     openWorkspaceTab,
@@ -449,21 +443,6 @@ function cloneNavigationSnapshot(snapshot: WorkspaceNavigationSnapshot): Workspa
     activeUrl: snapshot.activeUrl,
     tabs: snapshot.tabs.map((tab) => ({ ...tab })),
   }
-}
-
-function nextDraftUrl(tabs: WorkspaceTab[]): string {
-  let next = 1
-  const used = new Set(
-    tabs
-      .map((tab) => tab.draftId)
-      .filter((id): id is string => Boolean(id)),
-  )
-
-  while (used.has(String(next))) {
-    next += 1
-  }
-
-  return `/draft/${next}`
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {

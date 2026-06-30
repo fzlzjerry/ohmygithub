@@ -243,10 +243,6 @@
           "label": "搜索或跳转",
           "description": "打开工作区搜索和快速跳转窗口。"
         },
-        "workspaceNewTab": {
-          "label": "新建标签页",
-          "description": "创建新的工作区标签页。"
-        },
         "workspaceCloseTab": {
           "label": "关闭标签页",
           "description": "关闭当前工作区标签页。"
@@ -1350,18 +1346,17 @@
       "closeTab": "关闭 {title}",
       "items": {
         "activity": "活动",
-        "draft": "草稿 {number}",
         "inbox": "收件箱",
         "reviews": "Review Queue"
-      },
-      "newTab": "新建 tab"
+      }
     },
     "toolbar": {
       "back": "后退",
       "collapseSidebar": "收起侧边栏",
       "copyGitHubLink": "复制 GitHub 链接",
       "expandSidebar": "展开侧边栏",
-      "forward": "前进"
+      "forward": "前进",
+      "openGitHubLink": "在 GitHub 中打开"
     },
     "rightPanel": {
       "close": "关闭预览面板",
@@ -1378,20 +1373,10 @@
     },
     "panel": {
       "blocks": {
-        "draftOutline": {
-          "description": "这里先放一个本地草稿面板，用来承接后续真实数据和编辑器。",
-          "meta": "草稿",
-          "title": "空白工作页"
-        },
         "mergeReadiness": {
           "description": "预留合并前检查、CI 状态和 reviewer 反馈的聚合入口。",
           "meta": "占位",
           "title": "合并准备度"
-        },
-        "nextStep": {
-          "description": "后续可以把这个 tab 绑定到真实仓库、查询或本地工作区状态。",
-          "meta": "下一步",
-          "title": "等待接入数据"
         },
         "releaseWatch": {
           "description": "预留版本、工作流和最近发布动态的轻量摘要区域。",
@@ -1517,9 +1502,6 @@
         "searchOrgs": "组织",
         "searchRepos": "仓库",
         "searchUsers": "用户",
-        "scope": "本地",
-        "source": "静态",
-        "status": "未连接",
         "unread": "0",
         "waiting": "0"
       }

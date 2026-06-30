@@ -1,7 +1,6 @@
 export type KeyboardShortcutCommandId =
   | 'settings.open'
   | 'workspace.search'
-  | 'workspace.newTab'
   | 'workspace.closeTab'
   | 'workspace.goBack'
   | 'workspace.goForward'
@@ -46,13 +45,6 @@ export const KEYBOARD_SHORTCUT_DEFINITIONS: readonly KeyboardShortcutDefinition[
     labelKey: 'settings.keyboard.commands.workspaceSearch.label',
     descriptionKey: 'settings.keyboard.commands.workspaceSearch.description',
     defaultAccelerator: 'Primary+K',
-  },
-  {
-    id: 'workspace.newTab',
-    group: 'workspace',
-    labelKey: 'settings.keyboard.commands.workspaceNewTab.label',
-    descriptionKey: 'settings.keyboard.commands.workspaceNewTab.description',
-    defaultAccelerator: 'Primary+T',
   },
   {
     id: 'workspace.closeTab',

@@ -14,11 +14,11 @@ import {
   Check,
   Copy,
   Folder,
+  Github,
   PanelLeftClose,
   PanelLeftOpen,
   PanelRightClose,
   PanelRightOpen,
-  Plus,
   X,
 } from 'lucide-vue-next'
 import {
@@ -57,7 +57,7 @@ const emit = defineEmits<{
   bookmark: [input: { folderId: string | null; tab: WorkspaceTab; title: string }]
   close: [url: string]
   copyGitHubUrl: []
-  create: []
+  openGitHubUrl: []
   forward: []
   replaceActiveUrl: [url: string]
   removeBookmark: [url: string]
@@ -446,18 +446,6 @@ watch(
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <Button
-        :aria-label="t('workspace.toolbar.copyGitHubLink')"
-        class="size-7"
-        :disabled="!props.activeGithubUrl"
-        size="icon-sm"
-        type="button"
-        variant="ghost"
-        @click="emit('copyGitHubUrl')"
-      >
-        <Copy class="size-3.5" />
-      </Button>
-
       <div class="mx-1 h-4 w-px shrink-0 bg-border" />
 
       <div class="workspace-tabs-scroll-frame min-w-0 flex-1">
@@ -509,14 +497,27 @@ watch(
       </div>
 
       <Button
-        :aria-label="t('workspace.tabs.newTab')"
+        :aria-label="t('workspace.toolbar.copyGitHubLink')"
         class="size-7"
+        :disabled="!props.activeGithubUrl"
         size="icon-sm"
         type="button"
         variant="ghost"
-        @click="emit('create')"
+        @click="emit('copyGitHubUrl')"
       >
-        <Plus class="size-4" />
+        <Copy class="size-3.5" />
+      </Button>
+
+      <Button
+        :aria-label="t('workspace.toolbar.openGitHubLink')"
+        class="size-7"
+        :disabled="!props.activeGithubUrl"
+        size="icon-sm"
+        type="button"
+        variant="ghost"
+        @click="emit('openGitHubUrl')"
+      >
+        <Github class="size-3.5" />
       </Button>
 
       <Button

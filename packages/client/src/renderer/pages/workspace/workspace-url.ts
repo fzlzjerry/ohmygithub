@@ -4,7 +4,7 @@ import type { AccountTabId, RepositoryTabId, WorkspaceTab, WorkspaceTabType } fr
 export const DEFAULT_WORKSPACE_URL = '/inbox'
 
 const INTERNAL_TYPES = new Set<WorkspaceTabType>(['inbox', 'reviews', 'activity'])
-const INTERNAL_PATHS = new Set(['draft', 'pull-requests', 'issues', 'search', 'not-found'])
+const INTERNAL_PATHS = new Set(['pull-requests', 'issues', 'search', 'not-found'])
 const DEFAULT_ACCOUNT_SECTION: AccountTabId = 'overview'
 const DEFAULT_REPOSITORY_SECTION: RepositoryTabId = 'overview'
 const PULL_REQUEST_CATEGORIES = new Set<GitHubPullRequestCategory>([
@@ -22,13 +22,13 @@ const VALID_TYPES = new Set<WorkspaceTabType>([
   'inbox',
   'reviews',
   'activity',
-  'draft',
   'account',
   'repo',
   'pull-request-list',
   'issue-list',
   'pull-request',
   'issue',
+  'action-run',
   'search-result',
   'not-found',
 ])
@@ -48,6 +48,10 @@ export function routeToWorkspaceUrl(route: RouteLocationNormalizedLoaded): strin
   if (path.startsWith('/search/')) {
     const [, , rawMode] = path.split('/')
     return createSearchUrl(sanitizeSearchMode(rawMode), typeof route.query.q === 'string' ? route.query.q : '')
+  }
+
+  if (isActionRunWorkspacePath(path)) {
+    return createActionRunWorkspaceUrlFromPath(path, typeof route.query.job === 'string' ? route.query.job : '')
   }
 
   if (isRepositoryWorkspacePath(path)) {
@@ -86,6 +90,10 @@ export function normalizeWorkspaceUrl(url: string): string {
     return createSearchUrl(sanitizeSearchMode(rawMode), search.get('q') ?? '')
   }
 
+  if (isActionRunWorkspacePath(path)) {
+    return createActionRunWorkspaceUrlFromPath(path, search.get('job') ?? '')
+  }
+
   if (isRepositoryWorkspacePath(path)) {
     return createRepositoryUrlFromPath(path, search.get('tab') ?? '')
   }
@@ -104,6 +112,31 @@ export function createRepositoryWorkspaceUrl(
 ): string {
   const path = `/${sanitizeSegment(owner)}/${sanitizeSegment(repo)}`
   return createRepositoryUrlFromPath(path, repositorySectionToQuery(section))
+}
+
+export function createActionRunWorkspaceUrl(
+  owner: string,
+  repo: string,
+  runId: number,
+  jobId?: number | null,
+): string {
+  const path = `/${sanitizeSegment(owner)}/${sanitizeSegment(repo)}/actions/runs/${runId}`
+  const normalizedJobId = sanitizeNumber(jobId)
+
+  if (!normalizedJobId) return path
+
+  const params = new URLSearchParams()
+  params.set('job', String(normalizedJobId))
+  return `${path}?${params.toString()}`
+}
+
+export function createCommitWorkspaceUrl(owner: string, repo: string, sha: string): string {
+  return `/${sanitizeSegment(owner)}/${sanitizeSegment(repo)}/commit/${sha}`
+}
+
+function sanitizeCommitSha(value: string | undefined): string {
+  const decoded = sanitizeSegment(value)
+  return /^[0-9a-f]{7,40}$/i.test(decoded) ? decoded.toLowerCase() : ''
 }
 
 export function createAccountWorkspaceUrl(
@@ -151,15 +184,6 @@ function parseWorkspaceUrl(url: string): Omit<WorkspaceTab, 'title'> {
       type: 'search-result',
       searchMode: mode,
       searchQuery,
-    }
-  }
-
-  if (firstSegment === 'draft') {
-    const draftId = sanitizeSegment(segments[1]) || '1'
-    return {
-      url: `/draft/${draftId}`,
-      type: 'draft',
-      draftId,
     }
   }
 
@@ -215,6 +239,36 @@ function parseWorkspaceUrl(url: string): Omit<WorkspaceTab, 'title'> {
     }
   }
 
+  if (owner && repo && resourceType === 'actions' && segments[3] === 'runs') {
+    const runId = sanitizeNumber(segments[4])
+    const jobId = sanitizeNumber(query.get('job') ?? '')
+
+    if (runId) {
+      return {
+        url: createActionRunWorkspaceUrl(owner, repo, runId, jobId),
+        type: 'action-run',
+        owner,
+        repo,
+        runId,
+        jobId: jobId ?? undefined,
+      }
+    }
+  }
+
+  if (owner && repo && resourceType === 'commit') {
+    const sha = sanitizeCommitSha(segments[3])
+
+    if (sha) {
+      return {
+        url: createCommitWorkspaceUrl(owner, repo, sha),
+        type: 'commit',
+        owner,
+        repo,
+        commitSha: sha,
+      }
+    }
+  }
+
   if (owner && repo) {
     const repositorySection = sanitizeRepositorySection(query.get('tab') ?? '')
 
@@ -241,11 +295,12 @@ function titleForWorkspaceTab(tab: Omit<WorkspaceTab, 'title'>): string {
   if (tab.type === 'inbox') return 'Inbox'
   if (tab.type === 'reviews') return 'Review Queue'
   if (tab.type === 'activity') return 'Activity'
-  if (tab.type === 'draft') return `Draft ${tab.draftId ?? '1'}`
   if (tab.type === 'pull-request-list') return titleForPullRequestCategory(tab.pullRequestCategory)
   if (tab.type === 'issue-list') return titleForIssueCategory(tab.issueCategory)
   if (tab.type === 'pull-request') return `${tab.owner}/${tab.repo}#${tab.number ?? ''}`
   if (tab.type === 'issue') return `${tab.owner}/${tab.repo}#${tab.number ?? ''}`
+  if (tab.type === 'action-run') return `${tab.owner}/${tab.repo} run ${tab.runId ?? ''}`
+  if (tab.type === 'commit') return `${tab.owner}/${tab.repo}@${tab.commitSha?.slice(0, 7) ?? ''}`
   if (tab.type === 'search-result') return tab.searchQuery ? `Search: ${tab.searchQuery}` : 'Search'
   if (tab.type === 'not-found') return tab.notFoundInput ? `Not Found: ${tab.notFoundInput}` : 'Not Found'
   if (tab.type === 'repo') return `${tab.owner}/${tab.repo}`
@@ -293,6 +348,24 @@ function createAccountUrlFromPath(path: string, rawSection: string): string {
   const params = new URLSearchParams()
   params.set('tab', accountSectionToQuery(accountSection))
   return `${path}?${params.toString()}`
+}
+
+function createActionRunWorkspaceUrlFromPath(path: string, rawJobId?: string | number | null): string {
+  const [owner, repo, , , rawRunId] = normalizeWorkspacePath(path).split('/').filter(Boolean)
+  const runId = sanitizeNumber(rawRunId)
+  const jobId = sanitizeNumber(rawJobId)
+
+  if (!owner || !repo || !runId) return path
+
+  return createActionRunWorkspaceUrl(decodeURIComponent(owner), decodeURIComponent(repo), runId, jobId)
+}
+
+function isActionRunWorkspacePath(path: string): boolean {
+  const segments = normalizeWorkspacePath(path).split('/').filter(Boolean)
+  return segments.length === 5
+    && segments[2] === 'actions'
+    && segments[3] === 'runs'
+    && Boolean(sanitizeNumber(segments[4]))
 }
 
 function isRepositoryWorkspacePath(path: string): boolean {
@@ -347,6 +420,7 @@ function sanitizeSearchMode(value: string | undefined): GitHubWorkspaceSearchMod
 
 function sanitizeRepositorySection(value: string | undefined): RepositoryTabId {
   if (value === 'files') return 'files'
+  if (value === 'commits') return 'commits'
   if (value === 'pull-requests' || value === 'pullRequests') return 'pullRequests'
   if (value === 'issues') return 'issues'
   if (value === 'actions') return 'actions'
@@ -368,7 +442,7 @@ function accountSectionToQuery(section: AccountTabId): string {
   return section
 }
 
-function sanitizeNumber(value: string | undefined): number | null {
+function sanitizeNumber(value: string | number | null | undefined): number | null {
   const parsed = Number(value)
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null
 }

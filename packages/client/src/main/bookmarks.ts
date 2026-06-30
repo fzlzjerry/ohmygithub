@@ -18,8 +18,9 @@ export interface StoredWorkspaceBookmark {
   folderId: string | null
   owner?: string
   repo?: string
-  draftId?: string
   number?: number
+  runId?: number
+  jobId?: number
   accountSection?: string
   repositorySection?: string
   pullRequestCategory?: string
@@ -147,8 +148,9 @@ function normalizeBookmark(
     folderId: typeof value.folderId === 'string' && folderIds.has(value.folderId) ? value.folderId : null,
     owner: optionalString(value.owner),
     repo: optionalString(value.repo),
-    draftId: optionalString(value.draftId),
     number: typeof value.number === 'number' && Number.isInteger(value.number) ? value.number : undefined,
+    runId: typeof value.runId === 'number' && Number.isInteger(value.runId) ? value.runId : undefined,
+    jobId: typeof value.jobId === 'number' && Number.isInteger(value.jobId) ? value.jobId : undefined,
     accountSection: optionalString(value.accountSection),
     repositorySection: optionalString(value.repositorySection),
     pullRequestCategory: optionalString(value.pullRequestCategory),

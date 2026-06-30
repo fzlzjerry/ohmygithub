@@ -64,6 +64,20 @@ const panelStyle = computed<Record<string, string>>(() => ({
         </div>
 
         <div
+          v-else-if="content.type === 'diff'"
+          class="workspace-right-panel-code min-h-full"
+        >
+          <ShikiCode
+            :code="content.patch"
+            :diff="true"
+            :filename="content.filename"
+            :language="content.language"
+            :padded="true"
+            :themed-background="true"
+          />
+        </div>
+
+        <div
           v-else-if="content.type === 'markdown'"
           class="p-4"
         >

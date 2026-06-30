@@ -8,3 +8,6 @@ coverage
 .env
 .env.*
 !.env.example
+
+# Superpowers agent working state (local scratch)
+.superpowers/

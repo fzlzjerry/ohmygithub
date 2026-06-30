@@ -3,12 +3,13 @@ import {
   Bell,
   Book,
   CircleDot,
-  FileText,
+  GitCommitHorizontal,
   GitPullRequest,
   Inbox,
   Search,
   SearchX,
   UserRound,
+  Workflow,
 } from 'lucide-vue-next'
 
 export function getWorkspaceTabView(tab: WorkspaceTab): WorkspaceTabView {
@@ -148,6 +149,25 @@ export function getWorkspaceTabView(tab: WorkspaceTab): WorkspaceTabView {
     })
   }
 
+  if (tab.type === 'action-run') {
+    return createResourceView(tab, {
+      icon: Workflow,
+      eyebrowKey: 'workspace.panel.eyebrows.actionRun',
+      headingKey: 'workspace.panel.headings.actionRun',
+      headingParams: {
+        owner: tab.owner ?? '',
+        repo: tab.repo ?? '',
+        run: tab.runId ?? '',
+      },
+      descriptionKey: 'workspace.panel.descriptions.actionRun',
+      stats: [
+        { id: 'repository', labelKey: 'workspace.panel.stats.repository', value: `${tab.owner ?? ''}/${tab.repo ?? ''}` },
+        { id: 'run', labelKey: 'workspace.panel.stats.run', value: `${tab.runId ?? ''}` },
+        { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
+      ],
+    })
+  }
+
   if (tab.type === 'issue-list') {
     return createResourceView(tab, {
       icon: CircleDot,
@@ -205,55 +225,37 @@ export function getWorkspaceTabView(tab: WorkspaceTab): WorkspaceTabView {
     })
   }
 
-  if (tab.type === 'account') {
+  if (tab.type === 'commit') {
     return createResourceView(tab, {
-      icon: UserRound,
-      eyebrowKey: 'workspace.panel.eyebrows.account',
-      headingKey: 'workspace.panel.headings.account',
-      descriptionKey: 'workspace.panel.descriptions.account',
+      icon: GitCommitHorizontal,
+      eyebrowKey: 'workspace.panel.eyebrows.commit',
+      headingKey: 'workspace.panel.headings.commit',
+      descriptionKey: 'workspace.panel.descriptions.commit',
       stats: [
-        { id: 'owner', labelKey: 'workspace.panel.stats.account', value: tab.owner ?? '' },
-        { id: 'type', labelKey: 'workspace.panel.stats.type', valueKey: 'workspace.panel.values.account' },
+        { id: 'repository', labelKey: 'workspace.panel.stats.repository', value: `${tab.owner ?? ''}/${tab.repo ?? ''}` },
+        { id: 'commit', labelKey: 'workspace.panel.stats.commit', value: tab.commitSha?.slice(0, 7) ?? '' },
         { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
       ],
     })
   }
 
-  return {
-    tab,
-    icon: FileText,
-    titleKey: 'workspace.tabs.items.draft',
-    titleParams: { number: tab.draftId ?? '1' },
-    title: tab.title,
-    eyebrowKey: 'workspace.panel.eyebrows.draft',
-    headingKey: 'workspace.panel.headings.draft',
-    descriptionKey: 'workspace.panel.descriptions.draft',
+  return createResourceView(tab, {
+    icon: UserRound,
+    eyebrowKey: 'workspace.panel.eyebrows.account',
+    headingKey: 'workspace.panel.headings.account',
+    descriptionKey: 'workspace.panel.descriptions.account',
     stats: [
-      { id: 'scope', labelKey: 'workspace.panel.stats.scope', valueKey: 'workspace.panel.values.scope' },
-      { id: 'source', labelKey: 'workspace.panel.stats.source', valueKey: 'workspace.panel.values.source' },
-      { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.status' },
+      { id: 'owner', labelKey: 'workspace.panel.stats.account', value: tab.owner ?? '' },
+      { id: 'type', labelKey: 'workspace.panel.stats.type', valueKey: 'workspace.panel.values.account' },
+      { id: 'status', labelKey: 'workspace.panel.stats.status', valueKey: 'workspace.panel.values.placeholder' },
     ],
-    blocks: [
-      {
-        id: 'draft-outline',
-        titleKey: 'workspace.panel.blocks.draftOutline.title',
-        descriptionKey: 'workspace.panel.blocks.draftOutline.description',
-        metaKey: 'workspace.panel.blocks.draftOutline.meta',
-      },
-      {
-        id: 'next-step',
-        titleKey: 'workspace.panel.blocks.nextStep.title',
-        descriptionKey: 'workspace.panel.blocks.nextStep.description',
-        metaKey: 'workspace.panel.blocks.nextStep.meta',
-      },
-    ],
-  }
+  })
 }
 
 function createResourceView(
   tab: WorkspaceTab,
   details: Pick<WorkspaceTabView, 'descriptionKey' | 'eyebrowKey' | 'headingKey' | 'icon' | 'stats'>
-    & Partial<Pick<WorkspaceTabView, 'titleKey' | 'titleParams'>>,
+    & Partial<Pick<WorkspaceTabView, 'headingParams' | 'titleKey' | 'titleParams'>>,
 ): WorkspaceTabView {
   return {
     tab,

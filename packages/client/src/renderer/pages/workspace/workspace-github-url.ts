@@ -22,6 +22,12 @@ export function workspaceTabToGitHubUrl(tab: WorkspaceTab): string | null {
     return `${repositoryBaseUrl(tab.owner, tab.repo)}/issues/${tab.number}`
   }
 
+  if (tab.type === 'action-run' && tab.owner && tab.repo && tab.runId) {
+    const runUrl = `${repositoryBaseUrl(tab.owner, tab.repo)}/actions/runs/${tab.runId}`
+
+    return tab.jobId ? `${runUrl}/job/${tab.jobId}` : runUrl
+  }
+
   if (tab.type === 'search-result') {
     return searchGitHubUrl(tab.searchQuery, tab.searchMode)
   }

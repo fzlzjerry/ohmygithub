@@ -5,6 +5,7 @@ export type WorkspaceMessageParams = Record<string, string | number>
 export type RepositoryTabId =
   | 'overview'
   | 'files'
+  | 'commits'
   | 'pullRequests'
   | 'issues'
   | 'actions'
@@ -19,13 +20,14 @@ export type WorkspaceTabType =
   | 'inbox'
   | 'reviews'
   | 'activity'
-  | 'draft'
   | 'account'
   | 'repo'
   | 'pull-request-list'
   | 'issue-list'
   | 'pull-request'
   | 'issue'
+  | 'action-run'
+  | 'commit'
   | 'search-result'
   | 'not-found'
 
@@ -49,8 +51,10 @@ export interface WorkspaceTab {
   title: string
   owner?: string
   repo?: string
-  draftId?: string
   number?: number
+  runId?: number
+  jobId?: number
+  commitSha?: string
   accountSection?: AccountTabId
   repositorySection?: RepositoryTabId
   pullRequestCategory?: GitHubPullRequestCategory
@@ -75,8 +79,10 @@ export interface WorkspaceBookmark {
   folderId: string | null
   owner?: string
   repo?: string
-  draftId?: string
   number?: number
+  runId?: number
+  jobId?: number
+  commitSha?: string
   accountSection?: AccountTabId
   repositorySection?: RepositoryTabId
   pullRequestCategory?: GitHubPullRequestCategory

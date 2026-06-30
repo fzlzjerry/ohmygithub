@@ -243,10 +243,6 @@
           "label": "Search or go to",
           "description": "Open the workspace search and quick navigation dialog."
         },
-        "workspaceNewTab": {
-          "label": "New tab",
-          "description": "Create a new workspace tab."
-        },
         "workspaceCloseTab": {
           "label": "Close tab",
           "description": "Close the active workspace tab."
@@ -1350,18 +1346,17 @@
       "closeTab": "Close {title}",
       "items": {
         "activity": "Activity",
-        "draft": "Draft {number}",
         "inbox": "Inbox",
         "reviews": "Review Queue"
-      },
-      "newTab": "New tab"
+      }
     },
     "toolbar": {
       "back": "Back",
       "collapseSidebar": "Collapse sidebar",
       "copyGitHubLink": "Copy GitHub link",
       "expandSidebar": "Expand sidebar",
-      "forward": "Forward"
+      "forward": "Forward",
+      "openGitHubLink": "Open in GitHub"
     },
     "rightPanel": {
       "close": "Close preview panel",
@@ -1378,20 +1373,10 @@
     },
     "panel": {
       "blocks": {
-        "draftOutline": {
-          "description": "This local draft panel is a placeholder for future data and editor surfaces.",
-          "meta": "Draft",
-          "title": "Blank workspace page"
-        },
         "mergeReadiness": {
           "description": "Reserved for merge checks, CI state, and reviewer feedback.",
           "meta": "Stub",
           "title": "Merge readiness"
-        },
-        "nextStep": {
-          "description": "Later this tab can bind to a real repository, query, or local workspace state.",
-          "meta": "Next",
-          "title": "Waiting for data"
         },
         "releaseWatch": {
           "description": "Reserved for releases, workflows, and recent publication signals.",
@@ -1517,9 +1502,6 @@
         "searchOrgs": "Organizations",
         "searchRepos": "Repositories",
         "searchUsers": "Users",
-        "scope": "Local",
-        "source": "Static",
-        "status": "Disconnected",
         "unread": "0",
         "waiting": "0"
       }
