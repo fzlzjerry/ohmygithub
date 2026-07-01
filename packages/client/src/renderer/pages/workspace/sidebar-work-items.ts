@@ -13,20 +13,17 @@ import {
   GitPullRequest,
   GitPullRequestClosed,
   GitPullRequestDraft,
-  Inbox,
   UserRound,
 } from 'lucide-vue-next'
 
 export const PULL_REQUEST_CATEGORIES: readonly GitHubPullRequestCategory[] = [
   'created-by-me',
   'needs-review',
-  'inbox',
   'mentioned-me',
 ]
 
 export const ISSUE_CATEGORIES: readonly GitHubIssueCategory[] = [
   'created-by-me',
-  'inbox',
   'mentioned-me',
 ]
 
@@ -287,7 +284,6 @@ function workItemToTreeItem(
 
 function pullRequestCategoryIcon(category: GitHubPullRequestCategory): Component {
   if (category === 'created-by-me') return UserRound
-  if (category === 'inbox') return Inbox
   if (category === 'mentioned-me') return AtSign
 
   return GitPullRequest
@@ -295,7 +291,6 @@ function pullRequestCategoryIcon(category: GitHubPullRequestCategory): Component
 
 function issueCategoryIcon(category: GitHubIssueCategory): Component {
   if (category === 'created-by-me') return UserRound
-  if (category === 'inbox') return Inbox
   if (category === 'mentioned-me') return AtSign
 
   return CircleDot

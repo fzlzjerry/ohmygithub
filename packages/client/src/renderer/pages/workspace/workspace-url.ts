@@ -10,14 +10,14 @@ const DEFAULT_REPOSITORY_SECTION: RepositoryTabId = 'overview'
 const PULL_REQUEST_CATEGORIES = new Set<GitHubPullRequestCategory>([
   'created-by-me',
   'needs-review',
-  'inbox',
   'mentioned-me',
 ])
 const ISSUE_CATEGORIES = new Set<GitHubIssueCategory>([
   'created-by-me',
-  'inbox',
   'mentioned-me',
 ])
+const DEFAULT_PULL_REQUEST_CATEGORY: GitHubPullRequestCategory = 'created-by-me'
+const DEFAULT_ISSUE_CATEGORY: GitHubIssueCategory = 'created-by-me'
 const VALID_TYPES = new Set<WorkspaceTabType>([
   'inbox',
   'reviews',
@@ -308,16 +308,14 @@ function titleForWorkspaceTab(tab: Omit<WorkspaceTab, 'title'>): string {
 }
 
 function titleForPullRequestCategory(category: GitHubPullRequestCategory | undefined): string {
-  if (category === 'created-by-me') return 'Created by Me'
   if (category === 'needs-review') return 'Needs Review'
   if (category === 'mentioned-me') return 'Mentioned Me'
-  return 'Inbox'
+  return 'Created by Me'
 }
 
 function titleForIssueCategory(category: GitHubIssueCategory | undefined): string {
-  if (category === 'created-by-me') return 'Created by Me'
   if (category === 'mentioned-me') return 'Mentioned Me'
-  return 'Inbox'
+  return 'Created by Me'
 }
 
 function normalizeWorkspacePath(path: string): string {
@@ -450,11 +448,11 @@ function sanitizeNumber(value: string | number | null | undefined): number | nul
 function sanitizePullRequestCategory(value: string | undefined): GitHubPullRequestCategory {
   return PULL_REQUEST_CATEGORIES.has(value as GitHubPullRequestCategory)
     ? value as GitHubPullRequestCategory
-    : 'inbox'
+    : DEFAULT_PULL_REQUEST_CATEGORY
 }
 
 function sanitizeIssueCategory(value: string | undefined): GitHubIssueCategory {
   return ISSUE_CATEGORIES.has(value as GitHubIssueCategory)
     ? value as GitHubIssueCategory
-    : 'inbox'
+    : DEFAULT_ISSUE_CATEGORY
 }

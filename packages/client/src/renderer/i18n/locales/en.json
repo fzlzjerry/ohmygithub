@@ -1015,32 +1015,7 @@
     }
   },
   "pullRequestList": {
-    "description": "{category} is ready as a pull request list workspace. The concrete pull requests are available from the sidebar tree.",
-    "eyebrow": "Pull Request List",
-    "sections": {
-      "overview": {
-        "description": "This placeholder will become the focused pull request list for the selected category.",
-        "title": "List overview"
-      },
-      "sidebar": {
-        "description": "Expand the sidebar category to open individual pull requests from this list.",
-        "title": "Sidebar items"
-      }
-    },
-    "sources": {
-      "created-by-me": "GitHub search by author",
-      "inbox": "Unread notifications",
-      "mentioned-me": "GitHub search by mention",
-      "needs-review": "GitHub search by review request"
-    },
-    "summary": {
-      "category": "Category",
-      "source": "Source",
-      "status": "Status"
-    },
-    "values": {
-      "placeholder": "Placeholder"
-    }
+    "description": "Pull requests in the {category} category."
   },
   "issue": {
     "description": "{repository} {number} is open as an issue workspace. Conversation, labels, and project data will be connected here later.",
@@ -1200,31 +1175,7 @@
     }
   },
   "issueList": {
-    "description": "{category} is ready as an issue list workspace. The concrete issues are available from the sidebar tree.",
-    "eyebrow": "Issue List",
-    "sections": {
-      "overview": {
-        "description": "This placeholder will become the focused issue list for the selected category.",
-        "title": "List overview"
-      },
-      "sidebar": {
-        "description": "Expand the sidebar category to open individual issues from this list.",
-        "title": "Sidebar items"
-      }
-    },
-    "sources": {
-      "created-by-me": "GitHub search by author",
-      "inbox": "Unread notifications",
-      "mentioned-me": "GitHub search by mention"
-    },
-    "summary": {
-      "category": "Category",
-      "source": "Source",
-      "status": "Status"
-    },
-    "values": {
-      "placeholder": "Placeholder"
-    }
+    "description": "Issues in the {category} category."
   },
   "workspace": {
     "title": "Workspace",
@@ -1308,7 +1259,6 @@
       },
       "pullRequestCategories": {
         "created-by-me": "Created by Me",
-        "inbox": "Inbox",
         "mentioned-me": "Mentioned Me",
         "needs-review": "Needs Review"
       },
@@ -1318,7 +1268,6 @@
       },
       "issueCategories": {
         "created-by-me": "Created by Me",
-        "inbox": "Inbox",
         "mentioned-me": "Mentioned Me"
       },
       "repositories": {
@@ -1489,7 +1438,6 @@
         "createdByMe": "Created by Me",
         "drafts": "1",
         "githubSearch": "GitHub Search",
-        "inbox": "Inbox",
         "mentionedMe": "Mentioned Me",
         "needsReview": "Needs Review",
         "mentions": "0",

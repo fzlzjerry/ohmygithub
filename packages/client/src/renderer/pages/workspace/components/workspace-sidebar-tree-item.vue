@@ -92,10 +92,10 @@ const loaderType = computed(() => props.item.childrenLoader?.type)
 const repositoryOwner = computed(() => props.item.childrenLoader?.owner ?? '')
 const repositoryName = computed(() => props.item.childrenLoader?.repo ?? '')
 const pullRequestCategory = computed<GitHubPullRequestCategory>(() =>
-  props.item.childrenLoader?.pullRequestCategory ?? 'inbox'
+  props.item.childrenLoader?.pullRequestCategory ?? 'created-by-me'
 )
 const issueCategory = computed<GitHubIssueCategory>(() =>
-  props.item.childrenLoader?.issueCategory ?? 'inbox'
+  props.item.childrenLoader?.issueCategory ?? 'created-by-me'
 )
 const loaderScope = computed(() => props.item.childrenLoader?.scope ?? props.item.id)
 const workItemReference = computed(() => props.item.workItemReference)

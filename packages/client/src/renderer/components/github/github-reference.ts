@@ -206,14 +206,14 @@ function createPullRequestListWorkspaceUrl(category: string | undefined): string
   if (category === 'mentioned') return '/pull-requests/mentioned-me'
   if (category === 'review-requested') return '/pull-requests/needs-review'
 
-  return '/pull-requests/inbox'
+  return '/pull-requests/created-by-me'
 }
 
 function createIssueListWorkspaceUrl(category: string | undefined): string {
   if (category === 'created') return '/issues/created-by-me'
   if (category === 'mentioned') return '/issues/mentioned-me'
 
-  return '/issues/inbox'
+  return '/issues/created-by-me'
 }
 
 function createSearchWorkspaceUrl(url: URL): string {

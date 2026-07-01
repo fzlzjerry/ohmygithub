@@ -291,24 +291,22 @@ function createResourceView(
 }
 
 function pullRequestCategoryTitleKey(category: GitHubPullRequestCategory | undefined): string {
-  return `workspace.sidebar.pullRequestCategories.${category ?? 'inbox'}`
+  return `workspace.sidebar.pullRequestCategories.${category ?? 'created-by-me'}`
 }
 
 function issueCategoryTitleKey(category: GitHubIssueCategory | undefined): string {
-  return `workspace.sidebar.issueCategories.${category ?? 'inbox'}`
+  return `workspace.sidebar.issueCategories.${category ?? 'created-by-me'}`
 }
 
 function pullRequestCategoryValueKey(category: GitHubPullRequestCategory | undefined): string {
-  if (category === 'created-by-me') return 'workspace.panel.values.createdByMe'
   if (category === 'needs-review') return 'workspace.panel.values.needsReview'
   if (category === 'mentioned-me') return 'workspace.panel.values.mentionedMe'
-  return 'workspace.panel.values.inbox'
+  return 'workspace.panel.values.createdByMe'
 }
 
 function issueCategoryValueKey(category: GitHubIssueCategory | undefined): string {
-  if (category === 'created-by-me') return 'workspace.panel.values.createdByMe'
   if (category === 'mentioned-me') return 'workspace.panel.values.mentionedMe'
-  return 'workspace.panel.values.inbox'
+  return 'workspace.panel.values.createdByMe'
 }
 
 function searchModeValueKey(mode: GitHubWorkspaceSearchMode | undefined): string {

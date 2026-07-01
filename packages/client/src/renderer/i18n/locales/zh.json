@@ -1015,32 +1015,7 @@
     }
   },
   "pullRequestList": {
-    "description": "{category} 已作为 Pull Request 列表工作页打开。具体 PR 可以在左侧分类树中展开。",
-    "eyebrow": "Pull Request 列表",
-    "sections": {
-      "overview": {
-        "description": "这里会成为所选分类的 Pull Request 列表视图。",
-        "title": "列表概览"
-      },
-      "sidebar": {
-        "description": "展开左侧分类即可打开其中的具体 Pull Request。",
-        "title": "侧边栏条目"
-      }
-    },
-    "sources": {
-      "created-by-me": "按创建者搜索 GitHub",
-      "inbox": "未读通知",
-      "mentioned-me": "按提及搜索 GitHub",
-      "needs-review": "按 Review 请求搜索 GitHub"
-    },
-    "summary": {
-      "category": "分类",
-      "source": "来源",
-      "status": "状态"
-    },
-    "values": {
-      "placeholder": "占位"
-    }
+    "description": "{category} 分类下的 Pull Request。"
   },
   "issue": {
     "description": "{repository} {number} 已作为 Issue 工作页打开。讨论、标签和项目数据会在这里继续接入。",
@@ -1200,31 +1175,7 @@
     }
   },
   "issueList": {
-    "description": "{category} 已作为 Issue 列表工作页打开。具体 Issue 可以在左侧分类树中展开。",
-    "eyebrow": "Issue 列表",
-    "sections": {
-      "overview": {
-        "description": "这里会成为所选分类的 Issue 列表视图。",
-        "title": "列表概览"
-      },
-      "sidebar": {
-        "description": "展开左侧分类即可打开其中的具体 Issue。",
-        "title": "侧边栏条目"
-      }
-    },
-    "sources": {
-      "created-by-me": "按创建者搜索 GitHub",
-      "inbox": "未读通知",
-      "mentioned-me": "按提及搜索 GitHub"
-    },
-    "summary": {
-      "category": "分类",
-      "source": "来源",
-      "status": "状态"
-    },
-    "values": {
-      "placeholder": "占位"
-    }
+    "description": "{category} 分类下的 Issue。"
   },
   "workspace": {
     "title": "Workspace",
@@ -1308,7 +1259,6 @@
       },
       "pullRequestCategories": {
         "created-by-me": "我创建的",
-        "inbox": "收件箱",
         "mentioned-me": "提及我的",
         "needs-review": "需要 Review"
       },
@@ -1318,7 +1268,6 @@
       },
       "issueCategories": {
         "created-by-me": "我创建的",
-        "inbox": "收件箱",
         "mentioned-me": "提及我的"
       },
       "repositories": {
@@ -1489,7 +1438,6 @@
         "createdByMe": "我创建的",
         "drafts": "1",
         "githubSearch": "GitHub 搜索",
-        "inbox": "收件箱",
         "mentionedMe": "提及我的",
         "needsReview": "需要 Review",
         "mentions": "0",
