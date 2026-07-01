@@ -93,7 +93,7 @@ async function startDeviceFlow(): Promise<DeviceFlowResult> {
   const clientId = getGitHubClientId()
 
   if (!clientId) {
-    throw new Error('GITHUB_CLIENT_ID is not configured')
+    throw new Error('OAUTH_CLIENT_ID is not configured')
   }
 
   const authApi = await createAuthApi()
@@ -314,7 +314,7 @@ async function createAuthApi(): Promise<AuthApi> {
 }
 
 function getGitHubClientId(): string {
-  return process.env.GITHUB_CLIENT_ID?.trim() ?? ''
+  return process.env.OAUTH_CLIENT_ID?.trim() ?? ''
 }
 
 function delay(ms: number): Promise<void> {

@@ -151,7 +151,7 @@
       "unknown": "发生了一些问题。"
     },
     "loginWithGitHub": "使用 GitHub 登录",
-    "missingClientId": "还没有配置 GITHUB_CLIENT_ID。请把它加入 .env，或使用个人 token。",
+    "missingClientId": "还没有配置 OAUTH_CLIENT_ID。请把它加入 .env，或使用个人 token。",
     "saveToken": "保存 token",
     "subtitle": "连接 GitHub 账号后开始处理工作项。",
     "title": "登录",

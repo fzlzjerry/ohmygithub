@@ -15,8 +15,8 @@ export default defineConfig(({ mode }) => {
         }
       },
       define: {
-        'process.env.GITHUB_CLIENT_ID': JSON.stringify(
-          env.GITHUB_CLIENT_ID ?? process.env.GITHUB_CLIENT_ID ?? ''
+        'process.env.OAUTH_CLIENT_ID': JSON.stringify(
+          env.OAUTH_CLIENT_ID ?? process.env.OAUTH_CLIENT_ID ?? ''
         )
       },
       plugins: [externalizeDepsPlugin({ exclude: ['@oh-my-github/api'] })],

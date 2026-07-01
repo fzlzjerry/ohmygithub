@@ -28,12 +28,12 @@ environment (e.g. CI-provided ones) always win over `.env`.
 
 ## Environment variables
 
-Copy `.env.example` to `.env` for local development. Only `GITHUB_CLIENT_ID` is required; the
+Copy `.env.example` to `.env` for local development. Only `OAUTH_CLIENT_ID` is required; the
 rest are optional and used only for signed/published release builds.
 
 | Variable | Required | Purpose | Local | GitHub Actions |
 |---|---|---|---|---|
-| `GITHUB_CLIENT_ID` | **yes** | GitHub OAuth App client id, baked into the app at build time | `.env` | **Variable** |
+| `OAUTH_CLIENT_ID` | **yes** | GitHub OAuth App client id, baked into the app at build time | `.env` | **Variable** |
 | `CSC_LINK` | no | Code-signing cert — `.p12` path or base64 string | `.env` | **Secret** |
 | `CSC_KEY_PASSWORD` | no | Code-signing cert password | `.env` | **Secret** |
 | `APPLE_ID` | no | Apple ID email (notarization) | `.env` | **Variable** |

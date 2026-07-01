@@ -28,7 +28,7 @@ jobs:
             script: package:linux
     runs-on: ${{ matrix.os }}
     env:
-      GITHUB_CLIENT_ID: ${{ vars.GITHUB_CLIENT_ID }}
+      OAUTH_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
