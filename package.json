@@ -1,6 +1,6 @@
 {
   "name": "oh-my-github",
-  "version": "0.1.0",
+  "version": "0.0.1",
   "private": true,
   "description": "A faster GitHub workspace for notifications, pull requests, reviews, and actions.",
   "packageManager": "pnpm@11.7.0",
@@ -17,10 +17,12 @@
     "package:win:arm64": "pnpm --filter @oh-my-github/client package:win:arm64",
     "package:linux": "pnpm --filter @oh-my-github/client package:linux",
     "typecheck": "pnpm -r typecheck",
-    "lint": "pnpm typecheck"
+    "lint": "pnpm typecheck",
+    "release": "bumpp -r"
   },
   "devDependencies": {
     "@types/node": "^24.0.7",
+    "bumpp": "^11.1.0",
     "typescript": "^5.8.3"
   }
 }
