@@ -295,7 +295,7 @@ function formatDate(value: string | null | undefined): string {
 <template>
   <header class="grid gap-3 border-b border-border pb-4">
     <div class="flex min-w-0 flex-col gap-3 md:flex-row md:items-start md:justify-between">
-      <div class="grid min-w-0 gap-2">
+      <div class="grid min-w-0 gap-2 md:flex-1">
         <div class="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1">
           <WorkItemStateBadge
             kind="pull-request"
@@ -327,6 +327,7 @@ function formatDate(value: string | null | undefined): string {
             <Input
               v-model="titleDraft"
               :aria-label="t('pullRequest.edit.titleInput')"
+              class="min-w-0 flex-1"
               :disabled="isSavingTitle"
               size="lg"
             />
@@ -362,7 +363,7 @@ function formatDate(value: string | null | undefined): string {
         </form>
         <div
           v-else
-          class="flex min-w-0 items-start gap-2"
+          class="flex min-w-0 items-center gap-2"
         >
           <h1 class="min-w-0 text-heading font-semibold leading-tight text-foreground">
             {{ pullRequest.title }}
@@ -370,7 +371,7 @@ function formatDate(value: string | null | undefined): string {
           <Button
             v-if="pullRequest.viewerCanUpdate"
             :aria-label="t('pullRequest.edit.editTitle')"
-            class="mt-0.5 size-7 shrink-0 text-muted-foreground"
+            class="size-7 shrink-0 text-muted-foreground"
             size="icon-sm"
             type="button"
             variant="ghost"
