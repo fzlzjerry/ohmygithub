@@ -69,6 +69,11 @@ if (process.env.R2_PUBLIC_BASE_URL) {
   )
 }
 
+// Override the app/bundle id when APP_ID is set; otherwise electron-builder.yml's default is used.
+if (process.env.APP_ID) {
+  extraArgs.push(`-c.appId=${process.env.APP_ID}`)
+}
+
 const result = spawnSync(command, [...args, ...extraArgs], {
   stdio: 'inherit',
   shell: true,

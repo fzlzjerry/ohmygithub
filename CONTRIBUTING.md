@@ -34,6 +34,7 @@ rest are optional and used only for signed/published release builds.
 | Variable | Required | Purpose | Local | GitHub Actions |
 |---|---|---|---|---|
 | `OAUTH_CLIENT_ID` | **yes** | GitHub OAuth App client id, baked into the app at build time | `.env` | **Variable** |
+| `APP_ID` | no | Override the app/bundle id (defaults to `electron-builder.yml`'s `appId`) | `.env` | **Variable** |
 | `CSC_LINK` | no | Code-signing cert — `.p12` path or base64 string | `.env` | **Secret** |
 | `CSC_KEY_PASSWORD` | no | Code-signing cert password | `.env` | **Secret** |
 | `APPLE_ID` | no | Apple ID email (notarization) | `.env` | **Variable** |

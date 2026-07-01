@@ -1,4 +1,5 @@
-appId: dev.ohmygithub.app
+# Default app/bundle id; override per build with the APP_ID env var (see scripts/with-env.mjs).
+appId: app.oh-my-github
 productName: Oh My GitHub
 copyright: Copyright © 2026 Oh My GitHub
 

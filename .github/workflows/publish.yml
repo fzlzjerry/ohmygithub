@@ -26,6 +26,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       OAUTH_CLIENT_ID: ${{ vars.OAUTH_CLIENT_ID }}
+      APP_ID: ${{ vars.APP_ID }}
       # When set, the build also emits latest*.yml + app-update.yml (update manifest for R2).
       R2_PUBLIC_BASE_URL: ${{ vars.R2_PUBLIC_BASE_URL }}
       # Code signing (optional — empty = unsigned build).
