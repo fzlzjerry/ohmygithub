@@ -5,6 +5,7 @@ export type GitHubItemState = 'open' | 'closed' | 'merged' | 'failed' | 'success
 export interface GitHubActor {
   login: string
   avatarUrl?: string
+  isBot?: boolean
 }
 
 export interface GitHubAuthViewer {
@@ -832,10 +833,26 @@ export interface GitHubIssueSearchResult {
   incompleteResults: boolean
 }
 
+export type GitHubReactionContent =
+  | 'thumbs-up'
+  | 'thumbs-down'
+  | 'laugh'
+  | 'hooray'
+  | 'confused'
+  | 'heart'
+  | 'rocket'
+  | 'eyes'
+
 export interface GitHubIssueReaction {
   content: string
   count: number
   viewerHasReacted?: boolean
+}
+
+export interface SetReactionOptions {
+  subjectId: string
+  content: GitHubReactionContent
+  reacted: boolean
 }
 
 export interface GitHubIssueMilestone {
@@ -850,6 +867,7 @@ export interface GitHubIssueMilestone {
 
 export interface GitHubIssueComment {
   id: string
+  nodeId: string
   author: GitHubActor
   body: string
   createdAt: string
@@ -1008,6 +1026,19 @@ export type GitHubPullRequestTimelineEventType =
   | 'disconnected'
   | 'comment-deleted'
   | 'referenced'
+  | 'locked'
+  | 'unlocked'
+  | 'pinned'
+  | 'unpinned'
+  | 'transferred'
+  | 'marked-as-duplicate'
+  | 'unmarked-as-duplicate'
+  | 'deployed'
+  | 'deployment-environment-changed'
+  | 'converted-to-discussion'
+  | 'added-to-project'
+  | 'removed-from-project'
+  | 'project-status-changed'
   | 'generic'
 
 export interface GitHubPullRequestTimelineReference {
@@ -1016,6 +1047,24 @@ export interface GitHubPullRequestTimelineReference {
   number?: number
   title?: string
   url?: string | null
+}
+
+export interface GitHubPullRequestReviewComment {
+  id: string
+  nodeId: string
+  author: GitHubActor
+  body: string
+  createdAt: string
+  updatedAt: string
+  url: string | null
+  path: string
+  diffHunk: string | null
+  line: number | null
+  originalLine: number | null
+  startLine: number | null
+  outdated: boolean
+  isReply: boolean
+  reactions: GitHubIssueReaction[]
 }
 
 export interface GitHubPullRequestTimelineEvent {
@@ -1039,6 +1088,7 @@ export interface GitHubPullRequestTimelineEvent {
   reviewer?: GitHubActor
   reviewerType?: GitHubPullRequestReviewerType
   reviewState?: GitHubPullRequestReviewState
+  reviewComments?: GitHubPullRequestReviewComment[]
   source?: GitHubPullRequestTimelineReference
 }
 
@@ -1213,6 +1263,7 @@ export interface GitHubClient {
   setIssueLock(options: SetIssueLockOptions): Promise<void>
   setIssuePinned(options: SetIssuePinnedOptions): Promise<void>
   deleteIssue(options: DeleteIssueOptions): Promise<void>
+  setReaction(options: SetReactionOptions): Promise<void>
   getAccountProfile(login: string): Promise<GitHubAccountProfile>
   getAccountOverview(login: string): Promise<GitHubAccountOverview>
   getAccountContributions(options: AccountContributionsOptions): Promise<GitHubAccountContributionYear>

@@ -17,6 +17,7 @@ import type {
   GitHubPullRequestDetail,
   GitHubPullRequestLinkedIssue,
   GitHubPullRequestMergeMethod,
+  GitHubPullRequestReviewComment,
   GitHubPullRequestReviewDecision,
   GitHubPullRequestReviewRequest,
   GitHubPullRequestReviewState,
@@ -64,6 +65,7 @@ interface GraphQLPullRequestNode extends GraphQLWorkItemBase {
 }
 
 interface GraphQLActorNode {
+  __typename?: string | null
   login: string
   avatarUrl?: string | null
 }
@@ -157,6 +159,23 @@ interface GraphQLPullRequestReviewNode {
   author: GraphQLActorNode | null
 }
 
+interface GraphQLReviewCommentNode {
+  id: string
+  body: string
+  createdAt: string
+  updatedAt: string
+  url?: string | null
+  path: string
+  diffHunk?: string | null
+  line?: number | null
+  originalLine?: number | null
+  startLine?: number | null
+  outdated?: boolean | null
+  replyTo?: { id: string } | null
+  author: GraphQLActorNode | null
+  reactionGroups?: GraphQLReactionGroup[] | null
+}
+
 interface GraphQLTimelineSourceNode {
   __typename?: string
   title?: string | null
@@ -232,6 +251,34 @@ interface GraphQLPullRequestTimelineNode {
   review?: GraphQLPullRequestReviewNode | null
   source?: GraphQLTimelineSourceNode | null
   subject?: GraphQLTimelineSourceNode | null
+  comments?: {
+    nodes?: Array<GraphQLReviewCommentNode | null> | null
+  } | null
+  lockReason?: string | null
+  fromRepository?: {
+    nameWithOwner?: string | null
+  } | null
+  canonical?: GraphQLTimelineSourceNode | null
+  deployment?: {
+    environment?: string | null
+  } | null
+  deploymentStatus?: {
+    state?: string | null
+    deployment?: {
+      environment?: string | null
+    } | null
+  } | null
+  discussion?: {
+    title?: string | null
+    number?: number | null
+    url?: string | null
+  } | null
+  project?: {
+    title?: string | null
+    url?: string | null
+  } | null
+  previousStatus?: string | null
+  status?: string | null
 }
 
 interface GraphQLPullRequestDetailNode extends GraphQLPullRequestNode {
@@ -363,6 +410,7 @@ const pullRequestFields = `
     isDraft
     merged
     author {
+      __typename
       login
       avatarUrl
     }
@@ -439,6 +487,7 @@ const pullRequestDetailQuery = `
         closedAt
         mergedAt
         mergedBy {
+          __typename
           login
           avatarUrl
         }
@@ -517,6 +566,7 @@ const pullRequestDetailQuery = `
             url
             state
             author {
+              __typename
               login
               avatarUrl
             }
@@ -546,6 +596,7 @@ const pullRequestDetailQuery = `
             url
             viewerCanUpdate
             author {
+              __typename
               login
               avatarUrl
             }
@@ -598,6 +649,19 @@ const pullRequestDetailQuery = `
             COMMENT_DELETED_EVENT
             REFERENCED_EVENT
             PULL_REQUEST_REVIEW
+            LOCKED_EVENT
+            UNLOCKED_EVENT
+            PINNED_EVENT
+            UNPINNED_EVENT
+            TRANSFERRED_EVENT
+            MARKED_AS_DUPLICATE_EVENT
+            UNMARKED_AS_DUPLICATE_EVENT
+            DEPLOYED_EVENT
+            DEPLOYMENT_ENVIRONMENT_CHANGED_EVENT
+            CONVERTED_TO_DISCUSSION_EVENT
+            ADDED_TO_PROJECT_V2_EVENT
+            REMOVED_FROM_PROJECT_V2_EVENT
+            PROJECT_V2_ITEM_STATUS_CHANGED_EVENT
           ]
         ) {
           nodes {
@@ -605,6 +669,7 @@ const pullRequestDetailQuery = `
             ... on AssignedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -631,6 +696,7 @@ const pullRequestDetailQuery = `
             ... on UnassignedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -657,6 +723,7 @@ const pullRequestDetailQuery = `
             ... on LabeledEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -668,6 +735,7 @@ const pullRequestDetailQuery = `
             ... on UnlabeledEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -679,6 +747,7 @@ const pullRequestDetailQuery = `
             ... on ClosedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -687,6 +756,7 @@ const pullRequestDetailQuery = `
             ... on ReopenedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -695,6 +765,7 @@ const pullRequestDetailQuery = `
             ... on RenamedTitleEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -705,6 +776,7 @@ const pullRequestDetailQuery = `
             ... on CrossReferencedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -732,6 +804,7 @@ const pullRequestDetailQuery = `
             ... on MentionedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -747,13 +820,45 @@ const pullRequestDetailQuery = `
               url
               state
               author {
+                __typename
                 login
                 avatarUrl
+              }
+              comments(first: 50) {
+                nodes {
+                  id
+                  body
+                  createdAt
+                  updatedAt
+                  url
+                  path
+                  diffHunk
+                  line
+                  originalLine
+                  startLine
+                  outdated
+                  replyTo {
+                    id
+                  }
+                  author {
+                    __typename
+                    login
+                    avatarUrl
+                  }
+                  reactionGroups {
+                    content
+                    reactors {
+                      totalCount
+                    }
+                    viewerHasReacted
+                  }
+                }
               }
             }
             ... on ReviewRequestedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -778,6 +883,7 @@ const pullRequestDetailQuery = `
             ... on ReviewRequestRemovedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -802,6 +908,7 @@ const pullRequestDetailQuery = `
             ... on ReviewDismissedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -819,6 +926,7 @@ const pullRequestDetailQuery = `
                 url
                 state
                 author {
+                  __typename
                   login
                   avatarUrl
                 }
@@ -827,6 +935,7 @@ const pullRequestDetailQuery = `
             ... on ReadyForReviewEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -836,6 +945,7 @@ const pullRequestDetailQuery = `
             ... on ConvertToDraftEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -868,6 +978,7 @@ const pullRequestDetailQuery = `
             ... on MergedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -883,6 +994,7 @@ const pullRequestDetailQuery = `
             ... on BaseRefChangedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -893,6 +1005,7 @@ const pullRequestDetailQuery = `
             ... on BaseRefDeletedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -902,6 +1015,7 @@ const pullRequestDetailQuery = `
             ... on BaseRefForcePushedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -923,6 +1037,7 @@ const pullRequestDetailQuery = `
             ... on HeadRefDeletedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -932,6 +1047,7 @@ const pullRequestDetailQuery = `
             ... on HeadRefForcePushedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -953,6 +1069,7 @@ const pullRequestDetailQuery = `
             ... on HeadRefRestoredEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -961,6 +1078,7 @@ const pullRequestDetailQuery = `
             ... on AutomaticBaseChangeFailedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -971,6 +1089,7 @@ const pullRequestDetailQuery = `
             ... on AutomaticBaseChangeSucceededEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -981,6 +1100,7 @@ const pullRequestDetailQuery = `
             ... on AutoMergeEnabledEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -989,6 +1109,7 @@ const pullRequestDetailQuery = `
             ... on AutoMergeDisabledEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -998,6 +1119,7 @@ const pullRequestDetailQuery = `
             ... on AutoRebaseEnabledEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1006,6 +1128,7 @@ const pullRequestDetailQuery = `
             ... on AutoSquashEnabledEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1014,6 +1137,7 @@ const pullRequestDetailQuery = `
             ... on AddedToMergeQueueEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1025,6 +1149,7 @@ const pullRequestDetailQuery = `
             ... on RemovedFromMergeQueueEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1042,6 +1167,7 @@ const pullRequestDetailQuery = `
             ... on MilestonedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1051,6 +1177,7 @@ const pullRequestDetailQuery = `
             ... on DemilestonedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1060,6 +1187,7 @@ const pullRequestDetailQuery = `
             ... on ConnectedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1106,6 +1234,7 @@ const pullRequestDetailQuery = `
             ... on DisconnectedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1152,6 +1281,7 @@ const pullRequestDetailQuery = `
             ... on CommentDeletedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1160,6 +1290,7 @@ const pullRequestDetailQuery = `
             ... on ReferencedEvent {
               id
               actor {
+                __typename
                 login
                 avatarUrl
               }
@@ -1187,6 +1318,193 @@ const pullRequestDetailQuery = `
                     nameWithOwner
                   }
                 }
+              }
+            }
+            ... on LockedEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              lockReason
+            }
+            ... on UnlockedEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+            }
+            ... on PinnedEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+            }
+            ... on UnpinnedEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+            }
+            ... on TransferredEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              fromRepository {
+                nameWithOwner
+              }
+            }
+            ... on MarkedAsDuplicateEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              canonical {
+                __typename
+                ... on Issue {
+                  title
+                  number
+                  url
+                  repository {
+                    nameWithOwner
+                  }
+                }
+                ... on PullRequest {
+                  title
+                  number
+                  url
+                  repository {
+                    nameWithOwner
+                  }
+                }
+              }
+            }
+            ... on UnmarkedAsDuplicateEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              canonical {
+                __typename
+                ... on Issue {
+                  title
+                  number
+                  url
+                  repository {
+                    nameWithOwner
+                  }
+                }
+                ... on PullRequest {
+                  title
+                  number
+                  url
+                  repository {
+                    nameWithOwner
+                  }
+                }
+              }
+            }
+            ... on DeployedEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              deployment {
+                environment
+              }
+            }
+            ... on DeploymentEnvironmentChangedEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              deploymentStatus {
+                state
+                deployment {
+                  environment
+                }
+              }
+            }
+            ... on ConvertedToDiscussionEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              discussion {
+                title
+                number
+                url
+              }
+            }
+            ... on AddedToProjectV2Event {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              project {
+                title
+                url
+              }
+            }
+            ... on RemovedFromProjectV2Event {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              project {
+                title
+                url
+              }
+            }
+            ... on ProjectV2ItemStatusChangedEvent {
+              id
+              actor {
+                __typename
+                login
+                avatarUrl
+              }
+              createdAt
+              previousStatus
+              status
+              project {
+                title
+                url
               }
             }
           }
@@ -1758,6 +2076,7 @@ function mapComments(
     return [
       {
         id: `pull-request-comment:${comment.databaseId ?? comment.id}`,
+        nodeId: comment.id,
         author: normalizeActor(comment.author),
         body: comment.body,
         createdAt: comment.createdAt,
@@ -1774,6 +2093,7 @@ function mapComments(
 function mapRestIssueComment(comment: RestIssueCommentNode): GitHubPullRequestComment {
   return {
     id: `pull-request-comment:${comment.id}`,
+    nodeId: comment.node_id ?? '',
     author: {
       login: comment.user?.login ?? 'unknown',
       avatarUrl: comment.user?.avatar_url ?? undefined
@@ -1892,6 +2212,34 @@ function mapReviews(
   })
 }
 
+function mapReviewComments(
+  nodes: Array<GraphQLReviewCommentNode | null> | null | undefined
+): GitHubPullRequestReviewComment[] {
+  return (nodes ?? []).flatMap((comment) => {
+    if (!comment) return []
+
+    return [
+      {
+        id: `pull-request-review-comment:${comment.id}`,
+        nodeId: comment.id,
+        author: normalizeActor(comment.author),
+        body: comment.body,
+        createdAt: comment.createdAt,
+        updatedAt: comment.updatedAt,
+        url: comment.url ?? null,
+        path: comment.path,
+        diffHunk: comment.diffHunk ?? null,
+        line: comment.line ?? null,
+        originalLine: comment.originalLine ?? null,
+        startLine: comment.startLine ?? null,
+        outdated: comment.outdated ?? false,
+        isReply: Boolean(comment.replyTo),
+        reactions: mapReactions(comment.reactionGroups)
+      }
+    ]
+  })
+}
+
 function mapLinkedIssues(
   nodes: Array<GraphQLLinkedIssueNode | null> | null | undefined
 ): GitHubPullRequestLinkedIssue[] {
@@ -1987,6 +2335,7 @@ function mapTimelineEvents(
           type: 'reviewed' as const,
           body: node.body ?? null,
           reviewState: normalizeReviewState(node.state),
+          reviewComments: mapReviewComments(node.comments?.nodes),
           url: node.url ?? null
         }
       ]
@@ -2173,6 +2522,88 @@ function mapTimelineEvents(
           afterCommit: commitLabel(node.commit),
           url: node.commit?.url ?? null,
           source: mapTimelineSource(node.subject)
+        }
+      ]
+    }
+
+    if (node.__typename === 'LockedEvent') {
+      return [{ ...base, type: 'locked' as const, reason: node.lockReason ?? null }]
+    }
+
+    if (node.__typename === 'UnlockedEvent') {
+      return [{ ...base, type: 'unlocked' as const }]
+    }
+
+    if (node.__typename === 'PinnedEvent') {
+      return [{ ...base, type: 'pinned' as const }]
+    }
+
+    if (node.__typename === 'UnpinnedEvent') {
+      return [{ ...base, type: 'unpinned' as const }]
+    }
+
+    if (node.__typename === 'TransferredEvent') {
+      return [{ ...base, type: 'transferred' as const, from: node.fromRepository?.nameWithOwner ?? null }]
+    }
+
+    if (node.__typename === 'MarkedAsDuplicateEvent') {
+      return [{ ...base, type: 'marked-as-duplicate' as const, source: mapTimelineSource(node.canonical) }]
+    }
+
+    if (node.__typename === 'UnmarkedAsDuplicateEvent') {
+      return [{ ...base, type: 'unmarked-as-duplicate' as const, source: mapTimelineSource(node.canonical) }]
+    }
+
+    if (node.__typename === 'DeployedEvent') {
+      return [{ ...base, type: 'deployed' as const, to: node.deployment?.environment ?? null }]
+    }
+
+    if (node.__typename === 'DeploymentEnvironmentChangedEvent') {
+      return [
+        {
+          ...base,
+          type: 'deployment-environment-changed' as const,
+          to: node.deploymentStatus?.deployment?.environment ?? null,
+          reason: node.deploymentStatus?.state ?? null
+        }
+      ]
+    }
+
+    if (node.__typename === 'ConvertedToDiscussionEvent') {
+      return [
+        {
+          ...base,
+          type: 'converted-to-discussion' as const,
+          url: node.discussion?.url ?? null,
+          source: node.discussion
+            ? {
+                type: 'discussion',
+                number: node.discussion.number ?? undefined,
+                title: node.discussion.title ?? undefined,
+                url: node.discussion.url ?? null
+              }
+            : undefined
+        }
+      ]
+    }
+
+    if (node.__typename === 'AddedToProjectV2Event') {
+      return [{ ...base, type: 'added-to-project' as const, to: node.project?.title ?? null, url: node.project?.url ?? null }]
+    }
+
+    if (node.__typename === 'RemovedFromProjectV2Event') {
+      return [{ ...base, type: 'removed-from-project' as const, from: node.project?.title ?? null, url: node.project?.url ?? null }]
+    }
+
+    if (node.__typename === 'ProjectV2ItemStatusChangedEvent') {
+      return [
+        {
+          ...base,
+          type: 'project-status-changed' as const,
+          from: node.previousStatus ?? null,
+          to: node.status ?? null,
+          label: node.project?.title ?? null,
+          url: node.project?.url ?? null
         }
       ]
     }

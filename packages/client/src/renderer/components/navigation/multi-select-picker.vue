@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { Check, Pencil } from 'lucide-vue-next'
 import {
   Button,
@@ -12,6 +12,7 @@ import {
   Popover,
   PopoverContent,
   PopoverTrigger,
+  Spinner,
 } from '@oh-my-github/ui'
 
 interface PickerOption {
@@ -31,6 +32,7 @@ const props = defineProps<{
   loading?: boolean
   disabled?: boolean
   single?: boolean
+  pendingIds?: string[]
 }>()
 
 const emit = defineEmits<{ 'update:modelValue': [string[]] }>()
@@ -38,11 +40,18 @@ const emit = defineEmits<{ 'update:modelValue': [string[]] }>()
 const open = defineModel<boolean>('open', { default: false })
 
 const selected = computed(() => new Set(props.modelValue))
+const pending = computed(() => new Set(props.pendingIds ?? []))
+
+watch(pending, (next, prev) => {
+  if (props.single && prev.size > 0 && next.size === 0) open.value = false
+})
 
 function toggle(id: string): void {
+  if (pending.value.size > 0) return
+
   if (props.single) {
     emit('update:modelValue', selected.value.has(id) ? [] : [id])
-    open.value = false
+    if (props.pendingIds === undefined) open.value = false
     return
   }
 
@@ -87,7 +96,12 @@ function toggle(id: string): void {
               :value="option.label"
               @select="toggle(option.id)"
             >
+              <Spinner
+                v-if="pending.has(option.id)"
+                class="size-4 shrink-0 text-muted-foreground"
+              />
               <Check
+                v-else
                 class="size-4 shrink-0"
                 :class="selected.has(option.id) ? 'opacity-100' : 'opacity-0'"
               />

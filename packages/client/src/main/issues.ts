@@ -2,6 +2,7 @@ import {
   createGitHubApi,
   type GitHubIssueCategory,
   type GitHubIssueSearchState,
+  type GitHubReactionContent,
   type SearchRepositoryIssuesOptions,
 } from '@oh-my-github/api'
 import { ipcMain } from 'electron'
@@ -51,6 +52,9 @@ export function registerIssuesIpc(): void {
   )
   ipcMain.handle('issues:delete', (_event, issueId: string) =>
     deleteIssue(issueId)
+  )
+  ipcMain.handle('issues:set-reaction', (_event, subjectId: string, content: GitHubReactionContent, reacted: boolean) =>
+    setReaction(subjectId, content, reacted)
   )
 }
 
@@ -322,6 +326,18 @@ async function deleteIssue(issueId: string) {
   const api = await createAuthenticatedGitHubApi()
 
   return api.issues.deleteIssue({ issueId: normalizedId })
+}
+
+async function setReaction(subjectId: string, content: GitHubReactionContent, reacted: boolean) {
+  const normalizedSubjectId = subjectId.trim()
+
+  if (!normalizedSubjectId) {
+    throw new Error('Reaction subject id is required')
+  }
+
+  const api = await createAuthenticatedGitHubApi()
+
+  return api.issues.setReaction({ subjectId: normalizedSubjectId, content, reacted: Boolean(reacted) })
 }
 
 function normalizeIssueSearchState(state: GitHubIssueSearchState | undefined): GitHubIssueSearchState {

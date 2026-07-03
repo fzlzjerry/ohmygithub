@@ -4,7 +4,7 @@ import type {
   IssueLabelSummary,
   IssueLinkedWorkSummary,
 } from './types'
-import type { Component } from 'vue'
+import type { Component, Ref } from 'vue'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -27,19 +27,18 @@ import {
   WorkItemStateBadge,
   createGitHubAvatarUrl,
   parseGitHubReferenceUrl,
-} from '../../../components'
+} from '@/components'
 import {
   updateIssue,
   useAssignableUsersQuery,
   useRepositoryLabelsQuery,
   useRepositoryMilestonesQuery,
-} from '../../../composables/github/use-issues'
+} from '@/composables/github/use-issues'
 
 const props = defineProps<{
   issue: IssueDetail
+  refetch: () => Promise<unknown>
 }>()
-
-const emit = defineEmits<{ refetch: [] }>()
 
 interface DevelopmentItem {
   id: string
@@ -74,6 +73,9 @@ const hasIssueStateAction = computed(() => canCloseIssue.value || canReopenIssue
 const assigneePickerOpen = ref(false)
 const labelPickerOpen = ref(false)
 const isSavingField = ref(false)
+const pendingAssigneeIds = ref<string[]>([])
+const pendingLabelIds = ref<string[]>([])
+const pendingMilestoneIds = ref<string[]>([])
 
 const assignableUsersQuery = useAssignableUsersQuery(
   () => props.issue.owner,
@@ -119,6 +121,12 @@ const currentMilestoneId = computed(() =>
 )
 const milestoneIds = computed(() => (currentMilestoneId.value ? [currentMilestoneId.value] : []))
 
+function changedIds(current: string[], next: string[]): string[] {
+  const cur = new Set(current)
+  const nxt = new Set(next)
+  return [...current.filter((id) => !nxt.has(id)), ...next.filter((id) => !cur.has(id))]
+}
+
 async function applyIssueUpdate(
   changes: {
     state?: 'open' | 'closed'
@@ -127,28 +135,32 @@ async function applyIssueUpdate(
     labels?: string[]
     milestone?: number | null
   },
+  pendingIds?: Ref<string[]>,
+  pending: string[] = [],
 ): Promise<void> {
   if (isSavingField.value) return
   isSavingField.value = true
+  if (pendingIds) pendingIds.value = pending
   try {
     await updateIssue(props.issue.owner, props.issue.repo, props.issue.number, changes)
-    emit('refetch')
+    await props.refetch()
   } finally {
     isSavingField.value = false
+    if (pendingIds) pendingIds.value = []
   }
 }
 
 function onAssigneesChange(next: string[]): void {
-  void applyIssueUpdate({ assignees: next })
+  void applyIssueUpdate({ assignees: next }, pendingAssigneeIds, changedIds(assigneeLogins.value, next))
 }
 
 function onLabelsChange(next: string[]): void {
-  void applyIssueUpdate({ labels: next })
+  void applyIssueUpdate({ labels: next }, pendingLabelIds, changedIds(labelNames.value, next))
 }
 
 function onMilestoneSelect(next: string[]): void {
   const value = next[0] ?? ''
-  void applyIssueUpdate({ milestone: value === '' ? null : Number(value) })
+  void applyIssueUpdate({ milestone: value === '' ? null : Number(value) }, pendingMilestoneIds, changedIds(milestoneIds.value, next))
 }
 
 function closeAsCompleted(): void {
@@ -414,6 +426,7 @@ function toIssueReference(item: IssueLinkedWorkSummary): LinkedPullRequestRefere
           :loading-label="t('issue.sidebar.loading')"
           :model-value="assigneeLogins"
           :options="assigneeOptions"
+          :pending-ids="pendingAssigneeIds"
           :search-placeholder="t('issue.sidebar.searchAssignees')"
           :trigger-label="t('issue.sidebar.edit')"
           @update:model-value="onAssigneesChange"
@@ -467,6 +480,7 @@ function toIssueReference(item: IssueLinkedWorkSummary): LinkedPullRequestRefere
           :loading-label="t('issue.sidebar.loading')"
           :model-value="labelNames"
           :options="labelOptions"
+          :pending-ids="pendingLabelIds"
           :search-placeholder="t('issue.sidebar.searchLabels')"
           :trigger-label="t('issue.sidebar.edit')"
           @update:model-value="onLabelsChange"
@@ -507,6 +521,7 @@ function toIssueReference(item: IssueLinkedWorkSummary): LinkedPullRequestRefere
           :empty-label="t('issue.sidebar.noMatches')"
           :model-value="milestoneIds"
           :options="milestoneOptions"
+          :pending-ids="pendingMilestoneIds"
           :search-placeholder="t('issue.sidebar.searchMilestones')"
           :trigger-label="t('issue.sidebar.edit')"
           single

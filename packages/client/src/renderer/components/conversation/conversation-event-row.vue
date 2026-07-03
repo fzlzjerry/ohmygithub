@@ -3,8 +3,8 @@ import type { Component } from 'vue'
 import type { ConversationActor, ConversationTimelineEvent } from './types'
 import { computed } from 'vue'
 import { CircleDot } from 'lucide-vue-next'
-import GitHubActorLink from '../github/github-actor-link.vue'
-import GitHubReferenceLink from '../github/github-reference-link.vue'
+import GitHubActorLink from '@/components/github/github-actor-link.vue'
+import GitHubReferenceLink from '@/components/github/github-reference-link.vue'
 import {
   formatConversationDate,
   toConversationDateTime,
@@ -70,6 +70,7 @@ const hasInlineContent = computed(() => Boolean(props.event.actor || eventText.v
         class="mr-2 text-label align-middle"
         avatar-size="sm"
         :avatar-url="event.actor.avatarUrl"
+        :is-bot="event.actor.isBot"
         :login="event.actor.login"
       />
 
@@ -112,6 +113,7 @@ const hasInlineContent = computed(() => Boolean(props.event.actor || eventText.v
         class="mr-2 text-label align-middle"
         avatar-size="sm"
         :avatar-url="event.actor.avatarUrl"
+        :is-bot="event.actor.isBot"
         :login="event.actor.login"
       />
 

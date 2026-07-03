@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { WorkspaceTab } from '../workspace/types'
+import type { WorkspaceTab } from '@/pages/workspace/types'
 import type { PullRequestDetail } from './components/types'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -21,17 +21,20 @@ import {
   ConversationMarkdownEditor,
   ConversationTimeline,
   GitHubActorLink,
-} from '../../components'
+} from '@/components'
 import {
   createPullRequestComment,
   updatePullRequest,
   updatePullRequestComment,
   usePullRequestDetailQuery,
-} from '../../composables/github/use-pull-requests'
+} from '@/composables/github/use-pull-requests'
+import { setReaction } from '@/composables/github/use-reactions'
+import { isReactionContent } from '@/components/conversation/reactions'
 import PullRequestHeader from './components/pull-request-header.vue'
 import PullRequestSidebar from './components/pull-request-sidebar.vue'
 import PullRequestCommitGroup from './components/pull-request-commit-group.vue'
 import PullRequestChecksCard from './components/pull-request-checks-card.vue'
+import PullRequestReviewCard from './components/pull-request-review-card.vue'
 import PullRequestCommitsTab from './components/pull-request-commits-tab.vue'
 import PullRequestReviewTab from './components/pull-request-review-tab.vue'
 import { usePullRequestTimelineItems } from './composables/use-pull-request-timeline-items'
@@ -71,6 +74,7 @@ const editingCommentId = ref<string | null>(null)
 const commentDraft = ref('')
 const commentEditError = ref<string | null>(null)
 const savingCommentId = ref<string | null>(null)
+const canReact = computed(() => Boolean(pullRequest.value && !pullRequest.value.locked))
 const isLoading = computed(() => hasIdentity.value && pullRequestQuery.isLoading.value && !pullRequest.value)
 const hasError = computed(() => Boolean(pullRequestQuery.error.value))
 const showUnavailable = computed(() =>
@@ -146,6 +150,18 @@ function cancelCommentEdit(): void {
   editingCommentId.value = null
   commentDraft.value = ''
   commentEditError.value = null
+}
+
+async function toggleReaction(subjectId: string | undefined, content: string, reacted: boolean): Promise<void> {
+  if (!subjectId || !isReactionContent(content)) return
+
+  try {
+    await setReaction(subjectId, content, reacted)
+  } catch {
+    // The refetch below restores the server state, reverting the optimistic toggle.
+  }
+
+  await pullRequestQuery.refetch()
 }
 
 async function savePullRequestCommentEdit(): Promise<void> {
@@ -275,6 +291,7 @@ async function savePullRequestCommentEdit(): Promise<void> {
             <ConversationBodyCard
               :actor="pullRequest.author"
               :body="pullRequest.body ?? ''"
+              :can-react="canReact && Boolean(pullRequest.nodeId)"
               :created-at="pullRequest.createdAt"
               :editing="isEditingBody"
               :empty-label="t('pullRequest.empty.body')"
@@ -282,6 +299,7 @@ async function savePullRequestCommentEdit(): Promise<void> {
               :repo="repo"
               :reactions="pullRequest.reactions ?? []"
               :updated-at="pullRequest.updatedAt"
+              @reaction-toggle="(content, reacted) => toggleReaction(pullRequest?.nodeId, content, reacted)"
             >
               <template
                 v-if="pullRequest.viewerCanUpdate && !isEditingBody"
@@ -331,6 +349,7 @@ async function savePullRequestCommentEdit(): Promise<void> {
                         <GitHubActorLink
                           avatar-size="lg"
                           :avatar-url="item.actor.avatarUrl"
+                          :is-bot="item.actor.isBot"
                           :login="item.actor.login"
                           :show-username="false"
                         />
@@ -339,6 +358,7 @@ async function savePullRequestCommentEdit(): Promise<void> {
                         :actor="item.actor"
                         :badges="item.badges"
                         :body="item.body"
+                        :can-react="canReact && Boolean(item.nodeId)"
                         :comment-id="item.commentId"
                         :created-at="item.createdAt"
                         :editing="editingCommentId === item.commentId"
@@ -347,6 +367,7 @@ async function savePullRequestCommentEdit(): Promise<void> {
                         :reactions="item.reactions"
                         :show-avatar="false"
                         :updated-at="item.updatedAt"
+                        @reaction-toggle="(content, reacted) => toggleReaction(item.nodeId, content, reacted)"
                       >
                         <template
                           v-if="item.viewerCanUpdate && editingCommentId !== item.commentId"
@@ -376,6 +397,31 @@ async function savePullRequestCommentEdit(): Promise<void> {
                           />
                         </template>
                       </ConversationCommentCard>
+                    </div>
+                    <div
+                      v-else-if="item.kind === 'review'"
+                      class="grid min-w-0 grid-cols-[2rem_minmax(0,1fr)] gap-3"
+                    >
+                      <div class="flex h-10 items-center justify-center">
+                        <GitHubActorLink
+                          avatar-size="lg"
+                          :avatar-url="item.actor.avatarUrl"
+                          :is-bot="item.actor.isBot"
+                          :login="item.actor.login"
+                          :show-username="false"
+                        />
+                      </div>
+                      <PullRequestReviewCard
+                        :actor="item.actor"
+                        :body="item.body"
+                        :can-react="canReact"
+                        :comments="item.comments"
+                        :created-at="item.createdAt"
+                        :owner="owner"
+                        :repo="repo"
+                        :review-state="item.reviewState"
+                        @reaction-toggle="toggleReaction"
+                      />
                     </div>
                     <PullRequestCommitGroup
                       v-else-if="item.kind === 'commit-group'"
@@ -423,7 +469,7 @@ async function savePullRequestCommentEdit(): Promise<void> {
           <PullRequestSidebar
             class="min-w-0 xl:sticky xl:top-4 xl:self-start"
             :pull-request="pullRequest"
-            @refetch="pullRequestQuery.refetch()"
+            :refetch="() => pullRequestQuery.refetch()"
           />
         </div>
 

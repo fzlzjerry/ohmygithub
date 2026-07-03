@@ -19,6 +19,7 @@ export interface GraphQLWorkItemBase {
   url: string
   updatedAt: string
   author: {
+    __typename?: string | null
     login: string
     avatarUrl?: string | null
   } | null
@@ -42,7 +43,8 @@ export function normalizeLimit(value: number | undefined): number {
 export function normalizeActor(actor: GraphQLWorkItemBase['author']): GitHubActor {
   return {
     login: actor?.login ?? 'unknown',
-    avatarUrl: actor?.avatarUrl ?? undefined
+    avatarUrl: actor?.avatarUrl ?? undefined,
+    isBot: actor?.__typename === 'Bot' || undefined
   }
 }
 

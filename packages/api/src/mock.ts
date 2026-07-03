@@ -1075,6 +1075,7 @@ export class MockGitHubClient implements GitHubClient {
     const createdAt = new Date().toISOString()
     const comment: GitHubPullRequestComment = {
       id: `mock-pr-comment:${repositoryKey(options)}:${options.number}:created:${Date.now()}`,
+      nodeId: `mock-pr-comment-node:${Date.now()}`,
       author: {
         login: 'acbox',
         avatarUrl: 'https://avatars.githubusercontent.com/u/9919?s=80&v=4',
@@ -1231,6 +1232,7 @@ export class MockGitHubClient implements GitHubClient {
     const createdAt = new Date().toISOString()
     const comment: GitHubIssueComment = {
       id: `mock-comment:${repositoryKey(options)}:${options.number}:created:${Date.now()}`,
+      nodeId: `mock-comment-node:${Date.now()}`,
       author: {
         login: 'acbox',
         avatarUrl: 'https://avatars.githubusercontent.com/u/9919?s=80&v=4',
@@ -2853,6 +2855,7 @@ function createMockPullRequestDetail(
     comments: [
       {
         id: `mock-pr-comment:${key}:${options.number}:1`,
+        nodeId: `mock-pr-comment-node:${key}:${options.number}:1`,
         author: { login: 'octo-lina', avatarUrl: 'https://avatars.githubusercontent.com/u/583231?s=80&v=4' },
         body: 'The first conversation slice should reuse the issue timeline and keep commits/checks/review as explicit future entry points.',
         createdAt: firstCommentAt,
@@ -3057,6 +3060,7 @@ function createMockIssueDetail(options: GetIssueDetailOptions, issue?: GitHubIss
     comments: [
       {
         id: `mock-comment:${key}:${options.number}:1`,
+        nodeId: `mock-comment-node:${key}:${options.number}:1`,
         author: { login: 'octo-lina', avatarUrl: 'https://avatars.githubusercontent.com/u/583231?s=80&v=4' },
         body: 'I can reproduce this from the repository issue list. The detail route should be able to render without extra renderer-side GitHub calls.',
         createdAt: new Date(Date.UTC(2026, 5, 25, 13, 15)).toISOString(),
@@ -3071,6 +3075,7 @@ function createMockIssueDetail(options: GetIssueDetailOptions, issue?: GitHubIss
       },
       {
         id: `mock-comment:${key}:${options.number}:2`,
+        nodeId: `mock-comment-node:${key}:${options.number}:2`,
         author: { login: 'arden', avatarUrl: 'https://avatars.githubusercontent.com/u/810438?s=80&v=4' },
         body: 'Mock data should include at least one cross-reference and one rename event so the activity list can be designed against real shapes.',
         createdAt: secondCommentAt,

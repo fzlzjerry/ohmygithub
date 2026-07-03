@@ -14,6 +14,7 @@ import type {
   GitHubIssueSubscription,
   GitHubLabel,
   GitHubIssueReaction,
+  GitHubReactionContent,
   GitHubIssueSearchResult,
   GitHubIssueSearchState,
   GitHubIssueState,
@@ -28,6 +29,7 @@ import type {
   SetIssueLockOptions,
   SetIssuePinnedOptions,
   SetIssueSubscriptionOptions,
+  SetReactionOptions,
   UpdateIssueCommentOptions,
   UpdateIssueOptions
 } from '../types'
@@ -811,6 +813,16 @@ export class IssuesApi {
     )
   }
 
+  async setReaction(options: SetReactionOptions): Promise<void> {
+    const mutation = options.reacted
+      ? 'mutation($subjectId: ID!, $content: ReactionContent!) { addReaction(input: { subjectId: $subjectId, content: $content }) { clientMutationId } }'
+      : 'mutation($subjectId: ID!, $content: ReactionContent!) { removeReaction(input: { subjectId: $subjectId, content: $content }) { clientMutationId } }'
+    await this.octokit.graphql(mutation, {
+      subjectId: options.subjectId,
+      content: reactionContentToGraphQL(options.content)
+    })
+  }
+
   private async searchIssues(searchQuery: string, limit: number): Promise<GitHubIssue[]> {
     const response = await this.octokit.graphql<ViewerIssuesResponse>(
       viewerIssuesQuery,
@@ -1093,6 +1105,7 @@ function mapComments(
     return [
       {
         id: `issue-comment:${comment.databaseId ?? comment.id}`,
+        nodeId: comment.id,
         author: normalizeActor(comment.author),
         body: comment.body,
         createdAt: comment.createdAt,
@@ -1109,6 +1122,7 @@ function mapComments(
 function mapRestIssueComment(comment: RestIssueCommentNode): GitHubIssueComment {
   return {
     id: `issue-comment:${comment.id}`,
+    nodeId: comment.node_id ?? '',
     author: {
       login: comment.user?.login ?? 'unknown',
       avatarUrl: comment.user?.avatar_url ?? undefined
@@ -1279,6 +1293,21 @@ function normalizeReactionContent(content: string): string {
   }
 
   return reactionContent[content] ?? content.toLowerCase()
+}
+
+function reactionContentToGraphQL(content: GitHubReactionContent): string {
+  const graphqlContent: Record<GitHubReactionContent, string> = {
+    'thumbs-up': 'THUMBS_UP',
+    'thumbs-down': 'THUMBS_DOWN',
+    'laugh': 'LAUGH',
+    'hooray': 'HOORAY',
+    'confused': 'CONFUSED',
+    'heart': 'HEART',
+    'rocket': 'ROCKET',
+    'eyes': 'EYES'
+  }
+
+  return graphqlContent[content]
 }
 
 function normalizeTimelineSourceType(type: string | undefined): string {

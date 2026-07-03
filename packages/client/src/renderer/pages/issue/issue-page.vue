@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { WorkspaceTab } from '../workspace/types'
+import type { WorkspaceTab } from '@/pages/workspace/types'
 import type { IssueDetail } from './components/types'
 import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
@@ -21,13 +21,15 @@ import {
   ConversationMarkdownEditor,
   ConversationTimeline,
   GitHubActorLink,
-} from '../../components'
+} from '@/components'
 import {
   createIssueComment,
   updateIssue,
   updateIssueComment,
   useIssueDetailQuery,
-} from '../../composables/github/use-issues'
+} from '@/composables/github/use-issues'
+import { setReaction } from '@/composables/github/use-reactions'
+import { isReactionContent } from '@/components/conversation/reactions'
 import IssueHeader from './components/issue-header.vue'
 import IssueSidebar from './components/issue-sidebar.vue'
 import { useIssueTimelineItems } from './composables/use-issue-timeline-items'
@@ -64,6 +66,7 @@ const editingCommentId = ref<string | null>(null)
 const commentDraft = ref('')
 const commentEditError = ref<string | null>(null)
 const savingCommentId = ref<string | null>(null)
+const canReact = computed(() => Boolean(issue.value && !issue.value.locked))
 const isLoading = computed(() => hasIdentity.value && issueQuery.isLoading.value && !issue.value)
 const hasError = computed(() => Boolean(issueQuery.error.value))
 const showUnavailable = computed(() =>
@@ -139,6 +142,18 @@ function cancelCommentEdit(): void {
   editingCommentId.value = null
   commentDraft.value = ''
   commentEditError.value = null
+}
+
+async function toggleReaction(subjectId: string | undefined, content: string, reacted: boolean): Promise<void> {
+  if (!subjectId || !isReactionContent(content)) return
+
+  try {
+    await setReaction(subjectId, content, reacted)
+  } catch {
+    // The refetch below restores the server state, reverting the optimistic toggle.
+  }
+
+  await issueQuery.refetch()
 }
 
 async function saveIssueCommentEdit(): Promise<void> {
@@ -263,6 +278,7 @@ async function saveIssueCommentEdit(): Promise<void> {
             <ConversationBodyCard
               :actor="issue.author"
               :body="issue.body ?? ''"
+              :can-react="canReact && Boolean(issue.nodeId)"
               :created-at="issue.createdAt"
               :editing="isEditingBody"
               :empty-label="t('issue.empty.body')"
@@ -270,6 +286,7 @@ async function saveIssueCommentEdit(): Promise<void> {
               :repo="repo"
               :reactions="issue.reactions ?? []"
               :updated-at="issue.updatedAt"
+              @reaction-toggle="(content, reacted) => toggleReaction(issue?.nodeId, content, reacted)"
             >
               <template
                 v-if="issue.viewerCanUpdate && !isEditingBody"
@@ -327,6 +344,7 @@ async function saveIssueCommentEdit(): Promise<void> {
                         :actor="item.actor"
                         :badges="item.badges"
                         :body="item.body"
+                        :can-react="canReact && Boolean(item.nodeId)"
                         :comment-id="item.commentId"
                         :created-at="item.createdAt"
                         :editing="editingCommentId === item.commentId"
@@ -335,6 +353,7 @@ async function saveIssueCommentEdit(): Promise<void> {
                         :reactions="item.reactions"
                         :show-avatar="false"
                         :updated-at="item.updatedAt"
+                        @reaction-toggle="(content, reacted) => toggleReaction(item.nodeId, content, reacted)"
                       >
                         <template
                           v-if="item.viewerCanUpdate && editingCommentId !== item.commentId"
@@ -393,7 +412,7 @@ async function saveIssueCommentEdit(): Promise<void> {
           <IssueSidebar
             class="min-w-0 xl:sticky xl:top-4 xl:self-start"
             :issue="issue"
-            @refetch="issueQuery.refetch()"
+            :refetch="() => issueQuery.refetch()"
           />
         </div>
       </template>

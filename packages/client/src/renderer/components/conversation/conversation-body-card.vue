@@ -2,8 +2,8 @@
 import type { ConversationActor, ConversationBadge, ConversationReaction } from './types'
 import { computed } from 'vue'
 import { Card } from '@oh-my-github/ui'
-import GitHubMarkdownRenderer from '../github/github-markdown-renderer.vue'
-import MarkdownRenderer from '../markdown/markdown-renderer.vue'
+import GitHubMarkdownRenderer from '@/components/github/github-markdown-renderer.vue'
+import MarkdownRenderer from '@/components/markdown/markdown-renderer.vue'
 import ConversationActorLine from './conversation-actor-line.vue'
 import ConversationReactionBar from './conversation-reaction-bar.vue'
 import { hasRenderableText } from './format'
@@ -20,6 +20,11 @@ const props = defineProps<{
   owner?: string | null
   repo?: string | null
   editing?: boolean
+  canReact?: boolean
+}>()
+
+const emit = defineEmits<{
+  'reaction-toggle': [content: string, reacted: boolean]
 }>()
 
 const resolvedActor = computed(() => props.actor ?? props.author ?? null)
@@ -28,6 +33,7 @@ const resolvedBadges = computed(() => props.badges ?? [])
 const resolvedReactions = computed(() => props.reactions ?? [])
 const hasBody = computed(() => hasRenderableText(resolvedBody.value))
 const hasReactions = computed(() => resolvedReactions.value.some((reaction) => reaction.count > 0))
+const showReactionBar = computed(() => hasReactions.value || props.canReact)
 </script>
 
 <template>
@@ -82,10 +88,14 @@ const hasReactions = computed(() => resolvedReactions.value.some((reaction) => r
     </div>
 
     <div
-      v-if="hasReactions"
+      v-if="showReactionBar"
       class="flex items-center border-t border-border px-3 py-2"
     >
-      <ConversationReactionBar :reactions="resolvedReactions" />
+      <ConversationReactionBar
+        :can-react="canReact"
+        :reactions="resolvedReactions"
+        @toggle="(content, reacted) => emit('reaction-toggle', content, reacted)"
+      />
     </div>
   </Card>
 </template>

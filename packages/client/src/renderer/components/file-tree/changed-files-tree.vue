@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, onUnmounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRightPanel } from '../../composables/use-right-panel'
+import { useRightPanel } from '@/composables/use-right-panel'
 import FileTree from './file-tree.vue'
 
 const props = defineProps<{
@@ -11,7 +11,16 @@ const props = defineProps<{
 }>()
 
 const { t } = useI18n()
-const { openRightPanel } = useRightPanel()
+const {
+  clearRightPanel,
+  closeRightPanel,
+  openRightPanel,
+} = useRightPanel()
+
+onUnmounted(() => {
+  closeRightPanel()
+  clearRightPanel()
+})
 
 const selectedPath = ref<string | null>(null)
 const expandedPaths = ref(new Set<string>())

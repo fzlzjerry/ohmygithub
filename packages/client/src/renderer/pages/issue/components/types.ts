@@ -4,7 +4,7 @@ import type {
   ConversationReaction,
   ConversationTimelineEvent,
   ConversationTimelineItem as SharedConversationTimelineItem,
-} from '../../../components'
+} from '@/components'
 
 export interface IssueActorSummary {
   login: string
@@ -69,6 +69,7 @@ export interface IssueReactionSummary {
 
 export interface IssueTimelineComment {
   id: string | number
+  nodeId?: string
   author: IssueActorSummary
   body: string
   createdAt: string
@@ -108,6 +109,7 @@ export type IssueTimelineItem =
       id: string
       kind: 'comment'
       commentId: string
+      nodeId: string
       actor: ConversationActor
       body: string
       createdAt?: string | null

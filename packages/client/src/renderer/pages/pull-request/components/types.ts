@@ -4,7 +4,7 @@ import type {
   ConversationReaction,
   ConversationTimelineEvent,
   ConversationTimelineItem as SharedConversationTimelineItem,
-} from '../../../components'
+} from '@/components'
 
 export type PullRequestActorSummary = GitHubActor
 export type PullRequestReactionSummary = GitHubIssueReaction
@@ -12,6 +12,7 @@ export type PullRequestMilestoneSummary = GitHubIssueMilestone
 export type PullRequestComment = GitHubPullRequestComment
 export type PullRequestReviewRequest = GitHubPullRequestReviewRequest
 export type PullRequestReviewSummary = GitHubPullRequestReviewSummary
+export type PullRequestReviewCommentSummary = GitHubPullRequestReviewComment
 export type PullRequestLinkedIssue = GitHubPullRequestLinkedIssue
 export type PullRequestCommitSummary = GitHubPullRequestCommitSummary
 export type PullRequestTimelineReference = GitHubPullRequestTimelineReference
@@ -23,6 +24,7 @@ export type PullRequestTimelineItem =
       id: string
       kind: 'comment'
       commentId: string
+      nodeId: string
       actor: ConversationActor
       body: string
       createdAt?: string | null
@@ -37,6 +39,16 @@ export type PullRequestTimelineItem =
       actor: ConversationActor
       createdAt?: string | null
       commits: PullRequestCommitSummary[]
+    }
+  | SharedConversationTimelineItem & {
+      id: string
+      kind: 'review'
+      actor: ConversationActor
+      body: string
+      createdAt?: string | null
+      reviewState: GitHubPullRequestReviewState
+      comments: PullRequestReviewCommentSummary[]
+      url?: string | null
     }
   | SharedConversationTimelineItem & {
       id: string

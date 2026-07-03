@@ -1177,6 +1177,13 @@
       "inputLabel": "Markdown 内容",
       "placeholder": "编写 Markdown",
       "save": "保存"
+    },
+    "actor": {
+      "bot": "Bot"
+    },
+    "reactions": {
+      "add": "添加表情回应",
+      "toggle": "切换 {reaction} 回应"
     }
   },
   "pullRequest": {
@@ -1327,7 +1334,9 @@
       "placeholder": "填写 Review 评论",
       "requestChanges": "请求修改",
       "retry": "重试",
-      "title": "提交 Review"
+      "title": "提交 Review",
+      "outdated": "已过时",
+      "reply": "回复了"
     },
     "reviewDecision": {
       "approved": "已批准",

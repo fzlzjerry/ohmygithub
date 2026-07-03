@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from '@oh-my-github/ui'
-import { createAccountWorkspaceUrl, createGitHubAvatarUrl } from './github-reference'
+import { createAccountWorkspaceUrl, createAppWorkspaceUrl, createGitHubAvatarUrl } from './github-reference'
 
 defineOptions({
   inheritAttrs: false,
@@ -20,26 +21,36 @@ const props = withDefaults(defineProps<{
   avatarSize?: 'xs' | 'sm' | 'md' | 'lg'
   interactive?: boolean
   variant?: 'plain' | 'pill'
+  isBot?: boolean
+  showBotBadge?: boolean
 }>(), {
   showAvatar: true,
   showUsername: true,
   avatarSize: 'sm',
   interactive: true,
   variant: 'plain',
+  isBot: false,
+  showBotBadge: true,
 })
 
 const router = useRouter()
+const { t } = useI18n()
 
 const normalizedLogin = computed(() => props.login.trim())
 const fallback = computed(() => normalizedLogin.value.slice(0, 2).toUpperCase())
 const avatarSrc = computed(() => props.avatarUrl || createGitHubAvatarUrl(normalizedLogin.value))
 const avatarClass = computed(() => {
-  if (props.avatarSize === 'xs') return 'size-4'
-  if (props.avatarSize === 'md') return 'size-7'
-  if (props.avatarSize === 'lg') return 'size-9'
+  const sizeClass = props.avatarSize === 'xs'
+    ? 'size-4'
+    : props.avatarSize === 'md'
+      ? 'size-7'
+      : props.avatarSize === 'lg'
+        ? 'size-9'
+        : 'size-5'
 
-  return 'size-5'
+  return props.isBot ? `${sizeClass} rounded-sm bg-white` : sizeClass
 })
+const showsBotBadge = computed(() => props.isBot && props.showBotBadge && props.showUsername)
 const fallbackClass = computed(() => {
   if (props.avatarSize === 'xs') return 'text-[9px]'
   if (props.avatarSize === 'lg') return 'text-caption'
@@ -57,7 +68,11 @@ const linkClass = computed(() => [
 function openProfile(): void {
   if (!props.interactive || !normalizedLogin.value) return
 
-  void router.push(createAccountWorkspaceUrl(normalizedLogin.value))
+  void router.push(
+    props.isBot
+      ? createAppWorkspaceUrl(normalizedLogin.value)
+      : createAccountWorkspaceUrl(normalizedLogin.value),
+  )
 }
 </script>
 
@@ -90,6 +105,12 @@ function openProfile(): void {
     >
       {{ normalizedLogin }}
     </span>
+    <span
+      v-if="showsBotBadge"
+      class="github-actor-link__bot-badge"
+    >
+      {{ t('conversation.actor.bot') }}
+    </span>
   </button>
 
   <span
@@ -117,10 +138,27 @@ function openProfile(): void {
     >
       {{ normalizedLogin }}
     </span>
+    <span
+      v-if="showsBotBadge"
+      class="github-actor-link__bot-badge"
+    >
+      {{ t('conversation.actor.bot') }}
+    </span>
   </span>
 </template>
 
 <style scoped>
+.github-actor-link__bot-badge {
+  border: 1px solid var(--border);
+  border-radius: 9999px;
+  color: var(--muted-foreground);
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.125rem 0.375rem;
+}
+
 .github-actor-link--pill {
   background-color: var(--ui-hover);
   border: 1px solid var(--border);

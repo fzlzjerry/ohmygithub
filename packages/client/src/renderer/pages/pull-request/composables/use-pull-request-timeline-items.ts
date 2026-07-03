@@ -7,34 +7,43 @@ import type {
   PullRequestTimelineEvent,
   PullRequestTimelineItem,
   PullRequestTimelineReference,
-} from '../components/types'
+} from '@/pages/pull-request/components/types'
 import type {
   ConversationActor,
   ConversationReaction,
   ConversationReference,
   ConversationTimelineEvent,
-} from '../../../components'
+} from '@/components'
 import { computed, toValue } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
   CheckCircle2,
   CircleDot,
+  Copy,
   GitBranch,
   GitCommitHorizontal,
   GitMerge,
   GitPullRequest,
   GitPullRequestDraft,
   Link2,
+  Lock,
+  LockOpen,
   MessageSquare,
+  MessagesSquare,
   Pencil,
+  Pin,
+  PinOff,
+  Rocket,
   RotateCcw,
   ShieldCheck,
+  SquareKanban,
   Tag,
   UserMinus,
   UserPlus,
   Users,
 } from 'lucide-vue-next'
-import { parseGitHubReferenceUrl } from '../../../components/github/github-reference'
+import { hasRenderableText } from '@/components/conversation/format'
+import { parseGitHubReferenceUrl } from '@/components/github/github-reference'
 
 export function usePullRequestTimelineItems(
   pullRequest: MaybeRefOrGetter<PullRequestDetail | null | undefined>,
@@ -49,6 +58,7 @@ export function usePullRequestTimelineItems(
       id: `comment-${comment.id}`,
       kind: 'comment',
       commentId: String(comment.id),
+      nodeId: comment.nodeId ?? '',
       actor: toConversationActor(comment.author) ?? { login: t('pullRequest.values.unknown') },
       body: comment.body,
       createdAt: comment.createdAt,
@@ -66,6 +76,19 @@ export function usePullRequestTimelineItems(
           actor: toConversationActor(event.commit.author) ?? { login: t('pullRequest.values.unknown') },
           createdAt: event.commit.committedDate,
           commit: event.commit,
+        }]
+      }
+
+      if (event.type === 'reviewed' && (hasRenderableText(event.body) || (event.reviewComments ?? []).length > 0)) {
+        return [{
+          id: `review-${event.id}`,
+          kind: 'review',
+          actor: toConversationActor(event.actor) ?? { login: t('pullRequest.values.unknown') },
+          body: event.body ?? '',
+          createdAt: event.createdAt,
+          reviewState: event.reviewState ?? 'commented',
+          comments: event.reviewComments ?? [],
+          url: event.url ?? null,
         }]
       }
 
@@ -182,6 +205,7 @@ function toConversationActor(actor: PullRequestActorSummary | null | undefined):
   return {
     login: actor.login,
     avatarUrl: actor.avatarUrl ?? undefined,
+    isBot: actor.isBot ?? undefined,
   }
 }
 
@@ -270,6 +294,28 @@ function timelineEventConfig(event: PullRequestTimelineEvent): Pick<Conversation
       return { icon: GitMerge, iconClass: 'text-muted-foreground' }
     case 'referenced':
       return { icon: GitCommitHorizontal, iconClass: 'text-info' }
+    case 'locked':
+      return { icon: Lock, iconClass: 'text-muted-foreground' }
+    case 'unlocked':
+      return { icon: LockOpen, iconClass: 'text-muted-foreground' }
+    case 'pinned':
+      return { icon: Pin, iconClass: 'text-info' }
+    case 'unpinned':
+      return { icon: PinOff, iconClass: 'text-muted-foreground' }
+    case 'transferred':
+      return { icon: GitPullRequest, iconClass: 'text-muted-foreground' }
+    case 'marked-as-duplicate':
+    case 'unmarked-as-duplicate':
+      return { icon: Copy, iconClass: 'text-muted-foreground' }
+    case 'deployed':
+    case 'deployment-environment-changed':
+      return { icon: Rocket, iconClass: 'text-info' }
+    case 'converted-to-discussion':
+      return { icon: MessagesSquare, iconClass: 'text-info' }
+    case 'added-to-project':
+    case 'removed-from-project':
+    case 'project-status-changed':
+      return { icon: SquareKanban, iconClass: 'text-muted-foreground' }
     default:
       return { icon: CircleDot, iconClass: 'text-muted-foreground' }
   }
@@ -389,6 +435,57 @@ function timelineEventText(event: PullRequestTimelineEvent, t: Translate, hasRef
       return event.afterCommit
         ? t('pullRequest.timeline.referencedCommit', { commit: event.afterCommit })
         : t('pullRequest.timeline.referenced')
+    case 'locked':
+      return event.reason
+        ? t('pullRequest.timeline.lockedWithReason', { reason: event.reason })
+        : t('pullRequest.timeline.locked')
+    case 'unlocked':
+      return t('pullRequest.timeline.unlocked')
+    case 'pinned':
+      return t('pullRequest.timeline.pinned')
+    case 'unpinned':
+      return t('pullRequest.timeline.unpinned')
+    case 'transferred':
+      return t('pullRequest.timeline.transferred', { from: event.from ?? t('pullRequest.values.unknown') })
+    case 'marked-as-duplicate':
+      if (hasReference) return t('pullRequest.timeline.markedAsDuplicateAction')
+
+      return t('pullRequest.timeline.markedAsDuplicate', { source: referenceText(event.source, t) })
+    case 'unmarked-as-duplicate':
+      if (hasReference) return t('pullRequest.timeline.unmarkedAsDuplicateAction')
+
+      return t('pullRequest.timeline.unmarkedAsDuplicate', { source: referenceText(event.source, t) })
+    case 'deployed':
+      return event.to
+        ? t('pullRequest.timeline.deployedTo', { environment: event.to })
+        : t('pullRequest.timeline.deployed')
+    case 'deployment-environment-changed':
+      return t('pullRequest.timeline.deploymentEnvironmentChanged', {
+        environment: event.to ?? t('pullRequest.values.unknown'),
+      })
+    case 'converted-to-discussion':
+      if (hasReference) return t('pullRequest.timeline.convertedToDiscussionAction')
+
+      return t('pullRequest.timeline.convertedToDiscussion', { source: referenceText(event.source, t) })
+    case 'added-to-project':
+      return event.to
+        ? t('pullRequest.timeline.addedToProject', { project: event.to })
+        : t('pullRequest.timeline.addedToProjectGeneric')
+    case 'removed-from-project':
+      return event.from
+        ? t('pullRequest.timeline.removedFromProject', { project: event.from })
+        : t('pullRequest.timeline.removedFromProjectGeneric')
+    case 'project-status-changed':
+      return event.from
+        ? t('pullRequest.timeline.projectStatusChanged', {
+            from: event.from,
+            to: event.to ?? t('pullRequest.values.unknown'),
+            project: event.label ?? t('pullRequest.values.unknown'),
+          })
+        : t('pullRequest.timeline.projectStatusSet', {
+            to: event.to ?? t('pullRequest.values.unknown'),
+            project: event.label ?? t('pullRequest.values.unknown'),
+          })
     default:
       return fallback
   }
@@ -399,6 +496,7 @@ function toConversationReference(
   currentPullRequest: PullRequestDetail,
 ): ConversationReference | null {
   if (!source || typeof source === 'string') return null
+  if (source.type === 'discussion') return null
 
   const parsedUrl = source.url ? parseGitHubReferenceUrl(source.url) : null
   const [sourceOwner, sourceRepo] = splitRepository(source.repository)
@@ -461,9 +559,7 @@ function reviewToneClass(state: GitHubPullRequestReviewState | null | undefined)
 }
 
 function getTimelineTime(item: UngroupedPullRequestTimelineItem): number {
-  const value = item.kind === 'comment' || item.kind === 'commit-group' || item.kind === 'commit'
-    ? item.createdAt
-    : item.event.createdAt
+  const value = item.kind === 'event' ? item.event.createdAt : item.createdAt
 
   const timestamp = new Date(value ?? '').getTime()
 

@@ -4,6 +4,7 @@ import type { Component } from 'vue'
 export interface ConversationActor {
   login: string
   avatarUrl?: string | null
+  isBot?: boolean
 }
 
 export interface ConversationReaction {

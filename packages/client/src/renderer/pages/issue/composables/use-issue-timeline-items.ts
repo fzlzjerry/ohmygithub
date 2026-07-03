@@ -6,13 +6,13 @@ import type {
   IssueTimelineEvent,
   IssueTimelineItem,
   IssueTimelineReference,
-} from '../components/types'
+} from '@/pages/issue/components/types'
 import type {
   ConversationActor,
   ConversationReaction,
   ConversationReference,
   ConversationTimelineEvent,
-} from '../../../components'
+} from '@/components'
 import { computed, toValue } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -26,7 +26,7 @@ import {
   UserMinus,
   UserPlus,
 } from 'lucide-vue-next'
-import { parseGitHubReferenceUrl } from '../../../components/github/github-reference'
+import { parseGitHubReferenceUrl } from '@/components/github/github-reference'
 
 export function useIssueTimelineItems(
   issue: MaybeRefOrGetter<IssueDetail | null | undefined>,
@@ -41,6 +41,7 @@ export function useIssueTimelineItems(
       id: `comment-${comment.id}`,
       kind: 'comment',
       commentId: String(comment.id),
+      nodeId: comment.nodeId ?? '',
       actor: toConversationActor(comment.author) ?? { login: t('issue.values.unknown') },
       body: comment.body,
       createdAt: comment.createdAt,

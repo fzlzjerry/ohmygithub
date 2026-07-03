@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { PullRequestDetail } from './types'
-import type { Component } from 'vue'
+import type { Component, Ref } from 'vue'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import {
@@ -41,19 +41,19 @@ import {
   WorkItemLabelList,
   WorkItemSidebarSection,
   createGitHubAvatarUrl,
-} from '../../../components'
+} from '@/components'
 import {
   closePullRequest,
   markPullRequestReadyForReview,
   mergePullRequest,
   requestPullRequestReviewers,
   updatePullRequest,
-} from '../../../composables/github/use-pull-requests'
+} from '@/composables/github/use-pull-requests'
 import {
   useAssignableUsersQuery,
   useRepositoryLabelsQuery,
   useRepositoryMilestonesQuery,
-} from '../../../composables/github/use-issues'
+} from '@/composables/github/use-issues'
 import {
   canApplyMergeDialogOpenChange,
   type PullRequestMergeDialogOpenChangeReason,
@@ -63,9 +63,8 @@ import { createPullRequestMergeDraft } from './pull-request-merge-draft'
 
 const props = defineProps<{
   pullRequest: PullRequestDetail
+  refetch: () => Promise<unknown>
 }>()
-
-const emit = defineEmits<{ refetch: [] }>()
 
 interface SummaryItem {
   id: string
@@ -86,6 +85,10 @@ const isSavingField = ref(false)
 const assigneePickerOpen = ref(false)
 const labelPickerOpen = ref(false)
 const reviewerPickerOpen = ref(false)
+const pendingAssigneeIds = ref<string[]>([])
+const pendingLabelIds = ref<string[]>([])
+const pendingReviewerIds = ref<string[]>([])
+const pendingMilestoneIds = ref<string[]>([])
 
 const assignableUsersQuery = useAssignableUsersQuery(() => props.pullRequest.owner, () => props.pullRequest.repo, assigneePickerOpen)
 const reviewerUsersQuery = useAssignableUsersQuery(() => props.pullRequest.owner, () => props.pullRequest.repo, reviewerPickerOpen)
@@ -109,17 +112,27 @@ const currentMilestoneId = computed(() => props.pullRequest.milestone?.number !=
 const milestoneIds = computed(() => currentMilestoneId.value ? [currentMilestoneId.value] : [])
 const projects = computed(() => props.pullRequest.projects ?? [])
 
-async function applyUpdate(changes: { assignees?: string[], labels?: string[], milestone?: number | null }): Promise<void> {
+function changedIds(current: string[], next: string[]): string[] {
+  const cur = new Set(current)
+  const nxt = new Set(next)
+  return [...current.filter((id) => !nxt.has(id)), ...next.filter((id) => !cur.has(id))]
+}
+
+async function applyUpdate(changes: { assignees?: string[], labels?: string[], milestone?: number | null }, pendingIds: Ref<string[]>, pending: string[]): Promise<void> {
   if (isSavingField.value) return
   isSavingField.value = true
+  pendingIds.value = pending
   try {
     await updatePullRequest(props.pullRequest.owner, props.pullRequest.repo, props.pullRequest.number, changes)
-    emit('refetch')
-  } finally { isSavingField.value = false }
+    await props.refetch()
+  } finally {
+    isSavingField.value = false
+    pendingIds.value = []
+  }
 }
-function onAssigneesChange(next: string[]): void { void applyUpdate({ assignees: next }) }
-function onLabelsChange(next: string[]): void { void applyUpdate({ labels: next }) }
-function onMilestoneSelect(next: string[]): void { const v = next[0] ?? ''; void applyUpdate({ milestone: v === '' ? null : Number(v) }) }
+function onAssigneesChange(next: string[]): void { void applyUpdate({ assignees: next }, pendingAssigneeIds, changedIds(assigneeLogins.value, next)) }
+function onLabelsChange(next: string[]): void { void applyUpdate({ labels: next }, pendingLabelIds, changedIds(labelNames.value, next)) }
+function onMilestoneSelect(next: string[]): void { const v = next[0] ?? ''; void applyUpdate({ milestone: v === '' ? null : Number(v) }, pendingMilestoneIds, changedIds(milestoneIds.value, next)) }
 async function onReviewersChange(next: string[]): Promise<void> {
   if (isSavingField.value) return
   const current = reviewerLogins.value
@@ -127,10 +140,14 @@ async function onReviewersChange(next: string[]): Promise<void> {
   const removed = current.filter((l) => !next.includes(l))
   if (added.length === 0 && removed.length === 0) return
   isSavingField.value = true
+  pendingReviewerIds.value = [...added, ...removed]
   try {
     await requestPullRequestReviewers(props.pullRequest.owner, props.pullRequest.repo, props.pullRequest.number, added, removed)
-    emit('refetch')
-  } finally { isSavingField.value = false }
+    await props.refetch()
+  } finally {
+    isSavingField.value = false
+    pendingReviewerIds.value = []
+  }
 }
 
 const selectedMergeMethod = ref<GitHubPullRequestMergeMethod | null>(null)
@@ -361,7 +378,7 @@ async function confirmMerge(): Promise<void> {
     })
     bypassRules.value = false
     setMergeDialogOpen(false, 'merge-success')
-    emit('refetch')
+    void props.refetch()
   } catch {
     mergeDialogError.value = canBypassRules.value && bypassRules.value
       ? t('pullRequest.merge.bypassError')
@@ -379,7 +396,7 @@ async function closeCurrentPullRequest(): Promise<void> {
 
   try {
     await closePullRequest(props.pullRequest.owner, props.pullRequest.repo, props.pullRequest.number)
-    emit('refetch')
+    void props.refetch()
   } catch {
     actionError.value = t('pullRequest.merge.closeError')
   } finally {
@@ -400,7 +417,7 @@ async function markReadyForReview(): Promise<void> {
       props.pullRequest.number,
       props.pullRequest.nodeId,
     )
-    emit('refetch')
+    void props.refetch()
   } catch {
     actionError.value = t('pullRequest.merge.readyError')
   } finally {
@@ -628,6 +645,7 @@ function isDateItem(value: DateItem | null): value is DateItem {
           :loading-label="t('pullRequest.sidebar.loading')"
           :model-value="reviewerLogins"
           :options="reviewerOptions"
+          :pending-ids="pendingReviewerIds"
           :search-placeholder="t('pullRequest.sidebar.searchReviewers')"
           :trigger-label="t('pullRequest.sidebar.edit')"
           @update:model-value="onReviewersChange"
@@ -678,6 +696,7 @@ function isDateItem(value: DateItem | null): value is DateItem {
           :loading-label="t('pullRequest.sidebar.loading')"
           :model-value="assigneeLogins"
           :options="assigneeOptions"
+          :pending-ids="pendingAssigneeIds"
           :search-placeholder="t('pullRequest.sidebar.searchAssignees')"
           :trigger-label="t('pullRequest.sidebar.edit')"
           @update:model-value="onAssigneesChange"
@@ -728,6 +747,7 @@ function isDateItem(value: DateItem | null): value is DateItem {
           :loading-label="t('pullRequest.sidebar.loading')"
           :model-value="labelNames"
           :options="labelOptions"
+          :pending-ids="pendingLabelIds"
           :search-placeholder="t('pullRequest.sidebar.searchLabels')"
           :trigger-label="t('pullRequest.sidebar.edit')"
           @update:model-value="onLabelsChange"
@@ -752,6 +772,7 @@ function isDateItem(value: DateItem | null): value is DateItem {
           :empty-label="t('pullRequest.sidebar.noMatches')"
           :model-value="milestoneIds"
           :options="milestoneOptions"
+          :pending-ids="pendingMilestoneIds"
           :search-placeholder="t('pullRequest.sidebar.searchMilestones')"
           :trigger-label="t('pullRequest.sidebar.edit')"
           single

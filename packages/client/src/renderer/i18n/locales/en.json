@@ -1177,6 +1177,13 @@
       "inputLabel": "Markdown body",
       "placeholder": "Write Markdown",
       "save": "Save"
+    },
+    "actor": {
+      "bot": "Bot"
+    },
+    "reactions": {
+      "add": "Add reaction",
+      "toggle": "Toggle {reaction} reaction"
     }
   },
   "pullRequest": {
@@ -1327,7 +1334,9 @@
       "placeholder": "Leave a review comment",
       "requestChanges": "Request changes",
       "retry": "Retry",
-      "title": "Submit a review"
+      "title": "Submit a review",
+      "outdated": "Outdated",
+      "reply": "replied"
     },
     "reviewDecision": {
       "approved": "Approved",

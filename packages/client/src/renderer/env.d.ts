@@ -971,6 +971,7 @@ type GitHubIssueCategory = 'created-by-me' | 'inbox' | 'mentioned-me'
 type GitHubActor = {
   login: string
   avatarUrl?: string
+  isBot?: boolean
 }
 
 type GitHubLabel = {
@@ -1141,6 +1142,16 @@ type GitHubIssueSearchResult = {
   incompleteResults: boolean
 }
 
+type GitHubReactionContent =
+  | 'thumbs-up'
+  | 'thumbs-down'
+  | 'laugh'
+  | 'hooray'
+  | 'confused'
+  | 'heart'
+  | 'rocket'
+  | 'eyes'
+
 type GitHubIssueReaction = {
   content: string
   count: number
@@ -1159,6 +1170,7 @@ type GitHubIssueMilestone = {
 
 type GitHubIssueComment = {
   id: string
+  nodeId: string
   author: GitHubActor
   body: string
   createdAt: string
@@ -1285,6 +1297,19 @@ type GitHubPullRequestTimelineEventType =
   | 'disconnected'
   | 'comment-deleted'
   | 'referenced'
+  | 'locked'
+  | 'unlocked'
+  | 'pinned'
+  | 'unpinned'
+  | 'transferred'
+  | 'marked-as-duplicate'
+  | 'unmarked-as-duplicate'
+  | 'deployed'
+  | 'deployment-environment-changed'
+  | 'converted-to-discussion'
+  | 'added-to-project'
+  | 'removed-from-project'
+  | 'project-status-changed'
   | 'generic'
 
 type GitHubPullRequestTimelineReference = {
@@ -1308,6 +1333,24 @@ type GitHubPullRequestCommitSummary = {
   url: string
 }
 
+type GitHubPullRequestReviewComment = {
+  id: string
+  nodeId: string
+  author: GitHubActor
+  body: string
+  createdAt: string
+  updatedAt: string
+  url: string | null
+  path: string
+  diffHunk: string | null
+  line: number | null
+  originalLine: number | null
+  startLine: number | null
+  outdated: boolean
+  isReply: boolean
+  reactions: GitHubIssueReaction[]
+}
+
 type GitHubPullRequestTimelineEvent = {
   id: string
   type: GitHubPullRequestTimelineEventType
@@ -1329,6 +1372,7 @@ type GitHubPullRequestTimelineEvent = {
   reviewer?: GitHubActor
   reviewerType?: GitHubPullRequestReviewerType
   reviewState?: GitHubPullRequestReviewState
+  reviewComments?: GitHubPullRequestReviewComment[]
   source?: GitHubPullRequestTimelineReference
 }
 

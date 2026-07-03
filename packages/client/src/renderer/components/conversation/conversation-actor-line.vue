@@ -2,7 +2,7 @@
 import type { ConversationActor, ConversationBadge } from './types'
 import { computed } from 'vue'
 import { Badge } from '@oh-my-github/ui'
-import GitHubActorLink from '../github/github-actor-link.vue'
+import GitHubActorLink from '@/components/github/github-actor-link.vue'
 import {
   formatConversationDate,
   toConversationDateTime,
@@ -37,6 +37,7 @@ const visibleBadges = computed(() => props.badges.filter((badge) => badge.label.
       class="shrink-0"
       avatar-size="md"
       :avatar-url="actor.avatarUrl"
+      :is-bot="actor.isBot"
       :login="actor.login"
       :show-username="false"
     />
@@ -46,6 +47,7 @@ const visibleBadges = computed(() => props.badges.filter((badge) => badge.label.
         class="text-label"
         avatar-size="sm"
         :avatar-url="actor.avatarUrl"
+        :is-bot="actor.isBot"
         :login="actor.login"
         :show-avatar="false"
       />
