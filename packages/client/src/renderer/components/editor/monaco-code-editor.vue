@@ -2,9 +2,10 @@
 import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import type { MonacoLanguage, MonacoOptions, MonacoTheme } from 'stream-monaco'
 import { ensureMonacoWorkers, useMonaco } from 'stream-monaco'
-import { useCodeTheme } from '../index'
-import { resolveCodeLanguage } from '../index'
-import { useSettingsStore } from '../../stores/settings'
+import { useCodeTheme } from '@/components/index'
+import { resolveCodeLanguage } from '@/components/index'
+import { allSchemeThemes } from '@/components/code/scheme-code-themes'
+import { useSettingsStore } from '@/stores/settings'
 
 const props = withDefaults(defineProps<{
   modelValue: string
@@ -25,7 +26,7 @@ const emit = defineEmits<{
 
 const editorElement = ref<HTMLElement>()
 const settingsStore = useSettingsStore()
-const { activeTheme, themes } = useCodeTheme()
+const { activeThemeName } = useCodeTheme()
 let isUpdatingFromOutside = false
 
 function resolveLanguage(): MonacoLanguage {
@@ -49,8 +50,8 @@ const monaco = useMonaco({
   renderLineHighlight: 'line',
   scrollBeyondLastLine: false,
   tabSize: 2,
-  theme: activeTheme.value,
-  themes: [themes.value.dark, themes.value.light] as MonacoTheme[],
+  theme: activeThemeName.value,
+  themes: allSchemeThemes as MonacoTheme[],
   wordWrap: 'on',
   ...props.options
 })
@@ -97,7 +98,7 @@ watch(
   }
 )
 
-watch(activeTheme, (theme) => {
+watch(activeThemeName, (theme) => {
   void monaco.setTheme(theme as MonacoTheme, true)
 })
 
@@ -139,5 +140,14 @@ watch(
 .monaco-editor-host {
   height: 100% !important;
   max-height: 100% !important;
+}
+
+/* Code themes use a transparent background so the editor blends into the
+   scheme-tinted panel behind it. */
+.monaco-editor-host :deep(.monaco-editor),
+.monaco-editor-host :deep(.monaco-editor .margin),
+.monaco-editor-host :deep(.monaco-editor-background),
+.monaco-editor-host :deep(.monaco-editor .monaco-editor-background) {
+  background: transparent !important;
 }
 </style>
