@@ -1,9 +1,12 @@
 import { AccountsApi } from './modules/accounts'
 import { ActionsApi } from './modules/actions'
 import { AuthApi } from './modules/auth'
+import { DeploymentsApi } from './modules/deployments'
 import { InboxApi } from './modules/inbox'
 import { IssuesApi } from './modules/issues'
+import { PackagesApi } from './modules/packages'
 import { PullsApi } from './modules/pulls'
+import { ReleasesApi } from './modules/releases'
 import { RepositoriesApi } from './modules/repositories'
 import { SearchApi } from './modules/search'
 import { createOctokit, type GitHubOctokit } from './transport'
@@ -21,12 +24,25 @@ import type {
   GitHubActionRunPage,
   GitHubActionWorkflow,
   GitHubClient,
+  GitHubDeployment,
+  GitHubDeploymentPage,
+  GitHubDeploymentState,
+  GitHubDeploymentStatus,
+  GitHubEnvironment,
+  GitHubEnvironmentPage,
+  GitHubEnvironmentProtectionRule,
   GitHubWorkspaceGotoResult,
   GitHubIssue,
   GitHubIssueSearchResult,
   GitHubIssueComment,
   GitHubIssueDetail,
   GitHubOrganization,
+  GitHubPackage,
+  GitHubPackagePage,
+  GitHubPackageType,
+  GitHubPackageVersion,
+  GitHubPackageVersionPage,
+  GitHubPackageVisibility,
   GitHubPullRequest,
   GitHubPullRequestComment,
   GitHubPullRequestCommitSummary,
@@ -47,9 +63,12 @@ export interface GitHubApi extends GitHubClient {
   readonly accounts: AccountsApi
   readonly actions: ActionsApi
   readonly auth: AuthApi
+  readonly deployments: DeploymentsApi
   readonly inbox: InboxApi
   readonly issues: IssuesApi
+  readonly packages: PackagesApi
   readonly pulls: PullsApi
+  readonly releases: ReleasesApi
   readonly repositories: RepositoriesApi
   readonly search: SearchApi
 }
@@ -59,9 +78,12 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
   const accounts = new AccountsApi(octokit)
   const actions = new ActionsApi(octokit)
   const auth = new AuthApi({ octokit, proxyUrl: options.proxyUrl })
+  const deployments = new DeploymentsApi(octokit)
   const inbox = new InboxApi(octokit)
   const issues = new IssuesApi(octokit)
+  const packages = new PackagesApi(octokit)
   const pulls = new PullsApi(octokit)
+  const releases = new ReleasesApi(octokit)
   const repositories = new RepositoriesApi(octokit)
   const search = new SearchApi(octokit)
 
@@ -70,9 +92,12 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
     accounts,
     actions,
     auth,
+    deployments,
     inbox,
     issues,
+    packages,
     pulls,
+    releases,
     repositories,
     search,
     getAccountProfile: (login) => accounts.getProfile(login),
@@ -88,14 +113,24 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
     resolveRepositoryReference: (options) => search.resolveRepositoryReference(options),
     searchWorkspace: (options) => search.searchWorkspace(options),
     getRepositoryViewerState: (options) => repositories.getViewerState(options),
+    getRepositoryNavigationCounts: (options) => repositories.getNavigationCounts(options),
     getRepositoryOverview: (options) => repositories.getOverview(options),
+    getRepositoryContributorStats: (options) => repositories.getContributorStats(options),
     listRepositoryFiles: (options) => repositories.listFiles(options),
     listRepositoryCommits: (options) => repositories.listCommits(options),
     listRepositoryBranches: (options) => repositories.listBranches(options),
+    listRepositoryBranchesDetailed: (options) => repositories.listBranchesDetailed(options),
+    listRepositoryTags: (options) => repositories.listTags(options),
+    createRepositoryBranch: (options) => repositories.createBranch(options),
+    renameRepositoryBranch: (options) => repositories.renameBranch(options),
+    deleteRepositoryBranch: (options) => repositories.deleteBranch(options),
+    createRepositoryTag: (options) => repositories.createTag(options),
+    deleteRepositoryTag: (options) => repositories.deleteTag(options),
     getRepositoryCommit: (options) => repositories.getCommit(options),
     getRepositoryFilePreview: (options) => repositories.getFilePreview(options),
     setRepositoryStarred: (options) => repositories.setStarred(options),
-    setRepositoryWatching: (options) => repositories.setWatching(options),
+    setRepositorySubscription: (options) => repositories.setSubscription(options),
+    forkRepository: (options) => repositories.fork(options),
     listRepositoryWorkflows: (options) => actions.listRepositoryWorkflows(options),
     listRepositoryWorkflowRuns: (options) => actions.listRepositoryWorkflowRuns(options),
     getWorkflowRun: (options) => actions.getWorkflowRun(options),
@@ -104,6 +139,22 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
     rerunWorkflowRun: (options) => actions.rerunWorkflowRun(options),
     rerunFailedWorkflowRunJobs: (options) => actions.rerunFailedWorkflowRunJobs(options),
     rerunWorkflowJob: (options) => actions.rerunWorkflowJob(options),
+    listRepositoryEnvironments: (options) => deployments.listRepositoryEnvironments(options),
+    listRepositoryDeployments: (options) => deployments.listRepositoryDeployments(options),
+    listDeploymentStatuses: (options) => deployments.listDeploymentStatuses(options),
+    markDeploymentInactive: (options) => deployments.markDeploymentInactive(options),
+    deleteDeployment: (options) => deployments.deleteDeployment(options),
+    deleteEnvironment: (options) => deployments.deleteEnvironment(options),
+    listRepositoryReleases: (options) => releases.listRepositoryReleases(options),
+    createRelease: (options) => releases.createRelease(options),
+    updateRelease: (options) => releases.updateRelease(options),
+    deleteRelease: (options) => releases.deleteRelease(options),
+    listRepositoryPackages: (options) => packages.listRepositoryPackages(options),
+    listPackageVersions: (options) => packages.listPackageVersions(options),
+    deletePackage: (options) => packages.deletePackage(options),
+    deletePackageVersion: (options) => packages.deletePackageVersion(options),
+    restorePackage: (options) => packages.restorePackage(options),
+    restorePackageVersion: (options) => packages.restorePackageVersion(options),
     listNotifications: () => inbox.listNotifications(),
     listPullRequests: () => inbox.listPullRequests(),
     listIssues: () => inbox.listIssues(),
@@ -136,7 +187,8 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
     setIssueSubscription: (options) => issues.setIssueSubscription(options),
     setIssueLock: (options) => issues.setIssueLock(options),
     setIssuePinned: (options) => issues.setIssuePinned(options),
-    deleteIssue: (options) => issues.deleteIssue(options)
+    deleteIssue: (options) => issues.deleteIssue(options),
+    setReaction: (options) => issues.setReaction(options)
   }
 }
 
@@ -152,11 +204,24 @@ export type {
   GitHubActionRun,
   GitHubActionRunPage,
   GitHubActionWorkflow,
+  GitHubDeployment,
+  GitHubDeploymentPage,
+  GitHubDeploymentState,
+  GitHubDeploymentStatus,
+  GitHubEnvironment,
+  GitHubEnvironmentPage,
+  GitHubEnvironmentProtectionRule,
   GitHubIssue,
   GitHubIssueSearchResult,
   GitHubIssueComment,
   GitHubIssueDetail,
   GitHubOrganization,
+  GitHubPackage,
+  GitHubPackagePage,
+  GitHubPackageType,
+  GitHubPackageVersion,
+  GitHubPackageVersionPage,
+  GitHubPackageVisibility,
   GitHubPullRequest,
   GitHubPullRequestComment,
   GitHubPullRequestCommitSummary,
