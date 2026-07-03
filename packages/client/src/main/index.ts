@@ -21,7 +21,8 @@ configureDevRemoteDebugging()
 // area) when the app is in dark mode.
 const LIGHT_BACKGROUND = '#f7f7f5'
 const DARK_BACKGROUND = '#0a0a0a'
-const DEV_APP_ICON = resolve(__dirname, '../../../../assets/icon.png')
+const DEV_MAC_APP_ICON = resolve(__dirname, '../../../../assets/liquid-glass-icon.png')
+const DEV_DEFAULT_APP_ICON = resolve(__dirname, '../../../../assets/shadow-icon.png')
 
 function resolveBackgroundColor(): string {
   return nativeTheme.shouldUseDarkColors ? DARK_BACKGROUND : LIGHT_BACKGROUND
@@ -37,7 +38,8 @@ function configureDevelopmentAppIcon(): void {
 function loadDevelopmentAppIcon(): NativeImage | undefined {
   if (!is.dev) return undefined
 
-  const icon = nativeImage.createFromPath(DEV_APP_ICON)
+  const iconPath = process.platform === 'darwin' ? DEV_MAC_APP_ICON : DEV_DEFAULT_APP_ICON
+  const icon = nativeImage.createFromPath(iconPath)
   return icon.isEmpty() ? undefined : icon
 }
 

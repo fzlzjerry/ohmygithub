@@ -2,7 +2,7 @@
 appId: app.oh-my-github
 productName: Oh My GitHub
 copyright: Copyright © 2026 Oh My GitHub
-icon: ../../assets/icon.svg
+icon: ../../assets/shadow-icon.svg
 
 directories:
   output: release/${version}
@@ -17,6 +17,7 @@ npmRebuild: false
 
 mac:
   category: public.app-category.developer-tools
+  icon: ../../assets/liquid-glass-icon.svg
   hardenedRuntime: true
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.plist
@@ -38,6 +39,7 @@ dmg:
   artifactName: ${productName}-${version}-${arch}.${ext}
 
 win:
+  icon: ../../assets/shadow-icon.svg
   target:
     - target: nsis
       arch:
@@ -50,6 +52,7 @@ nsis:
   artifactName: ${productName}-${version}-${arch}-setup.${ext}
 
 linux:
+  icon: ../../assets/shadow-icon.svg
   category: Development
   # The scoped package name (@oh-my-github/client) is not a valid AppImage executable
   # name, so set a clean one explicitly.
