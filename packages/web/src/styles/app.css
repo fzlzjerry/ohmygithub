@@ -1,0 +1,23 @@
+@import "tailwindcss";
+@import "@oh-my-github/ui/style.css";
+
+/* Landing-page type: Maple Mono for all Latin text, Maple Mono CN for 中文.
+   Maple Mono (Latin) is listed first so Latin uses its crisper weights; CJK
+   glyphs (absent there) fall through to Maple Mono CN per-glyph. Overrides the
+   app's MiSans-first --font-sans (from @oh-my-github/ui). */
+:root {
+  --font-sans: "Maple Mono", "Maple Mono CN", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Noto Sans SC", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Maple Mono", "Maple Mono CN", ui-monospace, SFMono-Regular, Menlo, Monaco, "Cascadia Code", "Source Code Pro", monospace;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}

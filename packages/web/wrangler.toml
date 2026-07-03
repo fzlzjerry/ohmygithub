@@ -1,0 +1,5 @@
+# Cloudflare Pages project config for the landing page.
+# Deployed by .github/workflows/deploy-web.yml via `wrangler pages deploy`.
+name = "oh-my-github-web"
+compatibility_date = "2025-06-01"
+pages_build_output_dir = "dist"

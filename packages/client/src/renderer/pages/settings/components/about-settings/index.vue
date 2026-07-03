@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { Download, MessageSquare, RefreshCw, Send } from 'lucide-vue-next'
+import { Download, MessageSquare, RefreshCw } from 'lucide-vue-next'
 import { useI18n } from 'vue-i18n'
 import { Button } from '@oh-my-github/ui'
+import TelegramIcon from '@/components/icons/telegram-icon.vue'
 import { getShortcutPlatform } from '@/keyboard/shortcut-accelerator'
 import liquidLogo from '../../../../../../../../assets/liquid-glass-icon.png'
 import shadowLogo from '../../../../../../../../assets/shadow-icon.png'
@@ -105,7 +106,7 @@ function openAuthorProfile(): void {
           variant="outline"
           @click.prevent
         >
-          <Send class="size-4" />
+          <TelegramIcon class="size-4" />
           {{ t('settings.about.telegram') }}
         </Button>
       </div>

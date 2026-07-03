@@ -1,0 +1,54 @@
+{
+  "brand": "Oh My GitHub",
+  "nav": {
+    "telegram": "Telegram",
+    "language": "语言",
+    "toggleTheme": "切换主题"
+  },
+  "hero": {
+    "tagline": "一款非官方的 GitHub 桌面客户端，为你的工作提供助力。",
+    "subtitle": "现代简洁的桌面应用，所有入口都汇聚在侧边栏。无需反复刷新页面或新建标签，即可无缝使用 GitHub 的每一项功能。",
+    "telegram": "加入 Telegram"
+  },
+  "download": {
+    "cta": "下载",
+    "downloadFor": "下载 {platform} 版",
+    "otherPlatforms": "其他平台",
+    "version": "版本 {version}",
+    "platforms": {
+      "mac-arm64": "macOS（Apple Silicon）",
+      "mac-x64": "macOS（Intel）",
+      "win-x64": "Windows",
+      "linux-x64": "Linux（x64 · AppImage）",
+      "linux-arm64": "Linux（arm64 · AppImage）"
+    }
+  },
+  "features": {
+    "title": "所有功能，侧边栏一触即达",
+    "items": {
+      "sidebar": {
+        "title": "统一侧边栏",
+        "description": "所有工作流集中在一处，无需在标签间来回翻找。"
+      },
+      "seamless": {
+        "title": "无缝衔接",
+        "description": "在通知、PR 与 Actions 之间切换，无需刷新页面。"
+      },
+      "fast": {
+        "title": "轻快原生",
+        "description": "流畅的桌面外壳，不打断你的心流。"
+      },
+      "crossPlatform": {
+        "title": "跨平台",
+        "description": "支持 macOS、Windows 与 Linux。"
+      }
+    }
+  },
+  "footer": {
+    "copyright": "© {year} Oh My GitHub。保留所有权利。",
+    "madeBy": "由 {author} 用 ❤️ 倾情打造",
+    "download": "下载",
+    "issues": "问题反馈",
+    "telegram": "Telegram"
+  }
+}

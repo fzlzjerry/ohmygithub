@@ -1,0 +1,44 @@
+name: Deploy Web
+
+# Build the landing page (packages/web) and deploy it to Cloudflare Pages.
+# Runs on pushes to main that touch the web package or the shared ui package,
+# and can be triggered manually.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/web/**'
+      - 'packages/ui/**'
+      - '.github/workflows/deploy-web.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      # Typecheck/build don't need the Electron runtime.
+      ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+      # Base URL the download buttons point at. Falls back to the default in
+      # lib/downloads.ts if neither a secret nor a repo variable is set.
+      VITE_R2_PUBLIC_BASE_URL: ${{ secrets.VITE_R2_PUBLIC_BASE_URL || vars.VITE_R2_PUBLIC_BASE_URL }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Build
+        run: pnpm build:web
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: packages/web
+          command: pages deploy dist --project-name=${{ vars.CLOUDFLARE_PAGES_PROJECT || 'oh-my-github-web' }}

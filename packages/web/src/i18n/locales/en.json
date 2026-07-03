@@ -1,0 +1,54 @@
+{
+  "brand": "Oh My GitHub",
+  "nav": {
+    "telegram": "Telegram",
+    "language": "Language",
+    "toggleTheme": "Toggle theme"
+  },
+  "hero": {
+    "tagline": "An unofficial GitHub Desktop powering your work.",
+    "subtitle": "A modern, minimalist desktop app where every entry point lives in the sidebar — use every GitHub feature seamlessly, with no constant page reloads or new tabs.",
+    "telegram": "Join Telegram"
+  },
+  "download": {
+    "cta": "Download",
+    "downloadFor": "Download for {platform}",
+    "otherPlatforms": "Other platforms",
+    "version": "Version {version}",
+    "platforms": {
+      "mac-arm64": "macOS (Apple Silicon)",
+      "mac-x64": "macOS (Intel)",
+      "win-x64": "Windows",
+      "linux-x64": "Linux (x64 · AppImage)",
+      "linux-arm64": "Linux (arm64 · AppImage)"
+    }
+  },
+  "features": {
+    "title": "Everything, one sidebar away",
+    "items": {
+      "sidebar": {
+        "title": "Unified sidebar",
+        "description": "Every workflow lives in one place — no hunting through tabs."
+      },
+      "seamless": {
+        "title": "Seamless flow",
+        "description": "Switch between notifications, PRs, and actions without a reload."
+      },
+      "fast": {
+        "title": "Fast & native",
+        "description": "A snappy desktop shell that stays out of your way."
+      },
+      "crossPlatform": {
+        "title": "Cross-platform",
+        "description": "Runs on macOS, Windows, and Linux."
+      }
+    }
+  },
+  "footer": {
+    "copyright": "© {year} Oh My GitHub. All rights reserved.",
+    "madeBy": "Made with ❤️ by {author}",
+    "download": "Download",
+    "issues": "Issues",
+    "telegram": "Telegram"
+  }
+}

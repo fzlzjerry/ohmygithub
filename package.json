@@ -7,8 +7,11 @@
   "scripts": {
     "env:setup": "pnpm install && pnpm --filter @oh-my-github/client exec install-electron",
     "dev": "pnpm --filter @oh-my-github/client dev",
+    "dev:web": "pnpm --filter @oh-my-github/web dev",
     "build": "pnpm -r build",
     "build:client": "pnpm --filter @oh-my-github/client build",
+    "build:web": "pnpm --filter @oh-my-github/web build",
+    "preview:web": "pnpm --filter @oh-my-github/web preview",
     "package": "pnpm package:client",
     "package:client": "pnpm --filter @oh-my-github/client package",
     "package:dir": "pnpm --filter @oh-my-github/client package:dir",
