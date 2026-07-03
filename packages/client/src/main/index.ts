@@ -5,7 +5,7 @@ import { registerAccountsIpc } from './accounts'
 import { registerActionsIpc } from './actions'
 import { initializeAuth, registerAuthIpc } from './auth'
 import { registerBookmarksIpc } from './bookmarks'
-import { initializeConfig, registerConfigIpc } from './config'
+import { initializeConfig, registerConfigIpc, type LocalConfig } from './config'
 import { configureDevRemoteDebugging } from './debug'
 import { registerDeploymentsIpc } from './deployments'
 import { registerInboxIpc } from './inbox'
@@ -22,7 +22,9 @@ configureDevRemoteDebugging()
 
 // Keep the native window background in sync with the active theme so no light
 // strip bleeds through behind the renderer (e.g. the hiddenInset titlebar inset
-// area) when the app is in dark mode.
+// area) when the app is in dark mode. `shouldUseDarkColors` follows the OS by
+// default, so the app theme is pushed into `nativeTheme.themeSource` first (see
+// applyThemeSource) — otherwise app=dark + OS=light paints a light window frame.
 const LIGHT_BACKGROUND = '#f7f7f5'
 const DARK_BACKGROUND = '#0a0a0a'
 const DEV_MAC_APP_ICON = resolve(__dirname, '../../../../assets/liquid-glass-icon.png')
@@ -30,6 +32,13 @@ const DEV_DEFAULT_APP_ICON = resolve(__dirname, '../../../../assets/shadow-icon.
 
 function resolveBackgroundColor(): string {
   return nativeTheme.shouldUseDarkColors ? DARK_BACKGROUND : LIGHT_BACKGROUND
+}
+
+// Drive the OS-level appearance from the in-app theme preference so the native
+// chrome (window background, traffic lights) matches the renderer. 'auto' defers
+// to the OS via 'system'.
+function applyThemeSource(theme: LocalConfig['ui']['theme']): void {
+  nativeTheme.themeSource = theme === 'auto' ? 'system' : theme
 }
 
 function configureDevelopmentAppIcon(): void {
@@ -118,7 +127,7 @@ void app.whenReady().then(() => {
   registerActionsIpc()
   registerAuthIpc()
   registerBookmarksIpc()
-  registerConfigIpc()
+  registerConfigIpc((config) => applyThemeSource(config.ui.theme))
   registerDeploymentsIpc()
   registerInboxIpc()
   registerIssuesIpc()
@@ -131,7 +140,7 @@ void app.whenReady().then(() => {
   registerUpdatesIpc()
   registerWindowIpc()
   initializeAuth()
-  initializeConfig()
+  applyThemeSource(initializeConfig().config.ui.theme)
   createWindow()
 
   app.on('activate', () => {

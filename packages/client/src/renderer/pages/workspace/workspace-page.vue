@@ -207,6 +207,12 @@ function registerWorkspaceShortcuts(): void {
       void copyActiveGitHubUrl()
       return true
     }, { enabled: () => canUseWorkspaceShortcuts.value }),
+    registerKeyboardShortcutHandler('workspace.openInBrowser', () => {
+      if (!activeGithubUrl.value) return false
+
+      void openActiveGitHubUrl()
+      return true
+    }, { enabled: () => canUseWorkspaceShortcuts.value }),
   )
 }
 

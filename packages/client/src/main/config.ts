@@ -57,11 +57,12 @@ export function initializeConfig(): LocalConfigInfo {
   }
 }
 
-export function registerConfigIpc(): void {
+export function registerConfigIpc(onChange?: (config: LocalConfig) => void): void {
   ipcMain.handle('config:get', () => initializeConfig())
   ipcMain.handle('config:update', (_event, patch: LocalConfigPatch) => {
     const config = mergeConfig(readConfig(), patch)
     writeConfig(config)
+    onChange?.(config)
 
     return {
       path: configPath,

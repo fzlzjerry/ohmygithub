@@ -238,8 +238,7 @@
       },
       "groups": {
         "global": "全局",
-        "workspace": "工作区",
-        "repository": "仓库"
+        "workspace": "工作区"
       },
       "commands": {
         "settingsOpen": {
@@ -278,53 +277,9 @@
           "label": "复制 GitHub 链接",
           "description": "复制当前工作区标签页对应的 GitHub 链接。"
         },
-        "repositorySectionOverview": {
-          "label": "仓库概览",
-          "description": "将当前仓库标签页切换到概览。"
-        },
-        "repositorySectionFiles": {
-          "label": "仓库文件",
-          "description": "将当前仓库标签页切换到文件。"
-        },
-        "repositorySectionCommits": {
-          "label": "仓库提交",
-          "description": "将当前仓库标签页切换到提交。"
-        },
-        "repositorySectionPullRequests": {
-          "label": "仓库 Pull Requests",
-          "description": "将当前仓库标签页切换到 Pull Requests。"
-        },
-        "repositorySectionIssues": {
-          "label": "仓库 Issues",
-          "description": "将当前仓库标签页切换到 Issues。"
-        },
-        "repositorySectionActions": {
-          "label": "仓库 Actions",
-          "description": "将当前仓库标签页切换到 Actions。"
-        },
-        "repositorySectionReleases": {
-          "label": "仓库 Releases",
-          "description": "将当前仓库标签页切换到 Releases。"
-        },
-        "repositorySectionBranches": {
-          "label": "仓库分支",
-          "description": "将当前仓库标签页切换到 Branches。"
-        },
-        "repositorySectionContributors": {
-          "label": "仓库贡献者",
-          "description": "将当前仓库标签页切换到贡献者。"
-        },
-        "repositorySectionPackages": {
-          "label": "仓库软件包",
-          "description": "将当前仓库标签页切换到软件包。"
-        },
-        "repositorySectionDeployments": {
-          "label": "仓库部署",
-          "description": "将当前仓库标签页切换到部署。"
-        },
-        "repositorySectionSettings": {
-          "label": "仓库设置",
-          "description": "将当前仓库标签页切换到设置。"
+        "workspaceOpenInBrowser": {
+          "label": "在浏览器中打开",
+          "description": "在浏览器中打开当前工作区标签页对应的 GitHub 页面。"
         }
       }
     },

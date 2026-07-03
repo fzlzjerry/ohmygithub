@@ -238,8 +238,7 @@
       },
       "groups": {
         "global": "Global",
-        "workspace": "Workspace",
-        "repository": "Repository"
+        "workspace": "Workspace"
       },
       "commands": {
         "settingsOpen": {
@@ -278,53 +277,9 @@
           "label": "Copy GitHub link",
           "description": "Copy the GitHub link for the active workspace tab."
         },
-        "repositorySectionOverview": {
-          "label": "Repository overview",
-          "description": "Switch the active repository tab to Overview."
-        },
-        "repositorySectionFiles": {
-          "label": "Repository files",
-          "description": "Switch the active repository tab to Files."
-        },
-        "repositorySectionCommits": {
-          "label": "Repository commits",
-          "description": "Switch the active repository tab to Commits."
-        },
-        "repositorySectionPullRequests": {
-          "label": "Repository pull requests",
-          "description": "Switch the active repository tab to Pull Requests."
-        },
-        "repositorySectionIssues": {
-          "label": "Repository issues",
-          "description": "Switch the active repository tab to Issues."
-        },
-        "repositorySectionActions": {
-          "label": "Repository actions",
-          "description": "Switch the active repository tab to Actions."
-        },
-        "repositorySectionReleases": {
-          "label": "Repository releases",
-          "description": "Switch the active repository tab to Releases."
-        },
-        "repositorySectionBranches": {
-          "label": "Repository branches",
-          "description": "Switch the active repository tab to Branches."
-        },
-        "repositorySectionContributors": {
-          "label": "Repository contributors",
-          "description": "Switch the active repository tab to Contributors."
-        },
-        "repositorySectionPackages": {
-          "label": "Repository packages",
-          "description": "Switch the active repository tab to Packages."
-        },
-        "repositorySectionDeployments": {
-          "label": "Repository deployments",
-          "description": "Switch the active repository tab to Deployments."
-        },
-        "repositorySectionSettings": {
-          "label": "Repository settings",
-          "description": "Switch the active repository tab to Settings."
+        "workspaceOpenInBrowser": {
+          "label": "Open in browser",
+          "description": "Open the active workspace tab on GitHub in your browser."
         }
       }
     },

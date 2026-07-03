@@ -8,20 +8,9 @@ export type KeyboardShortcutCommandId =
   | 'workspace.toggleRightPanel'
   | 'workspace.toggleBookmark'
   | 'workspace.copyGitHubUrl'
-  | 'repository.section.overview'
-  | 'repository.section.files'
-  | 'repository.section.commits'
-  | 'repository.section.branches'
-  | 'repository.section.pullRequests'
-  | 'repository.section.issues'
-  | 'repository.section.actions'
-  | 'repository.section.releases'
-  | 'repository.section.contributors'
-  | 'repository.section.packages'
-  | 'repository.section.deployments'
-  | 'repository.section.settings'
+  | 'workspace.openInBrowser'
 
-export type KeyboardShortcutGroupId = 'global' | 'workspace' | 'repository'
+export type KeyboardShortcutGroupId = 'global' | 'workspace'
 
 export interface KeyboardShortcutDefinition {
   id: KeyboardShortcutCommandId
@@ -107,99 +96,17 @@ export const KEYBOARD_SHORTCUT_DEFINITIONS: readonly KeyboardShortcutDefinition[
     defaultAccelerator: 'Primary+Shift+C',
   },
   {
-    id: 'repository.section.overview',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionOverview.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionOverview.description',
-    defaultAccelerator: '1',
-  },
-  {
-    id: 'repository.section.files',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionFiles.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionFiles.description',
-    defaultAccelerator: '2',
-  },
-  {
-    id: 'repository.section.commits',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionCommits.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionCommits.description',
-    defaultAccelerator: '3',
-  },
-  {
-    id: 'repository.section.pullRequests',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionPullRequests.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionPullRequests.description',
-    defaultAccelerator: '4',
-  },
-  {
-    id: 'repository.section.issues',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionIssues.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionIssues.description',
-    defaultAccelerator: '5',
-  },
-  {
-    id: 'repository.section.actions',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionActions.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionActions.description',
-    defaultAccelerator: '6',
-  },
-  {
-    id: 'repository.section.releases',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionReleases.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionReleases.description',
-    defaultAccelerator: '7',
-  },
-  {
-    id: 'repository.section.contributors',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionContributors.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionContributors.description',
-    defaultAccelerator: '0',
-  },
-  {
-    id: 'repository.section.settings',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionSettings.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionSettings.description',
-    defaultAccelerator: '8',
-  },
-  {
-    id: 'repository.section.branches',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionBranches.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionBranches.description',
-    defaultAccelerator: '9',
-  },
-  {
-    id: 'repository.section.packages',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionPackages.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionPackages.description',
-    // The digit row (0-9) is fully assigned to the other repository tabs; this
-    // reserves an unused chord until the section shortcuts get renumbered.
-    defaultAccelerator: 'Shift+P',
-  },
-  {
-    id: 'repository.section.deployments',
-    group: 'repository',
-    labelKey: 'settings.keyboard.commands.repositorySectionDeployments.label',
-    descriptionKey: 'settings.keyboard.commands.repositorySectionDeployments.description',
-    // The digit row (0-9) is fully assigned to the other repository tabs; this
-    // reserves an unused chord until the section shortcuts get renumbered.
-    defaultAccelerator: 'Shift+D',
+    id: 'workspace.openInBrowser',
+    group: 'workspace',
+    labelKey: 'settings.keyboard.commands.workspaceOpenInBrowser.label',
+    descriptionKey: 'settings.keyboard.commands.workspaceOpenInBrowser.description',
+    defaultAccelerator: 'Primary+Shift+O',
   },
 ]
 
 export const KEYBOARD_SHORTCUT_GROUPS: readonly KeyboardShortcutGroupId[] = [
   'global',
   'workspace',
-  'repository',
 ]
 
 export const KEYBOARD_SHORTCUT_DEFINITION_BY_ID = new Map(
