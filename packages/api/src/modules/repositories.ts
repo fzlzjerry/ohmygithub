@@ -1,7 +1,15 @@
 import { RequestError, type GitHubOctokit } from '../transport'
 import { CONTRIBUTOR_STATS_PENDING } from '../types'
 import { rewriteImagesToCamo } from './markdown-camo'
+import {
+  enrichFollowAccounts,
+  fetchListWindow,
+  mapFollowUser,
+  type FollowUserResponse,
+  type GraphFollowEnrichmentNode,
+} from './social-users'
 import type {
+  GitHubAccountFollowList,
   GitHubCiState,
   GitHubCommitDetail,
   GitHubContributorStatsWeek,
@@ -803,6 +811,39 @@ export class RepositoriesApi {
         type: contributor.type ?? 'User',
       }]
     })
+  }
+
+  async listStargazers(options: RepositoryOptions): Promise<GitHubAccountFollowList> {
+    return this.listEngagementUsers('GET /repos/{owner}/{repo}/stargazers', options)
+  }
+
+  async listWatchers(options: RepositoryOptions): Promise<GitHubAccountFollowList> {
+    return this.listEngagementUsers('GET /repos/{owner}/{repo}/subscribers', options)
+  }
+
+  // Stargazers and subscribers are plain ascending REST user lists; window the
+  // tail and enrich rows exactly like the account followers list.
+  private async listEngagementUsers(
+    route: 'GET /repos/{owner}/{repo}/stargazers' | 'GET /repos/{owner}/{repo}/subscribers',
+    options: RepositoryOptions,
+  ): Promise<GitHubAccountFollowList> {
+    const window = await fetchListWindow<FollowUserResponse>(async (page, perPage) => {
+      const response = await this.octokit.request(route, {
+        owner: options.owner,
+        repo: options.repo,
+        page,
+        per_page: perPage,
+      })
+      return { items: response.data as FollowUserResponse[], link: String(response.headers.link ?? '') }
+    })
+    const enrichments = await enrichFollowAccounts(this.octokit, window.items)
+      .catch(() => new Map<string, GraphFollowEnrichmentNode>())
+
+    return {
+      items: window.items.flatMap((user) => mapFollowUser(user, enrichments.get(user.login?.toLowerCase() ?? ''))),
+      totalCount: window.totalCount,
+      truncated: window.truncated,
+    }
   }
 
   async getCommit(options: RepositoryCommitOptions): Promise<GitHubCommitDetail> {
