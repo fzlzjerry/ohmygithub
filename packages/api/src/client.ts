@@ -12,6 +12,7 @@ import { ReleasesApi } from './modules/releases'
 import { RepositoriesApi } from './modules/repositories'
 import { RepositorySettingsApi } from './modules/repository-settings.general'
 import { RepositorySettingsAccessApi } from './modules/repository-settings.access'
+import { RepositorySettingsAutomationApi } from './modules/repository-settings.automation'
 import { SearchApi } from './modules/search'
 import { UserSettingsApi } from './modules/user-settings'
 import { createOctokit, type GitHubOctokit } from './transport'
@@ -79,6 +80,7 @@ export interface GitHubApi extends GitHubClient {
   readonly repositories: RepositoriesApi
   readonly repositorySettings: RepositorySettingsApi
   readonly repositorySettingsAccess: RepositorySettingsAccessApi
+  readonly repositorySettingsAutomation: RepositorySettingsAutomationApi
   readonly search: SearchApi
   readonly userSettings: UserSettingsApi
 }
@@ -99,6 +101,7 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
   const repositories = new RepositoriesApi(octokit)
   const repositorySettings = new RepositorySettingsApi(octokit)
   const repositorySettingsAccess = new RepositorySettingsAccessApi(octokit)
+  const repositorySettingsAutomation = new RepositorySettingsAutomationApi(octokit)
   const search = new SearchApi(octokit)
   const userSettings = new UserSettingsApi(octokit)
 
@@ -118,6 +121,7 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
     repositories,
     repositorySettings,
     repositorySettingsAccess,
+    repositorySettingsAutomation,
     search,
     userSettings,
     getAccountProfile: (login) => accounts.getProfile(login),

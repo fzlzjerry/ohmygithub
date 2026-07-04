@@ -492,6 +492,121 @@ export interface GitHubRepositoryAccessOverview {
   teams: GitHubRepositoryTeamAccess[]
 }
 
+export interface GitHubBranchProtectionSummary {
+  branch: string
+  requiredReviews: number | null
+  requireCodeOwnerReviews: boolean
+  requiredStatusChecks: string[] | null
+  strictStatusChecks: boolean
+  enforceAdmins: boolean
+  requiredLinearHistory: boolean
+  allowForcePushes: boolean
+  allowDeletions: boolean
+  requiredConversationResolution: boolean
+  lockBranch: boolean
+  requiredSignatures: boolean
+}
+
+export type GitHubRulesetEnforcement = 'active' | 'evaluate' | 'disabled'
+
+export interface GitHubRepositoryRuleset {
+  id: number
+  name: string
+  target: string
+  enforcement: GitHubRulesetEnforcement
+  rules: string[]
+  refConditions: string[]
+}
+
+export interface GitHubActionsSelectedActions {
+  githubOwnedAllowed: boolean
+  verifiedAllowed: boolean
+  patternsAllowed: string[]
+}
+
+export interface GitHubActionsSettings {
+  enabled: boolean
+  allowedActions: 'all' | 'local_only' | 'selected' | null
+  shaPinningRequired: boolean | null
+  defaultWorkflowPermissions: 'read' | 'write' | null
+  canApprovePullRequestReviews: boolean | null
+  accessLevel: 'none' | 'user' | 'organization' | null
+  retentionDays: number | null
+  selectedActions: GitHubActionsSelectedActions | null
+}
+
+export interface GitHubSelfHostedRunner {
+  id: number
+  name: string
+  os: string
+  status: string
+  busy: boolean
+  labels: string[]
+}
+
+export interface GitHubRepositoryWebhook {
+  id: number
+  url: string
+  contentType: string
+  insecureSsl: boolean
+  events: string[]
+  active: boolean
+  lastResponseStatus: string | null
+}
+
+export interface UpsertRepositoryWebhookInput {
+  url: string
+  contentType: 'json' | 'form'
+  secret?: string
+  insecureSsl: boolean
+  events: string[]
+  active: boolean
+}
+
+export interface GitHubEnvironmentReviewer {
+  type: 'User' | 'Team'
+  id: number
+  name: string
+}
+
+export interface GitHubEnvironmentBranchPolicyItem {
+  id: number
+  name: string
+  type: 'branch' | 'tag'
+}
+
+export interface GitHubEnvironmentSettings {
+  name: string
+  waitTimer: number
+  preventSelfReview: boolean
+  reviewers: GitHubEnvironmentReviewer[]
+  branchPolicy: 'protected' | 'custom' | 'all'
+  customPolicies: GitHubEnvironmentBranchPolicyItem[]
+}
+
+export interface UpsertEnvironmentInput {
+  waitTimer: number
+  preventSelfReview: boolean
+  reviewers: Array<{ type: 'User' | 'Team'; id: number }>
+  branchPolicy: 'protected' | 'custom' | 'all'
+}
+
+export interface GitHubPagesSettings {
+  enabled: boolean
+  buildType: 'legacy' | 'workflow' | null
+  sourceBranch: string | null
+  sourcePath: string | null
+  cname: string | null
+  httpsEnforced: boolean
+  url: string | null
+  latestBuildStatus: string | null
+}
+
+export interface GitHubRepositoryCustomPropertyValue {
+  propertyName: string
+  value: string | string[] | null
+}
+
 export interface GitHubRepositoryContributorSummary {
   id: number
   login: string
