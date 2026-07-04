@@ -254,6 +254,42 @@ export function useRepositoryRefsInvalidation() {
   }
 }
 
+export async function createRepository(options: {
+  organization: string | null
+  name: string
+  description: string | null
+  visibility: 'public' | 'private'
+  autoInit: boolean
+  gitignoreTemplate: string | null
+  licenseTemplate: string | null
+}): Promise<GitHubCreatedRepository> {
+  assertRepositoriesBridge()
+
+  return window.ohMyGithub.repositories.create(options)
+}
+
+export function useGitignoreTemplatesQuery() {
+  return useQuery<string[]>({
+    key: ['github', 'gitignore-templates'],
+    query: async () => {
+      assertRepositoriesBridge()
+
+      return window.ohMyGithub.repositories.listGitignoreTemplates()
+    },
+  })
+}
+
+export function useLicenseTemplatesQuery() {
+  return useQuery<GitHubLicenseTemplate[]>({
+    key: ['github', 'license-templates'],
+    query: async () => {
+      assertRepositoriesBridge()
+
+      return window.ohMyGithub.repositories.listLicenses()
+    },
+  })
+}
+
 export async function createBranch(owner: string, repo: string, name: string, fromRef: string): Promise<GitHubCreatedRef> {
   assertRepositoriesBridge()
 
