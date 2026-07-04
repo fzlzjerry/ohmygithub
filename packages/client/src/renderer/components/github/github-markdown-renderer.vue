@@ -5,7 +5,7 @@ import { useSettingsStore } from '@/stores/settings'
 import MermaidRenderer from '@/components/mermaid/mermaid-renderer.vue'
 import MarkdownCodeBlock from '@/components/markdown/markdown-code-block.vue'
 import MarkdownImage from '@/components/markdown/markdown-image.vue'
-import { unwrapSubWrappedBadges } from '@/components/markdown/markdown-content'
+import { allowGitHubHtmlTags, prepareGitHubMarkdown } from '@/components/markdown/markdown-content'
 import GitHubMarkdownLink from './github-markdown-link.vue'
 import { GITHUB_MARKDOWN_CONTEXT_KEY } from './github-markdown-context'
 import GitHubMarkdownText from './github-markdown-text.vue'
@@ -14,6 +14,7 @@ const GITHUB_MARKDOWN_ID = 'oh-my-github-github-rich-content'
 
 enableKatex()
 enableMermaid()
+allowGitHubHtmlTags()
 setCustomComponents(GITHUB_MARKDOWN_ID, {
   code_block: MarkdownCodeBlock,
   image: MarkdownImage,
@@ -36,7 +37,7 @@ const props = withDefaults(defineProps<{
 const settings = useSettingsStore()
 const isDark = computed(() => settings.isDark)
 const markdownRoot = ref<HTMLElement | null>(null)
-const renderableContent = computed(() => unwrapSubWrappedBadges(props.content))
+const renderableContent = computed(() => prepareGitHubMarkdown(props.content))
 const markdownContext = computed(() => ({
   owner: props.owner,
   repo: props.repo,

@@ -346,8 +346,12 @@ html:not([data-focus-ring-modality="keyboard"])
   font-weight: 520;
 }
 
+/* Tailwind preflight forces img to display:block, which stacks raw <img>
+   rows from README html blocks vertically; GitHub keeps them inline. */
 .rich-content-markdown :where(img) {
+  display: inline-block;
   max-width: 100%;
+  vertical-align: middle;
 }
 
 .rich-content-markdown :where(.heading-node, .paragraph-node) {
