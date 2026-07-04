@@ -1825,6 +1825,145 @@
             "six_months": "6 个月"
           }
         }
+      },
+      "automation": {
+        "navigation": "代码与自动化设置",
+        "error": "变更失败。",
+        "save": "保存",
+        "editOnGitHub": "在 GitHub 上编辑",
+        "tabs": {
+          "branches": "分支保护",
+          "rules": "规则集",
+          "actions": "Actions",
+          "runners": "Runners",
+          "webhooks": "Webhooks",
+          "environments": "环境",
+          "pages": "Pages",
+          "custom-properties": "自定义属性"
+        },
+        "branches": {
+          "hint": "经典分支保护规则。新建与编辑请前往 GitHub 网页;通配符规则仅网页可见。",
+          "empty": "没有受保护的分支。",
+          "remove": "移除保护",
+          "yes": "是",
+          "no": "否",
+          "strict": "严格",
+          "requiredReviews": "所需批准审查数",
+          "codeOwners": "要求代码所有者审查",
+          "statusChecks": "必需状态检查",
+          "enforceAdmins": "对管理员生效",
+          "linearHistory": "要求线性历史",
+          "forcePushes": "允许强制推送",
+          "deletions": "允许删除",
+          "conversation": "要求解决所有讨论",
+          "lock": "锁定分支",
+          "signatures": "要求签名提交"
+        },
+        "rules": {
+          "hint": "针对分支、标签与推送的规则集。新建与编辑请前往 GitHub 网页。",
+          "empty": "没有规则集。",
+          "remove": "删除规则集",
+          "summary": "{target} · {rules} 条规则 · {refs}",
+          "enforcement": {
+            "active": "启用",
+            "evaluate": "评估",
+            "disabled": "禁用"
+          }
+        },
+        "actions": {
+          "enabled": "允许 GitHub Actions",
+          "enabledHint": "关闭后此仓库的所有工作流都无法运行。",
+          "allowedActions": "允许的 actions",
+          "allowed": {
+            "all": "允许所有 actions 与可复用工作流",
+            "local_only": "仅允许本仓库内的 actions",
+            "selected": "仅允许选定的 actions"
+          },
+          "githubOwned": "允许 GitHub 官方 actions",
+          "verified": "允许 Marketplace 认证作者的 actions",
+          "patterns": "允许的 action 匹配模式",
+          "patternsPlaceholder": "octo-org/*\nactions/checkout{'@'}*",
+          "workflowPermissions": "默认工作流权限",
+          "workflowPermissionsHint": "可能被组织级设置锁定。",
+          "permissionRead": "只读仓库内容",
+          "permissionWrite": "读写权限",
+          "canApprove": "允许 GitHub Actions 批准拉取请求",
+          "accessLevel": "其他仓库的工作流访问",
+          "access": {
+            "none": "不可访问",
+            "user": "你的仓库可访问",
+            "organization": "组织内仓库可访问"
+          },
+          "retention": "构件与日志保留",
+          "retentionHint": "构件与日志保留天数(1-400)。",
+          "retentionInvalid": "保留天数必须是 1-400 之间的整数。"
+        },
+        "runners": {
+          "hint": "注册到此仓库的 self-hosted runners。",
+          "new": "新建 runner",
+          "empty": "没有 self-hosted runners。",
+          "remove": "移除 runner",
+          "busy": "运行中"
+        },
+        "webhooks": {
+          "hint": "Webhook 将仓库事件投递到外部服务。",
+          "add": "添加 webhook",
+          "empty": "没有 webhook。",
+          "createTitle": "添加 webhook",
+          "editTitle": "编辑 webhook",
+          "url": "Payload URL",
+          "contentType": "内容类型",
+          "secret": "Secret(只写)",
+          "events": "事件",
+          "eventsPlaceholder": "push、pull_request……",
+          "sslVerification": "SSL 校验",
+          "active": "启用",
+          "ping": "Ping",
+          "pinged": "Ping 已发送。",
+          "edit": "编辑 webhook",
+          "remove": "删除 webhook"
+        },
+        "environments": {
+          "hint": "带保护规则与分支策略的部署环境。",
+          "add": "新建环境",
+          "empty": "没有环境。",
+          "createTitle": "新建环境",
+          "editTitle": "编辑环境",
+          "name": "名称",
+          "waitTimer": "等待时间(分钟,0-43200)",
+          "waitTimerInvalid": "等待时间必须是 0-43200 之间的整数。",
+          "preventSelfReview": "禁止自我审批",
+          "reviewersKept": "已保留 {count} 位必需审批者(编辑审批者请前往 GitHub)。",
+          "branchPolicyLabel": "可部署分支",
+          "policy": {
+            "all": "所有分支",
+            "protected": "仅受保护分支",
+            "custom": "选定的分支与标签"
+          },
+          "policyPlaceholder": "分支名模式",
+          "addPolicy": "添加",
+          "edit": "编辑环境",
+          "remove": "删除环境",
+          "summary": "{reviewers} 位审批者 · 等待 {wait} 分钟 · {policy}"
+        },
+        "pages": {
+          "disabledHint": "此仓库未启用 GitHub Pages。",
+          "buildType": "构建与部署来源",
+          "workflow": "GitHub Actions",
+          "legacy": "从分支部署",
+          "enable": "启用 Pages",
+          "summary": "{buildType} · {source} · 最近构建:{build}",
+          "httpsEnforced": "强制 HTTPS",
+          "cname": "自定义域名",
+          "requestBuild": "触发构建",
+          "buildRequested": "已触发构建。",
+          "disable": "停用 Pages",
+          "visibility": "Pages 可见性(企业版)"
+        },
+        "customProperties": {
+          "hint": "组织定义的自定义属性的取值。数组值用英文逗号分隔。",
+          "empty": "此仓库没有可用的自定义属性。"
+        }
       }
     }
   },

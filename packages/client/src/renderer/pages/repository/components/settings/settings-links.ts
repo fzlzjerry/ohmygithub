@@ -7,18 +7,6 @@ export interface RepositorySettingsLink {
 }
 
 export const repositorySettingsLinks: Partial<Record<RepositorySettingsSectionId, readonly RepositorySettingsLink[]>> = {
-  settingsAutomation: [
-    { id: 'branches', labelKey: 'repository.settings.links.branches', path: '/branches' },
-    { id: 'rules', labelKey: 'repository.settings.links.rules', path: '/rules' },
-    { id: 'actions', labelKey: 'repository.settings.links.actions', path: '/actions' },
-    { id: 'runners', labelKey: 'repository.settings.links.runners', path: '/actions/runners' },
-    { id: 'webhooks', labelKey: 'repository.settings.links.webhooks', path: '/hooks' },
-    { id: 'environments', labelKey: 'repository.settings.links.environments', path: '/environments' },
-    { id: 'codespaces', labelKey: 'repository.settings.links.codespaces', path: '/codespaces' },
-    { id: 'copilot', labelKey: 'repository.settings.links.copilot', path: '/copilot/code_review' },
-    { id: 'pages', labelKey: 'repository.settings.links.pages', path: '/pages' },
-    { id: 'customProperties', labelKey: 'repository.settings.links.customProperties', path: '/custom-properties' },
-  ],
   settingsSecurity: [
     { id: 'advancedSecurity', labelKey: 'repository.settings.links.advancedSecurity', path: '/security_analysis' },
     { id: 'deployKeys', labelKey: 'repository.settings.links.deployKeys', path: '/keys' },

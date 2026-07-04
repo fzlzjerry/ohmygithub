@@ -1825,6 +1825,145 @@
             "six_months": "6 months"
           }
         }
+      },
+      "automation": {
+        "navigation": "Code and automation settings",
+        "error": "The change failed.",
+        "save": "Save",
+        "editOnGitHub": "Edit on GitHub",
+        "tabs": {
+          "branches": "Branches",
+          "rules": "Rules",
+          "actions": "Actions",
+          "runners": "Runners",
+          "webhooks": "Webhooks",
+          "environments": "Environments",
+          "pages": "Pages",
+          "custom-properties": "Custom properties"
+        },
+        "branches": {
+          "hint": "Classic branch protection rules. Creating and editing rules happens on GitHub; wildcard rules are only visible there.",
+          "empty": "No protected branches.",
+          "remove": "Remove protection",
+          "yes": "Yes",
+          "no": "No",
+          "strict": "strict",
+          "requiredReviews": "Required approving reviews",
+          "codeOwners": "Require code owner reviews",
+          "statusChecks": "Required status checks",
+          "enforceAdmins": "Include administrators",
+          "linearHistory": "Require linear history",
+          "forcePushes": "Allow force pushes",
+          "deletions": "Allow deletions",
+          "conversation": "Require conversation resolution",
+          "lock": "Lock branch",
+          "signatures": "Require signed commits"
+        },
+        "rules": {
+          "hint": "Rulesets for branches, tags, and pushes. Creating and editing happens on GitHub.",
+          "empty": "No rulesets.",
+          "remove": "Delete ruleset",
+          "summary": "{target} · {rules} rules · {refs}",
+          "enforcement": {
+            "active": "Active",
+            "evaluate": "Evaluate",
+            "disabled": "Disabled"
+          }
+        },
+        "actions": {
+          "enabled": "Allow GitHub Actions",
+          "enabledHint": "Disable to block all workflows in this repository.",
+          "allowedActions": "Allowed actions",
+          "allowed": {
+            "all": "Allow all actions and reusable workflows",
+            "local_only": "Allow local actions only",
+            "selected": "Allow selected actions only"
+          },
+          "githubOwned": "Allow actions created by GitHub",
+          "verified": "Allow actions by Marketplace verified creators",
+          "patterns": "Allowed action patterns",
+          "patternsPlaceholder": "octo-org/*\nactions/checkout{'@'}*",
+          "workflowPermissions": "Default workflow permissions",
+          "workflowPermissionsHint": "May be locked at the organization level.",
+          "permissionRead": "Read repository contents",
+          "permissionWrite": "Read and write permissions",
+          "canApprove": "Allow GitHub Actions to approve pull requests",
+          "accessLevel": "Workflow access from other repositories",
+          "access": {
+            "none": "Not accessible",
+            "user": "Accessible from your repositories",
+            "organization": "Accessible from organization repositories"
+          },
+          "retention": "Artifact and log retention",
+          "retentionHint": "Days to keep artifacts and logs (1-400).",
+          "retentionInvalid": "Retention must be an integer between 1 and 400."
+        },
+        "runners": {
+          "hint": "Self-hosted runners registered for this repository.",
+          "new": "New runner",
+          "empty": "No self-hosted runners.",
+          "remove": "Remove runner",
+          "busy": "Busy"
+        },
+        "webhooks": {
+          "hint": "Webhooks deliver repository events to external services.",
+          "add": "Add webhook",
+          "empty": "No webhooks.",
+          "createTitle": "Add webhook",
+          "editTitle": "Edit webhook",
+          "url": "Payload URL",
+          "contentType": "Content type",
+          "secret": "Secret (write-only)",
+          "events": "Events",
+          "eventsPlaceholder": "push, pull_request, ...",
+          "sslVerification": "SSL verification",
+          "active": "Active",
+          "ping": "Ping",
+          "pinged": "Ping delivered.",
+          "edit": "Edit webhook",
+          "remove": "Delete webhook"
+        },
+        "environments": {
+          "hint": "Deployment environments with protection rules and branch policies.",
+          "add": "New environment",
+          "empty": "No environments.",
+          "createTitle": "New environment",
+          "editTitle": "Edit environment",
+          "name": "Name",
+          "waitTimer": "Wait timer (minutes, 0-43200)",
+          "waitTimerInvalid": "Wait timer must be an integer between 0 and 43200.",
+          "preventSelfReview": "Prevent self-review",
+          "reviewersKept": "{count} required reviewers are kept as-is (edit reviewers on GitHub).",
+          "branchPolicyLabel": "Deployment branches",
+          "policy": {
+            "all": "All branches",
+            "protected": "Protected branches only",
+            "custom": "Selected branches and tags"
+          },
+          "policyPlaceholder": "Branch name pattern",
+          "addPolicy": "Add",
+          "edit": "Edit environment",
+          "remove": "Delete environment",
+          "summary": "{reviewers} reviewers · wait {wait} min · {policy}"
+        },
+        "pages": {
+          "disabledHint": "GitHub Pages is not enabled for this repository.",
+          "buildType": "Build and deployment source",
+          "workflow": "GitHub Actions",
+          "legacy": "Deploy from a branch",
+          "enable": "Enable Pages",
+          "summary": "{buildType} · {source} · last build: {build}",
+          "httpsEnforced": "Enforce HTTPS",
+          "cname": "Custom domain",
+          "requestBuild": "Request build",
+          "buildRequested": "Build requested.",
+          "disable": "Disable Pages",
+          "visibility": "Pages visibility (Enterprise)"
+        },
+        "customProperties": {
+          "hint": "Values for custom properties defined by the organization. Array values are comma-separated.",
+          "empty": "No custom properties are defined for this repository."
+        }
       }
     }
   },
