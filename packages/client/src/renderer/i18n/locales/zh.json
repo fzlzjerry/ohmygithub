@@ -1124,7 +1124,22 @@
         "title": "Releases"
       },
       "settings": {
-        "title": "Settings"
+        "title": "设置"
+      },
+      "settingsGeneral": {
+        "title": "常规"
+      },
+      "settingsAccess": {
+        "title": "访问权限"
+      },
+      "settingsAutomation": {
+        "title": "代码与自动化"
+      },
+      "settingsSecurity": {
+        "title": "安全"
+      },
+      "settingsIntegrations": {
+        "title": "集成"
       }
     },
     "branches": {
@@ -1604,6 +1619,34 @@
     },
     "values": {
       "placeholder": "未接入"
+    },
+    "settings": {
+      "externalHint": "以下设置暂未内置,点击条目将在浏览器中打开 GitHub 对应设置页。",
+      "links": {
+        "general": "常规",
+        "collaborators": "协作者与团队",
+        "interactionLimits": "互动限制",
+        "reviewLimits": "代码审查限制",
+        "reportedContent": "被举报内容",
+        "branches": "分支保护",
+        "rules": "规则集",
+        "actions": "Actions",
+        "runners": "Runners",
+        "webhooks": "Webhooks",
+        "environments": "环境",
+        "codespaces": "Codespaces",
+        "copilot": "Copilot 代码审查",
+        "pages": "Pages",
+        "customProperties": "自定义属性",
+        "advancedSecurity": "高级安全",
+        "deployKeys": "部署密钥",
+        "secretsActions": "Actions 密钥与变量",
+        "secretsCodespaces": "Codespaces 密钥",
+        "secretsDependabot": "Dependabot 密钥",
+        "githubApps": "GitHub Apps",
+        "emailNotifications": "邮件通知",
+        "autolinks": "自动链接引用"
+      }
     }
   },
   "conversation": {

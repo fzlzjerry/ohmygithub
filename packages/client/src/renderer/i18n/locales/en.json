@@ -1125,6 +1125,21 @@
       },
       "settings": {
         "title": "Settings"
+      },
+      "settingsGeneral": {
+        "title": "General"
+      },
+      "settingsAccess": {
+        "title": "Access"
+      },
+      "settingsAutomation": {
+        "title": "Code & automation"
+      },
+      "settingsSecurity": {
+        "title": "Security"
+      },
+      "settingsIntegrations": {
+        "title": "Integrations"
       }
     },
     "branches": {
@@ -1604,6 +1619,34 @@
     },
     "values": {
       "placeholder": "Not connected"
+    },
+    "settings": {
+      "externalHint": "These settings aren't available in-app yet. Each entry opens the matching GitHub settings page in your browser.",
+      "links": {
+        "general": "General",
+        "collaborators": "Collaborators and teams",
+        "interactionLimits": "Interaction limits",
+        "reviewLimits": "Code review limits",
+        "reportedContent": "Reported content",
+        "branches": "Branches",
+        "rules": "Rulesets",
+        "actions": "Actions",
+        "runners": "Runners",
+        "webhooks": "Webhooks",
+        "environments": "Environments",
+        "codespaces": "Codespaces",
+        "copilot": "Copilot code review",
+        "pages": "Pages",
+        "customProperties": "Custom properties",
+        "advancedSecurity": "Advanced Security",
+        "deployKeys": "Deploy keys",
+        "secretsActions": "Actions secrets and variables",
+        "secretsCodespaces": "Codespaces secrets",
+        "secretsDependabot": "Dependabot secrets",
+        "githubApps": "GitHub Apps",
+        "emailNotifications": "Email notifications",
+        "autolinks": "Autolink references"
+      }
     }
   },
   "conversation": {
