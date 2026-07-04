@@ -460,6 +460,38 @@ export interface SetRepositoryFeatureNodeOptions {
   enabled: boolean
 }
 
+export type GitHubRepositoryCollaboratorRole = 'pull' | 'triage' | 'push' | 'maintain' | 'admin'
+
+export interface GitHubRepositoryCollaborator {
+  login: string
+  avatarUrl: string
+  roleName: string
+  htmlUrl: string
+}
+
+export interface GitHubRepositoryInvitation {
+  id: number
+  inviteeLogin: string | null
+  inviteeAvatarUrl: string | null
+  permissions: string
+  createdAt: string | null
+  htmlUrl: string
+}
+
+export interface GitHubRepositoryTeamAccess {
+  slug: string
+  name: string
+  permission: string
+  org: string
+}
+
+export interface GitHubRepositoryAccessOverview {
+  ownerType: 'User' | 'Organization'
+  collaborators: GitHubRepositoryCollaborator[]
+  invitations: GitHubRepositoryInvitation[]
+  teams: GitHubRepositoryTeamAccess[]
+}
+
 export interface GitHubRepositoryContributorSummary {
   id: number
   login: string
