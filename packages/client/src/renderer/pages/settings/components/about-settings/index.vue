@@ -10,6 +10,7 @@ import shadowLogo from '../../../../../../../../assets/shadow-icon.png'
 
 const AUTHOR_PROFILE_URL = 'https://github.com/sheepbox8646'
 const TELEGRAM_URL = 'https://t.me/ohmygithub'
+const FEEDBACK_URL = 'https://github.com/ohmygit-hub/ohmygithub/issues'
 
 const { t } = useI18n()
 
@@ -58,6 +59,10 @@ function openAuthorProfile(): void {
 function openTelegram(): void {
   void window.ohMyGithub.links.openExternalUrl(TELEGRAM_URL)
 }
+
+function openFeedback(): void {
+  void window.ohMyGithub.links.openExternalUrl(FEEDBACK_URL)
+}
 </script>
 
 <template>
@@ -99,7 +104,7 @@ function openTelegram(): void {
           as="a"
           href="#"
           variant="outline"
-          @click.prevent
+          @click.prevent="openFeedback"
         >
           <MessageSquare class="size-4" />
           {{ t('settings.about.feedback') }}

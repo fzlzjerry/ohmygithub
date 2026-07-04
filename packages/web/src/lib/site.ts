@@ -2,5 +2,6 @@
 export const AUTHOR = 'Acbox'
 export const AUTHOR_URL = 'https://github.com/sheepbox8646'
 export const REPO_URL = 'https://github.com/sheepbox8646/oh-my-github'
-export const ISSUES_URL = `${REPO_URL}/issues`
+// Feedback / issues go to the public tracker repo.
+export const ISSUES_URL = 'https://github.com/ohmygit-hub/ohmygithub/issues'
 export const TELEGRAM_URL = 'https://t.me/ohmygithub'
