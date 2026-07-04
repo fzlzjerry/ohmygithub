@@ -32,6 +32,7 @@ import {
   X,
 } from 'lucide-vue-next'
 import { GitHubActorLink, WorkItemStateBadge } from '@/components'
+import TabSwitcher, { type TabSwitcherItem } from '@/components/navigation/tab-switcher.vue'
 import { setIssueLock, setIssueSubscription } from '@/composables/github/use-issues'
 import { updatePullRequest } from '@/composables/github/use-pull-requests'
 
@@ -45,13 +46,6 @@ const emit = defineEmits<{
   refetch: []
   selectTab: [id: string]
 }>()
-
-interface PullRequestTabItem {
-  id: string
-  icon: Component
-  label: string
-  disabled: boolean
-}
 
 interface PullRequestHeaderStatus {
   label: string
@@ -195,32 +189,23 @@ const isBusy = ref(false)
 const nodeId = computed(() => props.pullRequest.nodeId ?? '')
 const isSubscribed = computed(() => props.pullRequest.viewerSubscription === 'SUBSCRIBED')
 const isLocked = computed(() => Boolean(props.pullRequest.locked))
-const tabs = computed<PullRequestTabItem[]>(() => [
+const tabs = computed<TabSwitcherItem[]>(() => [
   {
     id: 'conversations',
     icon: MessageSquare,
     label: t('pullRequest.tabs.conversations'),
-    disabled: false,
   },
   {
     id: 'commits',
     icon: GitCommitHorizontal,
     label: t('pullRequest.tabs.commits'),
-    disabled: false,
   },
   {
     id: 'review',
     icon: ShieldCheck,
     label: t('pullRequest.tabs.review'),
-    disabled: false,
   },
 ])
-
-function selectTab(tab: PullRequestTabItem): void {
-  if (tab.disabled || tab.id === props.activeTab) return
-
-  emit('selectTab', tab.id)
-}
 
 async function runAction(action: () => Promise<void>): Promise<void> {
   if (isBusy.value) return
@@ -446,31 +431,11 @@ function formatDate(value: string | null | undefined): string {
       <span class="truncate">{{ updatedMeta }}</span>
     </div>
 
-    <nav
-      :aria-label="t('pullRequest.tabs.label')"
-      class="flex min-w-0 flex-wrap items-center gap-1"
-    >
-      <button
-        v-for="tab in tabs"
-        :key="tab.id"
-        class="inline-flex h-8 select-none items-center gap-1.5 border-b px-2 text-body font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring/30"
-        :class="tab.disabled
-          ? 'cursor-not-allowed border-transparent text-muted-foreground/70'
-          : tab.id === activeTab
-            ? 'border-foreground text-foreground'
-            : 'border-transparent text-muted-foreground hover:text-foreground'"
-        :aria-current="tab.id === activeTab ? 'page' : undefined"
-        :aria-disabled="tab.disabled ? 'true' : undefined"
-        :disabled="tab.disabled"
-        type="button"
-        @click="selectTab(tab)"
-      >
-        <component
-          :is="tab.icon"
-          class="size-3.5"
-        />
-        <span>{{ tab.label }}</span>
-      </button>
-    </nav>
+    <TabSwitcher
+      :active-id="activeTab"
+      :navigation-label="t('pullRequest.tabs.label')"
+      :tabs="tabs"
+      @update:active-id="emit('selectTab', $event)"
+    />
   </header>
 </template>
