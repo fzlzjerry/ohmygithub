@@ -2,7 +2,7 @@ import type { MaybeRefOrGetter } from 'vue'
 import { toValue } from 'vue'
 import { useQuery, useQueryCache } from '@pinia/colada'
 
-const REPOSITORY_OVERVIEW_QUERY_VERSION = 'resource-rendering-v3'
+const REPOSITORY_OVERVIEW_QUERY_VERSION = 'viewer-can-administer-v4'
 
 export function useRepositoryOverviewQuery(
   owner: MaybeRefOrGetter<string>,
