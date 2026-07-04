@@ -2525,7 +2525,9 @@
       "initReadme": "使用 README 初始化仓库",
       "gitignore": ".gitignore 模板",
       "license": "许可证",
-      "none": "无"
+      "none": "无",
+      "noMatches": "没有匹配项",
+      "searchTemplates": "搜索…"
     },
     "validation": {
       "nameRequired": "仓库名称不能为空。",

@@ -15,6 +15,8 @@ import {
   SelectValue,
   Spinner,
 } from '@oh-my-github/ui'
+import SearchableSelect from '@/components/navigation/searchable-select.vue'
+import type { SearchableSelectOption } from '@/components/navigation/searchable-select.vue'
 import { useOrganizationsQuery } from '@/composables/github/use-organizations'
 import { useAccountListInvalidation } from '@/composables/github/use-accounts'
 import {
@@ -50,6 +52,16 @@ const gitignoreTemplates = computed(() => gitignoreTemplatesQuery.data.value ?? 
 const licenseTemplates = computed(() => licenseTemplatesQuery.data.value ?? [])
 const templatesFailed = computed(() =>
   Boolean(gitignoreTemplatesQuery.error.value || licenseTemplatesQuery.error.value))
+
+const gitignoreOptions = computed<SearchableSelectOption[]>(() => [
+  { id: NONE_VALUE, label: t('newRepository.fields.none') },
+  ...gitignoreTemplates.value.map((template) => ({ id: template, label: template })),
+])
+
+const licenseOptions = computed<SearchableSelectOption[]>(() => [
+  { id: NONE_VALUE, label: t('newRepository.fields.none') },
+  ...licenseTemplates.value.map((license) => ({ id: license.key, label: license.name })),
+])
 
 const form = reactive({
   owner: '',
@@ -136,7 +148,10 @@ async function submit(): Promise<void> {
               <SelectValue :placeholder="viewerLogin" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem :value="viewerLogin">
+              <SelectItem
+                v-if="viewerLogin"
+                :value="viewerLogin"
+              >
                 {{ viewerLogin }}
               </SelectItem>
               <SelectItem
@@ -215,50 +230,28 @@ async function submit(): Promise<void> {
 
       <div class="grid grid-cols-2 gap-3">
         <div class="grid gap-2">
-          <Label for="new-repository-gitignore">{{ t('newRepository.fields.gitignore') }}</Label>
-          <Select v-model="form.gitignoreTemplate">
-            <SelectTrigger
-              id="new-repository-gitignore"
-              class="w-full"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem :value="NONE_VALUE">
-                {{ t('newRepository.fields.none') }}
-              </SelectItem>
-              <SelectItem
-                v-for="template in gitignoreTemplates"
-                :key="template"
-                :value="template"
-              >
-                {{ template }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>{{ t('newRepository.fields.gitignore') }}</Label>
+          <SearchableSelect
+            v-model="form.gitignoreTemplate"
+            :empty-label="t('newRepository.fields.noMatches')"
+            :options="gitignoreOptions"
+            :placeholder="t('newRepository.fields.none')"
+            :search-placeholder="t('newRepository.fields.searchTemplates')"
+            :select-label="t('newRepository.fields.gitignore')"
+            trigger-class="w-full min-w-0"
+          />
         </div>
         <div class="grid gap-2">
-          <Label for="new-repository-license">{{ t('newRepository.fields.license') }}</Label>
-          <Select v-model="form.licenseTemplate">
-            <SelectTrigger
-              id="new-repository-license"
-              class="w-full"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem :value="NONE_VALUE">
-                {{ t('newRepository.fields.none') }}
-              </SelectItem>
-              <SelectItem
-                v-for="license in licenseTemplates"
-                :key="license.key"
-                :value="license.key"
-              >
-                {{ license.name }}
-              </SelectItem>
-            </SelectContent>
-          </Select>
+          <Label>{{ t('newRepository.fields.license') }}</Label>
+          <SearchableSelect
+            v-model="form.licenseTemplate"
+            :empty-label="t('newRepository.fields.noMatches')"
+            :options="licenseOptions"
+            :placeholder="t('newRepository.fields.none')"
+            :search-placeholder="t('newRepository.fields.searchTemplates')"
+            :select-label="t('newRepository.fields.license')"
+            trigger-class="w-full min-w-0"
+          />
         </div>
       </div>
       <p

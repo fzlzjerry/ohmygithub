@@ -2525,7 +2525,9 @@
       "initReadme": "Initialize this repository with a README",
       "gitignore": ".gitignore template",
       "license": "License",
-      "none": "None"
+      "none": "None",
+      "noMatches": "No matches",
+      "searchTemplates": "Search…"
     },
     "validation": {
       "nameRequired": "Repository name is required.",
