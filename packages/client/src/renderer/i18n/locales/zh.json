@@ -1964,6 +1964,56 @@
           "hint": "组织定义的自定义属性的取值。数组值用英文逗号分隔。",
           "empty": "此仓库没有可用的自定义属性。"
         }
+      },
+      "security": {
+        "navigation": "安全设置",
+        "error": "变更失败。",
+        "moreOnGitHub": "代码扫描、告警访问等更多设置请前往 GitHub",
+        "tabs": {
+          "advancedSecurity": "高级安全",
+          "deployKeys": "部署密钥",
+          "secrets": "密钥与变量"
+        },
+        "advancedSecurity": "GitHub 高级安全",
+        "advancedSecurityHint": "可能受套餐限制;不可用的开关会被隐藏。",
+        "secretScanning": "机密扫描",
+        "pushProtection": "推送保护",
+        "dependabotAlerts": "Dependabot 告警",
+        "dependabotAlertsHint": "在依赖存在漏洞时收到提醒。",
+        "securityUpdates": "Dependabot 安全更新",
+        "privateReporting": "私密漏洞报告",
+        "deployKeys": {
+          "titlePlaceholder": "密钥名称",
+          "keyPlaceholder": "ssh-ed25519 AAAA...",
+          "readOnly": "只读",
+          "add": "添加密钥",
+          "remove": "删除密钥",
+          "readOnlyBadge": "只读",
+          "readWriteBadge": "读写",
+          "empty": "没有部署密钥。"
+        },
+        "secrets": {
+          "scopesLabel": "密钥作用域",
+          "scopes": {
+            "actions": "Actions",
+            "codespaces": "Codespaces",
+            "dependabot": "Dependabot"
+          },
+          "namePlaceholder": "NAME",
+          "valuePlaceholder": "值(只写)",
+          "save": "保存密钥",
+          "saved": "密钥 {name} 已保存。",
+          "update": "更新密钥",
+          "remove": "删除密钥",
+          "updated": "更新于 {date}",
+          "empty": "此作用域下没有密钥。",
+          "variablesTitle": "变量",
+          "variableValuePlaceholder": "值",
+          "addVariable": "添加变量",
+          "updateVariable": "更新变量",
+          "removeVariable": "删除变量",
+          "variablesEmpty": "没有变量。"
+        }
       }
     }
   },

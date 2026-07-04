@@ -7,6 +7,7 @@ import { repositorySettingsLinks } from './settings-links'
 import GeneralSection from './general/general-section.vue'
 import AccessSection from './access/access-section.vue'
 import AutomationSection from './automation/automation-section.vue'
+import SecuritySection from './security/security-section.vue'
 
 const props = defineProps<{
   category: RepositorySettingsSectionId
@@ -50,6 +51,14 @@ function openLink(path: string): void {
 
   <AutomationSection
     v-else-if="category === 'settingsAutomation'"
+    :owner="owner"
+    :repo="repo"
+    :settings-sub="settingsSub"
+    @update:settings-sub="emit('update:settingsSub', $event)"
+  />
+
+  <SecuritySection
+    v-else-if="category === 'settingsSecurity'"
     :owner="owner"
     :repo="repo"
     :settings-sub="settingsSub"

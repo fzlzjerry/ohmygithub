@@ -1964,6 +1964,56 @@
           "hint": "Values for custom properties defined by the organization. Array values are comma-separated.",
           "empty": "No custom properties are defined for this repository."
         }
+      },
+      "security": {
+        "navigation": "Security settings",
+        "error": "The change failed.",
+        "moreOnGitHub": "Code scanning, alert access, and more on GitHub",
+        "tabs": {
+          "advancedSecurity": "Advanced Security",
+          "deployKeys": "Deploy keys",
+          "secrets": "Secrets & variables"
+        },
+        "advancedSecurity": "GitHub Advanced Security",
+        "advancedSecurityHint": "May be plan-gated; unavailable toggles are hidden.",
+        "secretScanning": "Secret scanning",
+        "pushProtection": "Push protection",
+        "dependabotAlerts": "Dependabot alerts",
+        "dependabotAlertsHint": "Get notified about vulnerable dependencies.",
+        "securityUpdates": "Dependabot security updates",
+        "privateReporting": "Private vulnerability reporting",
+        "deployKeys": {
+          "titlePlaceholder": "Key title",
+          "keyPlaceholder": "ssh-ed25519 AAAA...",
+          "readOnly": "Read-only",
+          "add": "Add key",
+          "remove": "Delete key",
+          "readOnlyBadge": "read-only",
+          "readWriteBadge": "read/write",
+          "empty": "No deploy keys."
+        },
+        "secrets": {
+          "scopesLabel": "Secret scope",
+          "scopes": {
+            "actions": "Actions",
+            "codespaces": "Codespaces",
+            "dependabot": "Dependabot"
+          },
+          "namePlaceholder": "NAME",
+          "valuePlaceholder": "Value (write-only)",
+          "save": "Save secret",
+          "saved": "Secret {name} saved.",
+          "update": "Update secret",
+          "remove": "Delete secret",
+          "updated": "Updated {date}",
+          "empty": "No secrets in this scope.",
+          "variablesTitle": "Variables",
+          "variableValuePlaceholder": "Value",
+          "addVariable": "Add variable",
+          "updateVariable": "Update variable",
+          "removeVariable": "Delete variable",
+          "variablesEmpty": "No variables."
+        }
       }
     }
   },
