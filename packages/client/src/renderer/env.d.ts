@@ -624,6 +624,38 @@ type UpdateRepositoryGeneralSettingsInput = {
   mergeCommitMessage?: GitHubMergeCommitMessage
 }
 
+type GitHubRepositoryCollaboratorRole = 'pull' | 'triage' | 'push' | 'maintain' | 'admin'
+
+type GitHubRepositoryCollaborator = {
+  login: string
+  avatarUrl: string
+  roleName: string
+  htmlUrl: string
+}
+
+type GitHubRepositoryInvitation = {
+  id: number
+  inviteeLogin: string | null
+  inviteeAvatarUrl: string | null
+  permissions: string
+  createdAt: string | null
+  htmlUrl: string
+}
+
+type GitHubRepositoryTeamAccess = {
+  slug: string
+  name: string
+  permission: string
+  org: string
+}
+
+type GitHubRepositoryAccessOverview = {
+  ownerType: 'User' | 'Organization'
+  collaborators: GitHubRepositoryCollaborator[]
+  invitations: GitHubRepositoryInvitation[]
+  teams: GitHubRepositoryTeamAccess[]
+}
+
 type GitHubContributorStatsAuthor = {
   id: number
   login: string
@@ -2152,6 +2184,39 @@ interface Window {
       setImmutableReleases: (owner: string, repo: string, enabled: boolean) => Promise<void>
       transfer: (owner: string, repo: string, newOwner: string, newName?: string) => Promise<void>
       deleteRepository: (owner: string, repo: string) => Promise<void>
+      access: {
+        getOverview: (owner: string, repo: string) => Promise<GitHubRepositoryAccessOverview>
+        addCollaborator: (
+          owner: string,
+          repo: string,
+          username: string,
+          permission: GitHubRepositoryCollaboratorRole
+        ) => Promise<'invited' | 'added'>
+        removeCollaborator: (owner: string, repo: string, username: string) => Promise<void>
+        updateInvitation: (
+          owner: string,
+          repo: string,
+          invitationId: number,
+          permissions: string
+        ) => Promise<void>
+        cancelInvitation: (owner: string, repo: string, invitationId: number) => Promise<void>
+        setTeam: (
+          org: string,
+          teamSlug: string,
+          owner: string,
+          repo: string,
+          permission: string
+        ) => Promise<void>
+        removeTeam: (org: string, teamSlug: string, owner: string, repo: string) => Promise<void>
+        getInteractionLimits: (owner: string, repo: string) => Promise<GitHubInteractionLimits | null>
+        setInteractionLimits: (
+          owner: string,
+          repo: string,
+          limit: GitHubInteractionLimitGroup,
+          expiry?: GitHubInteractionLimitExpiry
+        ) => Promise<void>
+        clearInteractionLimits: (owner: string, repo: string) => Promise<void>
+      }
     }
     search: {
       resolveGoto: (input: string) => Promise<GitHubWorkspaceGotoResult>

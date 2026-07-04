@@ -233,7 +233,29 @@ const api = {
     transfer: (owner: string, repo: string, newOwner: string, newName?: string) =>
       ipcRenderer.invoke('repository-settings:transfer', owner, repo, newOwner, newName),
     deleteRepository: (owner: string, repo: string) =>
-      ipcRenderer.invoke('repository-settings:delete', owner, repo)
+      ipcRenderer.invoke('repository-settings:delete', owner, repo),
+    access: {
+      getOverview: (owner: string, repo: string) =>
+        ipcRenderer.invoke('repository-settings:access-overview', owner, repo),
+      addCollaborator: (owner: string, repo: string, username: string, permission: string) =>
+        ipcRenderer.invoke('repository-settings:access-add-collaborator', owner, repo, username, permission),
+      removeCollaborator: (owner: string, repo: string, username: string) =>
+        ipcRenderer.invoke('repository-settings:access-remove-collaborator', owner, repo, username),
+      updateInvitation: (owner: string, repo: string, invitationId: number, permissions: string) =>
+        ipcRenderer.invoke('repository-settings:access-update-invitation', owner, repo, invitationId, permissions),
+      cancelInvitation: (owner: string, repo: string, invitationId: number) =>
+        ipcRenderer.invoke('repository-settings:access-cancel-invitation', owner, repo, invitationId),
+      setTeam: (org: string, teamSlug: string, owner: string, repo: string, permission: string) =>
+        ipcRenderer.invoke('repository-settings:access-set-team', org, teamSlug, owner, repo, permission),
+      removeTeam: (org: string, teamSlug: string, owner: string, repo: string) =>
+        ipcRenderer.invoke('repository-settings:access-remove-team', org, teamSlug, owner, repo),
+      getInteractionLimits: (owner: string, repo: string) =>
+        ipcRenderer.invoke('repository-settings:access-interaction-limits', owner, repo),
+      setInteractionLimits: (owner: string, repo: string, limit: string, expiry?: string) =>
+        ipcRenderer.invoke('repository-settings:access-set-interaction-limits', owner, repo, limit, expiry),
+      clearInteractionLimits: (owner: string, repo: string) =>
+        ipcRenderer.invoke('repository-settings:access-clear-interaction-limits', owner, repo)
+    }
   },
   search: {
     resolveGoto: (input: string) => ipcRenderer.invoke('search:resolve-goto', input),
