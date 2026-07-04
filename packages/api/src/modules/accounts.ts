@@ -1,10 +1,16 @@
 import { RequestError, type GitHubOctokit } from '../transport'
 import { rewriteImagesToCamo } from './markdown-camo'
+import {
+  enrichFollowAccounts,
+  fetchListWindow,
+  mapFollowUser,
+  type FollowUserResponse,
+  type GraphFollowEnrichmentNode,
+} from './social-users'
 import type {
   AccountContributionsOptions,
   GitHubAccountContributionYear,
   GitHubAccountFollowList,
-  GitHubAccountFollowUser,
   GitHubAccountOverview,
   GitHubAccountProfile,
   GitHubAccountRepository,
@@ -286,28 +292,6 @@ const organizationOverviewQuery = `
     }
   }
 `
-
-interface FollowUserResponse {
-  id?: number
-  login?: string
-  avatar_url?: string | null
-  type?: string | null
-}
-
-const FOLLOWS_FETCH_PAGE_SIZE = 100
-const FOLLOWS_MAX_PAGES = 10
-const FOLLOWS_ENRICH_CHUNK_SIZE = 100
-
-interface GraphFollowEnrichmentNode {
-  __typename?: string
-  name?: string | null
-  bio?: string | null
-  description?: string | null
-  viewerIsFollowing?: boolean
-  viewerCanFollow?: boolean
-  isFollowingViewer?: boolean
-  isViewer?: boolean
-}
 
 interface GraphSponsorEntityNode {
   __typename?: string
@@ -716,82 +700,22 @@ export class AccountsApi {
     route: 'GET /users/{username}/followers' | 'GET /users/{username}/following',
     login: string,
   ): Promise<GitHubAccountFollowList> {
-    const firstResponse = await this.octokit.request(route, {
-      username: login,
-      page: 1,
-      per_page: FOLLOWS_FETCH_PAGE_SIZE,
+    const window = await fetchListWindow<FollowUserResponse>(async (page, perPage) => {
+      const response = await this.octokit.request(route, {
+        username: login,
+        page,
+        per_page: perPage,
+      })
+      return { items: response.data as FollowUserResponse[], link: String(response.headers.link ?? '') }
     })
-    const firstPageUsers = firstResponse.data as FollowUserResponse[]
-    const lastPage = parseLastPage(String(firstResponse.headers.link ?? ''))
-    const truncated = lastPage > FOLLOWS_MAX_PAGES
-    // When truncated, keep the newest FOLLOWS_MAX_PAGES pages (the tail).
-    const windowStart = truncated ? lastPage - FOLLOWS_MAX_PAGES + 1 : 2
-    const extraPageNumbers: number[] = []
-    for (let pageNumber = windowStart; pageNumber <= lastPage; pageNumber += 1) {
-      extraPageNumbers.push(pageNumber)
-    }
-    const extraPages = await Promise.all(
-      extraPageNumbers.map(async (pageNumber) => {
-        const response = await this.octokit.request(route, {
-          username: login,
-          page: pageNumber,
-          per_page: FOLLOWS_FETCH_PAGE_SIZE,
-        })
-        return response.data as FollowUserResponse[]
-      }),
-    )
-    const ascending = truncated ? extraPages.flat() : [...firstPageUsers, ...extraPages.flat()]
-    const users = [...ascending].reverse()
-    const lastPageUsers = extraPages.length > 0 ? extraPages[extraPages.length - 1] : firstPageUsers
-    const totalCount = (lastPage - 1) * FOLLOWS_FETCH_PAGE_SIZE + lastPageUsers.length
-    const enrichments = await this.enrichFollowAccounts(users).catch(() => new Map<string, GraphFollowEnrichmentNode>())
+    const enrichments = await enrichFollowAccounts(this.octokit, window.items)
+      .catch(() => new Map<string, GraphFollowEnrichmentNode>())
 
     return {
-      items: users.flatMap((user) => mapFollowUser(user, enrichments.get(user.login?.toLowerCase() ?? ''))),
-      totalCount,
-      truncated,
+      items: window.items.flatMap((user) => mapFollowUser(user, enrichments.get(user.login?.toLowerCase() ?? ''))),
+      totalCount: window.totalCount,
+      truncated: window.truncated,
     }
-  }
-
-  // One aliased repositoryOwner lookup per row adds name/bio and the viewer's
-  // follow relationship to the plain REST list, batched 100 logins per query.
-  private async enrichFollowAccounts(users: FollowUserResponse[]): Promise<Map<string, GraphFollowEnrichmentNode>> {
-    const logins = users
-      .map((user) => user.login ?? '')
-      .filter((login) => /^[a-zA-Z0-9-]+$/.test(login))
-    const enrichments = new Map<string, GraphFollowEnrichmentNode>()
-
-    for (let offset = 0; offset < logins.length; offset += FOLLOWS_ENRICH_CHUNK_SIZE) {
-      const chunk = logins.slice(offset, offset + FOLLOWS_ENRICH_CHUNK_SIZE)
-      const selections = chunk.map((login, index) => `
-        o${index}: repositoryOwner(login: "${login}") {
-          __typename
-          ... on User {
-            name
-            bio
-            viewerIsFollowing
-            viewerCanFollow
-            isFollowingViewer
-            isViewer
-          }
-          ... on Organization {
-            name
-            description
-            viewerIsFollowing
-          }
-        }
-      `)
-      const response = await this.octokit.graphql<Record<string, GraphFollowEnrichmentNode | null>>(
-        `query FollowEnrichment {${selections.join('\n')}}`,
-      )
-
-      chunk.forEach((login, index) => {
-        const node = response[`o${index}`]
-        if (node) enrichments.set(login.toLowerCase(), node)
-      })
-    }
-
-    return enrichments
   }
 
   async getViewerState(login: string): Promise<GitHubAccountViewerState> {
@@ -999,30 +923,6 @@ function mapUserProfile(user: UserProfileResponse, fallbackLogin: string): GitHu
   }
 }
 
-function mapFollowUser(
-  user: FollowUserResponse,
-  enrichment: GraphFollowEnrichmentNode | undefined,
-): GitHubAccountFollowUser[] {
-  const login = user.login?.trim()
-  if (!login) return []
-
-  const isOrganization = (enrichment?.__typename ?? user.type) === 'Organization'
-
-  return [{
-    id: user.id ?? 0,
-    login,
-    name: enrichment?.name ?? null,
-    avatarUrl: user.avatar_url ?? `https://github.com/${encodeURIComponent(login)}.png?size=96`,
-    bio: (isOrganization ? enrichment?.description : enrichment?.bio) ?? null,
-    type: user.type ?? (isOrganization ? 'Organization' : 'User'),
-    isViewer: Boolean(enrichment?.isViewer),
-    viewerIsFollowing: Boolean(enrichment?.viewerIsFollowing),
-    // Organizations expose no viewerCanFollow field; anyone can follow an org.
-    viewerCanFollow: enrichment ? (isOrganization ? true : Boolean(enrichment.viewerCanFollow)) : false,
-    isFollowingViewer: Boolean(enrichment?.isFollowingViewer),
-  }]
-}
-
 function mapSponsorship(node: GraphSponsorshipNode | null | undefined): GitHubAccountSponsorship[] {
   if (!node) return []
 
@@ -1219,11 +1119,6 @@ function decodeContent(content: string | undefined, encoding: string | undefined
 
 function isMarkdownPath(path: string): boolean {
   return /\.(md|markdown|mdown|mkdn)$/i.test(path)
-}
-
-function parseLastPage(link: string): number {
-  const lastPageMatch = link.match(/[?&]page=(\d+)[^>]*>;\s*rel="last"/)
-  return lastPageMatch ? Number(lastPageMatch[1]) : 1
 }
 
 function parseLinkPagination(link: string, page: number, perPage: number, itemCount: number) {
