@@ -9,7 +9,7 @@ import type {
 import type { BookmarkMutationResult, CreateBookmarkFolderResult } from '@/pages/workspace/composables/use-workspace-bookmarks'
 import { computed, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { ChevronDown, ChevronRight, Folder, Inbox, Plus, Search } from 'lucide-vue-next'
+import { Book, Building2, ChevronDown, ChevronRight, ExternalLink, Folder, Inbox, Plus, Search } from 'lucide-vue-next'
 import {
   Button,
   Dialog,
@@ -18,6 +18,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
   Input,
   Label,
   SidebarContent,
@@ -72,6 +76,8 @@ const props = defineProps<{
 
 type WorkspaceSidebarSectionId = 'bookmarks' | 'pull-requests' | 'issues' | 'organizations'
 const INBOX_ITEM_ID = 'workspace-sidebar:inbox'
+const NEW_ITEM_ID = 'workspace-sidebar:new'
+const NEW_ORGANIZATION_URL = 'https://github.com/account/organizations/new'
 const PINNED_ORGANIZATIONS_STORAGE_KEY = 'oh-my-github:workspace-pinned-organizations:v1'
 
 const emit = defineEmits<{
@@ -265,6 +271,10 @@ function isInboxActive(): boolean {
   return activeItemId.value ? activeItemId.value === INBOX_ITEM_ID : props.activeUrl === '/inbox'
 }
 
+function isNewActive(): boolean {
+  return activeItemId.value ? activeItemId.value === NEW_ITEM_ID : props.activeUrl === '/new-repository'
+}
+
 function syncActiveItem(): void {
   if (pendingSelectedUrl.value) {
     if (pendingSelectedUrl.value === props.activeUrl) {
@@ -280,6 +290,8 @@ function syncActiveItem(): void {
 
   const nextItemId = props.activeUrl === '/inbox'
     ? INBOX_ITEM_ID
+    : props.activeUrl === '/new-repository'
+    ? NEW_ITEM_ID
     : findFirstItemIdByUrl([
       ...bookmarkItems.value,
       ...pullRequestItems.value,
@@ -499,6 +511,36 @@ function persistPinnedOrganizationLogins(logins: string[]): void {
             <Inbox />
             <span>{{ t('workspace.sidebar.items.inbox') }}</span>
           </SidebarMenuButton>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <DropdownMenu>
+            <DropdownMenuTrigger as-child>
+              <SidebarMenuButton
+                class="before:hidden"
+                size="sm"
+                :is-active="isNewActive()"
+                :tooltip="t('workspace.sidebar.items.new')"
+                type="button"
+              >
+                <Plus />
+                <span>{{ t('workspace.sidebar.items.new') }}</span>
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent
+              align="start"
+              side="right"
+            >
+              <DropdownMenuItem @select="selectSidebarItem('/new-repository', NEW_ITEM_ID)">
+                <Book />
+                {{ t('workspace.sidebar.items.newRepository') }}
+              </DropdownMenuItem>
+              <DropdownMenuItem @select="emit('openGitHubUrl', NEW_ORGANIZATION_URL)">
+                <Building2 />
+                {{ t('workspace.sidebar.items.newOrganization') }}
+                <ExternalLink class="ml-auto size-3.5 text-muted-foreground" />
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </SidebarMenuItem>
       </SidebarMenu>
     </SidebarHeader>

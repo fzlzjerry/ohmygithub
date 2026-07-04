@@ -2165,7 +2165,10 @@
         "organizations": "组织"
       },
       "items": {
-        "inbox": "收件箱"
+        "inbox": "收件箱",
+        "new": "新建",
+        "newOrganization": "组织",
+        "newRepository": "仓库"
       },
       "more": "更多",
       "organizations": {

@@ -1095,6 +1095,9 @@
       "contributors": {
         "title": "Contributors"
       },
+      "engagement": {
+        "title": "Engagement"
+      },
       "branches": {
         "title": "Branches"
       },
@@ -2165,7 +2168,10 @@
         "organizations": "Organizations"
       },
       "items": {
-        "inbox": "Inbox"
+        "inbox": "Inbox",
+        "new": "New",
+        "newOrganization": "Organization",
+        "newRepository": "Repository"
       },
       "more": "More",
       "organizations": {
