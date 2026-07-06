@@ -144,6 +144,8 @@
     }
   },
   "auth": {
+    "activeAccount": "Current account",
+    "back": "Back",
     "browserOpened": "Copy this code, then open GitHub to authorize the app.",
     "copyCodeAndOpenGitHub": "Copy code and open GitHub",
     "electronRequired": "Authentication is only available in the desktop app window.",
@@ -154,6 +156,7 @@
     "missingClientId": "OAUTH_CLIENT_ID is not configured. Add it to your .env file or use a personal token.",
     "saveToken": "Save token",
     "subtitle": "Connect your GitHub account to start triage.",
+    "switchAccount": "Switch account",
     "title": "Sign in",
     "tokenPlaceholder": "Personal GitHub token",
     "useOAuth": "Login with GitHub",

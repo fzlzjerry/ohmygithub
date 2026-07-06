@@ -144,6 +144,8 @@
     }
   },
   "auth": {
+    "activeAccount": "当前账号",
+    "back": "返回",
     "browserOpened": "复制这个代码，然后打开 GitHub 授权应用。",
     "copyCodeAndOpenGitHub": "复制代码并打开 GitHub",
     "electronRequired": "身份验证只能在桌面应用窗口中使用。",
@@ -154,6 +156,7 @@
     "missingClientId": "还没有配置 OAUTH_CLIENT_ID。请把它加入 .env，或使用个人 token。",
     "saveToken": "保存 token",
     "subtitle": "连接 GitHub 账号后开始处理工作项。",
+    "switchAccount": "切换账号",
     "title": "登录",
     "tokenPlaceholder": "个人 GitHub token",
     "useOAuth": "使用 GitHub 登录",
