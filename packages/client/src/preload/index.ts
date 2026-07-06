@@ -377,6 +377,7 @@ const api = {
     copyCodeAndOpenDeviceFlow: (sessionId: string) =>
       ipcRenderer.invoke('auth:copy-code-and-open-device-flow', sessionId),
     savePersonalToken: (token: string) => ipcRenderer.invoke('auth:save-personal-token', token),
+    switchAccount: (accountId: number) => ipcRenderer.invoke('auth:switch-account', accountId),
     logout: () => ipcRenderer.invoke('auth:logout')
   },
   config: {

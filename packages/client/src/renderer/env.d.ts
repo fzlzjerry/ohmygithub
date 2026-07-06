@@ -33,6 +33,14 @@ type AuthViewer = {
   avatarUrl: string
 }
 
+type AuthAccountSummary = {
+  id: number
+  login: string
+  name: string | null
+  avatarUrl: string
+  method: 'oauth_device' | 'personal_token'
+}
+
 type GitHubOrganization = {
   id: number
   login: string
@@ -2008,8 +2016,8 @@ type AuthState = {
   isAuthenticated: boolean
   path: string
   hasGitHubClientId: boolean
+  accounts: AuthAccountSummary[]
   auth: {
-    schemaVersion: 1
     method: 'oauth_device' | 'personal_token'
     tokenType: string
     scopes: string[]
@@ -2547,6 +2555,7 @@ interface Window {
       }>
       copyCodeAndOpenDeviceFlow: (sessionId: string) => Promise<void>
       savePersonalToken: (token: string) => Promise<AuthState>
+      switchAccount: (accountId: number) => Promise<AuthState>
       logout: () => Promise<AuthState>
     }
     config: {
