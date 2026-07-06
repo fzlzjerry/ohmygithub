@@ -167,6 +167,8 @@ const api = {
       ipcRenderer.invoke('releases:delete', owner, repo, releaseId)
   },
   repositories: {
+    getViewerAdmin: (owner: string, repo: string) =>
+      ipcRenderer.invoke('repositories:get-viewer-admin', owner, repo),
     getViewerState: (owner: string, repo: string) =>
       ipcRenderer.invoke('repositories:get-viewer-state', owner, repo),
     getNavigationCounts: (owner: string, repo: string) =>

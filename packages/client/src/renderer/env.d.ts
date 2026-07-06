@@ -2266,6 +2266,7 @@ interface Window {
       deleteRelease: (owner: string, repo: string, releaseId: number) => Promise<void>
     }
     repositories: {
+      getViewerAdmin: (owner: string, repo: string) => Promise<boolean>
       getViewerState: (owner: string, repo: string) => Promise<GitHubRepositoryViewerState>
       getNavigationCounts: (owner: string, repo: string) => Promise<GitHubRepositoryNavigationCounts>
       getOverview: (owner: string, repo: string) => Promise<GitHubRepositoryOverview>

@@ -37,6 +37,7 @@ import {
 import {
   useRepositoryNavigationCountsQuery,
   useRepositoryOverviewQuery,
+  useRepositoryViewerAdminQuery,
 } from '@/composables/github/use-repositories'
 import { useAccountListInvalidation } from '@/composables/github/use-accounts'
 import { createRepositoryWorkspaceUrl } from '@/pages/workspace/workspace-url'
@@ -108,7 +109,8 @@ const repositorySidebarCounts = computed(() =>
   resolveRepositorySidebarCounts(navigationCountsQuery.data.value ?? null, overview.value?.counts ?? null)
 )
 const isOverviewLoading = computed(() => overviewQuery.isLoading.value)
-const canAdministerRepository = computed(() => overview.value?.viewerCanAdminister ?? false)
+const viewerAdminQuery = useRepositoryViewerAdminQuery(owner, repository, hasRepositoryIdentity)
+const canAdministerRepository = computed(() => viewerAdminQuery.data.value ?? false)
 const hasOverviewError = computed(() => Boolean(overviewQuery.error.value))
 const isStarred = computed(() => viewerState.value?.isStarred ?? false)
 const subscription = computed<GitHubRepositorySubscription>(() => viewerState.value?.subscription ?? 'participating')

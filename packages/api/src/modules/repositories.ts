@@ -436,6 +436,15 @@ export class RepositoriesApi {
     }
   }
 
+  async getViewerAdmin(options: RepositoryOptions): Promise<boolean> {
+    try {
+      const repository = await this.getRepository(options)
+      return Boolean(repository.permissions?.admin)
+    } catch {
+      return false
+    }
+  }
+
   async getNavigationCounts(options: RepositoryOptions): Promise<GitHubRepositoryNavigationCounts> {
     const graphCounts = await this.getGraphCounts(options)
 

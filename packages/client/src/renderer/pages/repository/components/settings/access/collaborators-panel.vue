@@ -167,6 +167,12 @@ function cancel(id: number): void {
             </SelectTrigger>
             <SelectContent align="end">
               <SelectItem
+                v-if="!COLLABORATOR_ROLES.includes(collaborator.roleName as GitHubRepositoryCollaboratorRole)"
+                :value="collaborator.roleName"
+              >
+                {{ collaborator.roleName }}
+              </SelectItem>
+              <SelectItem
                 v-for="role in COLLABORATOR_ROLES"
                 :key="role"
                 :value="role"
@@ -219,6 +225,12 @@ function cancel(id: number): void {
               <SelectValue />
             </SelectTrigger>
             <SelectContent align="end">
+              <SelectItem
+                v-if="!INVITATION_PERMISSIONS.includes(invitation.permissions as typeof INVITATION_PERMISSIONS[number])"
+                :value="invitation.permissions"
+              >
+                {{ invitation.permissions }}
+              </SelectItem>
               <SelectItem
                 v-for="permission in INVITATION_PERMISSIONS"
                 :key="permission"

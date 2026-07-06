@@ -7,6 +7,9 @@ export function registerRepositoriesIpc(): void {
   ipcMain.handle('repositories:get-viewer-state', (_event, owner: string, repo: string) =>
     getRepositoryViewerState(owner, repo)
   )
+  ipcMain.handle('repositories:get-viewer-admin', async (_event, owner: string, repo: string) =>
+    (await createAuthenticatedGitHubApi()).repositories.getViewerAdmin(normalizeRepository(owner, repo))
+  )
   ipcMain.handle('repositories:get-navigation-counts', (_event, owner: string, repo: string) =>
     getRepositoryNavigationCounts(owner, repo)
   )

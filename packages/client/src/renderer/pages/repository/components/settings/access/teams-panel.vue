@@ -144,6 +144,12 @@ function remove(slug: string): void {
             </SelectTrigger>
             <SelectContent align="end">
               <SelectItem
+                v-if="!TEAM_PERMISSIONS.includes(team.permission as typeof TEAM_PERMISSIONS[number])"
+                :value="team.permission"
+              >
+                {{ team.permission }}
+              </SelectItem>
+              <SelectItem
                 v-for="permission in TEAM_PERMISSIONS"
                 :key="permission"
                 :value="permission"
