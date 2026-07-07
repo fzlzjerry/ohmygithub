@@ -13,6 +13,7 @@ const api = {
     listRepositories: (options: unknown) => ipcRenderer.invoke('accounts:list-repositories', options),
     listStarredRepositories: (options: unknown) =>
       ipcRenderer.invoke('accounts:list-starred-repositories', options),
+    listStarredLanguages: (login: string) => ipcRenderer.invoke('accounts:list-starred-languages', login),
     getViewerState: (login: string) => ipcRenderer.invoke('accounts:get-viewer-state', login),
     setFollowed: (options: unknown) => ipcRenderer.invoke('accounts:set-followed', options),
     listFollowers: (login: string) => ipcRenderer.invoke('accounts:list-followers', login),

@@ -84,6 +84,11 @@ export interface GitHubAccountRepositoryPage {
   incompleteResults: boolean
 }
 
+export interface GitHubAccountStarLanguage {
+  name: string
+  count: number
+}
+
 export interface GitHubAccountContributionDay {
   date: string
   contributionCount: number
@@ -1657,6 +1662,7 @@ export interface GitHubClient {
   getAccountContributions(options: AccountContributionsOptions): Promise<GitHubAccountContributionYear>
   listAccountRepositories(options: ListAccountRepositoriesOptions): Promise<GitHubAccountRepositoryPage>
   listAccountStarredRepositories(options: ListAccountRepositoriesOptions): Promise<GitHubAccountRepositoryPage>
+  listAccountStarredLanguages(login: string): Promise<GitHubAccountStarLanguage[]>
   getAccountViewerState(login: string): Promise<GitHubAccountViewerState>
   setAccountFollowed(options: SetAccountFollowedOptions): Promise<void>
   listViewerOrganizations(): Promise<GitHubOrganization[]>
@@ -1939,6 +1945,7 @@ export interface ListAccountRepositoriesOptions {
   page?: number
   perPage?: number
   search?: string
+  language?: string
 }
 
 export interface AccountContributionsOptions {

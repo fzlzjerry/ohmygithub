@@ -792,6 +792,10 @@
       }
     },
     "stars": {
+      "categories": {
+        "all": "All",
+        "label": "Filter starred repositories by language"
+      },
       "empty": {
         "description": "No starred repositories are visible for this account.",
         "title": "No starred repositories"

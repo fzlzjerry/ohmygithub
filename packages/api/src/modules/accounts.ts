@@ -19,6 +19,7 @@ import type {
   GitHubAccountSponsorsSummary,
   GitHubAccountSponsorship,
   GitHubAccountSponsorshipPage,
+  GitHubAccountStarLanguage,
   GitHubAccountViewerState,
   GitHubOrganization,
   GitHubRepository,
@@ -568,8 +569,9 @@ export class AccountsApi {
     const page = normalizePage(options.page)
     const perPage = normalizePerPage(options.perPage)
     const search = normalizeSearch(options.search)
-    if (search) {
-      return this.searchStarredRepositories(options.login.trim(), search, page, perPage)
+    const language = normalizeSearch(options.language)
+    if (search || language) {
+      return this.filterStarredRepositories(options.login.trim(), search, language, page, perPage)
     }
 
     const response = await this.octokit.request('GET /users/{username}/starred', {
@@ -581,6 +583,20 @@ export class AccountsApi {
     })
 
     return mapRepositoryPage(response.data as RepositoryResponse[], response.headers.link, page, perPage)
+  }
+
+  async listStarredLanguages(login: string): Promise<GitHubAccountStarLanguage[]> {
+    const counts = new Map<string, number>()
+
+    await this.scanStarredRepositories(login.trim(), (repository) => {
+      if (!repository.primaryLanguage) return
+
+      counts.set(repository.primaryLanguage, (counts.get(repository.primaryLanguage) ?? 0) + 1)
+    })
+
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
   }
 
   private async searchAccountRepositories(
@@ -600,13 +616,38 @@ export class AccountsApi {
     return mapSearchRepositoryPage(response.data as SearchRepositoriesResponse, page, perPage)
   }
 
-  private async searchStarredRepositories(
+  private async filterStarredRepositories(
     login: string,
     search: string,
+    language: string,
     page: number,
     perPage: number,
   ): Promise<GitHubAccountRepositoryPage> {
     const matches: GitHubAccountRepository[] = []
+
+    const incompleteResults = await this.scanStarredRepositories(login, (repository) => {
+      if (repositoryMatchesSearch(repository, search) && repositoryMatchesLanguage(repository, language)) {
+        matches.push(repository)
+      }
+    })
+
+    const offset = (page - 1) * perPage
+
+    return {
+      items: matches.slice(offset, offset + perPage),
+      totalCount: matches.length,
+      page,
+      perPage,
+      hasNextPage: offset + perPage < matches.length,
+      incompleteResults,
+    }
+  }
+
+  /** Walks the starred list (capped at 1000) and reports whether it was truncated. */
+  private async scanStarredRepositories(
+    login: string,
+    visit: (repository: GitHubAccountRepository) => void,
+  ): Promise<boolean> {
     const fetchPerPage = 100
     const maxScannedRepositories = 1000
     let nextPage = 1
@@ -624,11 +665,9 @@ export class AccountsApi {
       const repositories = response.data as RepositoryResponse[]
 
       scannedRepositories += repositories.length
-      matches.push(
-        ...repositories
-          .map(mapRestRepository)
-          .filter((repository) => repositoryMatchesSearch(repository, search)),
-      )
+      for (const repository of repositories) {
+        visit(mapRestRepository(repository))
+      }
 
       hasMoreRepositories = /rel="next"/.test(String(response.headers.link ?? ''))
       if (!hasMoreRepositories || repositories.length === 0) break
@@ -636,17 +675,7 @@ export class AccountsApi {
       nextPage += 1
     }
 
-    const offset = (page - 1) * perPage
-    const incompleteResults = hasMoreRepositories && scannedRepositories >= maxScannedRepositories
-
-    return {
-      items: matches.slice(offset, offset + perPage),
-      totalCount: matches.length,
-      page,
-      perPage,
-      hasNextPage: offset + perPage < matches.length,
-      incompleteResults,
-    }
+    return hasMoreRepositories && scannedRepositories >= maxScannedRepositories
   }
 
   async listFollowers(login: string): Promise<GitHubAccountFollowList> {
@@ -1169,6 +1198,12 @@ function buildRepositorySearchQuery(search: string, qualifiers: string[]): strin
     .filter(Boolean)
 
   return [...terms, ...qualifiers].join(' ')
+}
+
+function repositoryMatchesLanguage(repository: GitHubAccountRepository, language: string): boolean {
+  if (!language) return true
+
+  return (repository.primaryLanguage ?? '').toLowerCase() === language.toLowerCase()
 }
 
 function repositoryMatchesSearch(repository: GitHubAccountRepository, search: string): boolean {

@@ -137,6 +137,7 @@ export function createGitHubApi(options: GitHubApiOptions): GitHubApi {
     getAccountContributions: (options) => accounts.getContributions(options),
     listAccountRepositories: (options) => accounts.listRepositories(options),
     listAccountStarredRepositories: (options) => accounts.listStarredRepositories(options),
+    listAccountStarredLanguages: (login) => accounts.listStarredLanguages(login),
     getAccountViewerState: (login) => accounts.getViewerState(login),
     setAccountFollowed: (options) => accounts.setFollowed(options),
     listViewerOrganizations: () => accounts.listViewerOrganizations(),

@@ -114,6 +114,7 @@ export function useAccountStarredRepositoriesQuery(
   page: MaybeRefOrGetter<number>,
   perPage: MaybeRefOrGetter<number>,
   search: MaybeRefOrGetter<string>,
+  language: MaybeRefOrGetter<string>,
   enabled: MaybeRefOrGetter<boolean>,
 ) {
   return useQuery<GitHubAccountRepositoryPage>({
@@ -124,6 +125,7 @@ export function useAccountStarredRepositoriesQuery(
       toValue(page),
       toValue(perPage),
       toValue(search).trim(),
+      toValue(language).trim(),
     ],
     enabled: () => Boolean(toValue(login)) && toValue(enabled),
     staleTime: 1000 * 60 * 5,
@@ -141,7 +143,30 @@ export function useAccountStarredRepositoriesQuery(
         page: toValue(page),
         perPage: toValue(perPage),
         search: toValue(search).trim(),
+        language: toValue(language).trim(),
       })
+    },
+  })
+}
+
+export function useAccountStarredLanguagesQuery(
+  login: MaybeRefOrGetter<string>,
+  enabled: MaybeRefOrGetter<boolean>,
+) {
+  return useQuery<GitHubAccountStarLanguage[]>({
+    key: () => ['github', 'account-starred-languages', toValue(login)],
+    enabled: () => Boolean(toValue(login)) && toValue(enabled),
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    refetchOnWindowFocus: false,
+    query: async () => {
+      if (!window.ohMyGithub?.accounts) {
+        throw new Error('GitHub accounts bridge is unavailable')
+      }
+
+      return window.ohMyGithub.accounts.listStarredLanguages(toValue(login))
     },
   })
 }
@@ -283,6 +308,7 @@ export function useAccountListInvalidation() {
     // invalidate the whole prefix rather than guess the login.
     invalidateStarredRepositories(): void {
       void queryCache.invalidateQueries({ key: ['github', 'account-starred-repositories'] }, 'all')
+      void queryCache.invalidateQueries({ key: ['github', 'account-starred-languages'] }, 'all')
     },
     // A new fork lands under `owner` (viewer account or org); only one list matches.
     invalidateOwnedRepositories(owner: string): void {

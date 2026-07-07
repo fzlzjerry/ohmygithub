@@ -11,6 +11,9 @@ export function registerAccountsIpc(): void {
   ipcMain.handle('accounts:list-starred-repositories', (_event, options: unknown) =>
     listAccountStarredRepositories(options)
   )
+  ipcMain.handle('accounts:list-starred-languages', (_event, login: string) =>
+    listAccountStarredLanguages(login)
+  )
   ipcMain.handle('accounts:get-viewer-state', (_event, login: string) => getAccountViewerState(login))
   ipcMain.handle('accounts:set-followed', (_event, options: unknown) => setAccountFollowed(options))
   ipcMain.handle('accounts:list-followers', (_event, login: string) => listAccountFollowers(login))
@@ -61,6 +64,13 @@ async function listAccountStarredRepositories(options: unknown) {
   const api = await createAuthenticatedGitHubApi()
 
   return api.accounts.listStarredRepositories(normalizedOptions)
+}
+
+async function listAccountStarredLanguages(login: string) {
+  const normalizedLogin = normalizeLogin(login)
+  const api = await createAuthenticatedGitHubApi()
+
+  return api.accounts.listStarredLanguages(normalizedLogin)
 }
 
 async function getAccountViewerState(login: string) {
@@ -156,7 +166,7 @@ function normalizeLogin(login: string): string {
 }
 
 function normalizeAccountRepositoriesOptions(options: unknown) {
-  const input = options as Partial<{ login: string; page: number; perPage: number; search: string }>
+  const input = options as Partial<{ login: string; page: number; perPage: number; search: string; language: string }>
   const login = normalizeLogin(String(input?.login ?? ''))
 
   return {
@@ -164,6 +174,7 @@ function normalizeAccountRepositoriesOptions(options: unknown) {
     page: normalizePositiveInteger(input.page, 1),
     perPage: normalizePositiveInteger(input.perPage, 12),
     search: String(input.search ?? '').trim(),
+    language: String(input.language ?? '').trim(),
   }
 }
 

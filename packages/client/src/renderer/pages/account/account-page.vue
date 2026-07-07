@@ -38,6 +38,7 @@ import {
   useAccountListInvalidation,
   useAccountOverviewQuery,
   useAccountRepositoriesQuery,
+  useAccountStarredLanguagesQuery,
   useAccountStarredRepositoriesQuery,
   useAccountViewerStateQuery,
 } from '@/composables/github/use-accounts'
@@ -93,6 +94,7 @@ const repositorySearchInput = ref('')
 const repositorySearch = ref('')
 const starsSearchInput = ref('')
 const starsSearch = ref('')
+const starsLanguage = ref('')
 const viewerState = ref<GitHubAccountViewerState | null>(null)
 const pendingFollow = ref(false)
 let repositorySearchTimer: ReturnType<typeof setTimeout> | null = null
@@ -147,10 +149,13 @@ const starsQuery = useAccountStarredRepositoriesQuery(
   starsPage,
   () => PER_PAGE,
   starsSearch,
+  starsLanguage,
   starsEnabled,
 )
+const starsLanguagesQuery = useAccountStarredLanguagesQuery(login, starsEnabled)
 const repositoryResult = computed(() => repositoriesQuery.data.value ?? null)
 const starsResult = computed(() => starsQuery.data.value ?? null)
+const starsLanguages = computed(() => starsLanguagesQuery.data.value ?? [])
 const visibleAccountSections = computed(() =>
   accountSections.filter((section) => {
     if (isOrganizationProfile.value) return section.id !== 'stars'
@@ -280,10 +285,15 @@ watch(
     repositorySearch.value = ''
     starsSearchInput.value = ''
     starsSearch.value = ''
+    starsLanguage.value = ''
     selectedContributionYear.value = null
     viewerState.value = null
   },
 )
+
+watch(starsLanguage, () => {
+  starsPage.value = 1
+})
 
 watch(repositorySearchInput, (value) => {
   clearRepositorySearchTimer()
@@ -688,6 +698,8 @@ function normalizeExternalUrl(value: string | null): string | null {
               :disabled="!hasLogin"
               :has-error="Boolean(starsQuery.error.value)"
               :is-loading="starsQuery.isLoading.value"
+              :language="starsLanguage"
+              :languages="starsLanguages"
               mode="stars"
               :page="starsPage"
               :per-page="PER_PAGE"
@@ -696,6 +708,7 @@ function normalizeExternalUrl(value: string | null): string | null {
               :total-count="starsResult?.totalCount ?? 0"
               @retry="starsQuery.refetch()"
               @select="selectRepository"
+              @update:language="starsLanguage = $event"
               @update:page="starsPage = $event"
               @update:search="starsSearchInput = $event"
             />

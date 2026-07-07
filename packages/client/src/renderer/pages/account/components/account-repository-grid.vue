@@ -20,6 +20,8 @@ const props = defineProps<{
   disabled?: boolean
   hasError: boolean
   isLoading: boolean
+  language?: string
+  languages?: GitHubAccountStarLanguage[]
   mode: 'repositories' | 'stars'
   page: number
   perPage: number
@@ -31,6 +33,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   retry: []
   select: [repository: GitHubAccountRepository]
+  'update:language': [language: string]
   'update:page': [page: number]
   'update:search': [search: string]
 }>()
@@ -45,23 +48,65 @@ const pageModel = computed({
 })
 const showPagination = computed(() => props.totalCount > props.perPage || props.page > 1)
 const hasSearch = computed(() => props.search.trim().length > 0)
+const selectedLanguage = computed(() => props.language ?? '')
+const showLanguages = computed(() => props.mode === 'stars' && (props.languages?.length ?? 0) > 0)
+const hasFilters = computed(() => hasSearch.value || selectedLanguage.value.length > 0)
 const emptyTitleKey = computed(() =>
-  hasSearch.value ? `account.${props.mode}.search.empty.title` : `account.${props.mode}.empty.title`
+  hasFilters.value ? `account.${props.mode}.search.empty.title` : `account.${props.mode}.empty.title`
 )
 const emptyDescriptionKey = computed(() =>
-  hasSearch.value ? `account.${props.mode}.search.empty.description` : `account.${props.mode}.empty.description`
+  hasFilters.value ? `account.${props.mode}.search.empty.description` : `account.${props.mode}.empty.description`
 )
 
 function updateSearch(value: string | number): void {
   emit('update:search', String(value))
 }
+
+function selectLanguage(language: string): void {
+  emit('update:language', language === selectedLanguage.value ? '' : language)
+}
+
+function languageButtonClass(active: boolean): string[] {
+  return [
+    'h-7 shrink-0 select-none whitespace-nowrap rounded-lg px-3 text-body font-medium outline-hidden transition-colors focus-visible:ring-2 focus-visible:ring-ring/30 disabled:pointer-events-none disabled:opacity-40',
+    active ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted/70 hover:text-foreground',
+  ]
+}
 </script>
 
 <template>
   <section class="grid gap-3">
-    <div class="flex min-w-0 justify-end">
+    <div class="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:justify-end sm:gap-3">
+      <div
+        v-if="showLanguages"
+        :aria-label="t('account.stars.categories.label')"
+        class="flex w-full min-w-0 items-center gap-1 overflow-x-auto pb-0.5 sm:w-auto sm:flex-1"
+        role="group"
+      >
+        <button
+          :aria-pressed="selectedLanguage === ''"
+          :class="languageButtonClass(selectedLanguage === '')"
+          :disabled="disabled"
+          type="button"
+          @click="selectLanguage('')"
+        >
+          {{ t('account.stars.categories.all') }}
+        </button>
+        <button
+          v-for="entry in languages"
+          :key="entry.name"
+          :aria-pressed="selectedLanguage === entry.name"
+          :class="languageButtonClass(selectedLanguage === entry.name)"
+          :disabled="disabled"
+          type="button"
+          @click="selectLanguage(entry.name)"
+        >
+          {{ entry.name }}
+          <span class="opacity-60">{{ entry.count }}</span>
+        </button>
+      </div>
       <InputGroup
-        class="w-full sm:max-w-xs"
+        class="w-full shrink-0 sm:max-w-xs"
         size="sm"
       >
         <InputGroupAddon>

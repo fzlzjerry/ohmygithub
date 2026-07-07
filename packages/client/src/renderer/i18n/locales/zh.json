@@ -792,6 +792,10 @@
       }
     },
     "stars": {
+      "categories": {
+        "all": "全部",
+        "label": "按语言筛选 Star 仓库"
+      },
       "empty": {
         "description": "当前账号没有可见的 Star 仓库。",
         "title": "没有 Star 仓库"

@@ -17,6 +17,7 @@ import type {
   GitHubAccountProfile,
   GitHubAccountRepository,
   GitHubAccountRepositoryPage,
+  GitHubAccountStarLanguage,
   GitHubAccountViewerState,
   GitHubActionJob,
   GitHubActionJobLog,
@@ -812,11 +813,29 @@ export class MockGitHubClient implements GitHubClient {
   }
 
   async listAccountStarredRepositories(options: ListAccountRepositoriesOptions): Promise<GitHubAccountRepositoryPage> {
+    const language = String(options.language ?? '').trim().toLowerCase()
+    const repositories = filterAccountRepositories(starredRepositoriesByAccount[options.login] ?? [], options.search)
+      .filter((repository) => !language || (repository.primaryLanguage ?? '').toLowerCase() === language)
+
     return createMockAccountRepositoryPage(
-      filterAccountRepositories(starredRepositoriesByAccount[options.login] ?? [], options.search),
+      repositories,
       options.page ?? 1,
       options.perPage ?? 12,
     )
+  }
+
+  async listAccountStarredLanguages(login: string): Promise<GitHubAccountStarLanguage[]> {
+    const counts = new Map<string, number>()
+
+    for (const repository of starredRepositoriesByAccount[login] ?? []) {
+      if (!repository.primaryLanguage) continue
+
+      counts.set(repository.primaryLanguage, (counts.get(repository.primaryLanguage) ?? 0) + 1)
+    }
+
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
   }
 
   async getAccountViewerState(login: string): Promise<GitHubAccountViewerState> {
