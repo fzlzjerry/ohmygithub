@@ -35,7 +35,7 @@ const columns = computed(() => chunkOverviewInfoItems(props.items))
         </span>
         <a
           v-if="item.href"
-          class="ml-auto min-w-0 truncate text-right text-body font-medium text-primary underline-offset-4 hover:underline"
+          class="ml-auto min-w-0 truncate text-right text-body font-medium text-foreground underline underline-offset-4"
           :href="item.href"
           target="_blank"
           rel="noreferrer"
@@ -45,7 +45,7 @@ const columns = computed(() => chunkOverviewInfoItems(props.items))
         <button
           v-else-if="item.section"
           type="button"
-          class="ml-auto min-w-0 truncate text-right text-body font-medium text-primary underline-offset-4 hover:underline"
+          class="ml-auto min-w-0 cursor-pointer truncate text-right text-body font-medium text-foreground underline underline-offset-4"
           @click="emit('selectSection', item.section)"
         >
           {{ item.value }}
