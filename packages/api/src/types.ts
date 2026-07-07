@@ -1223,10 +1223,18 @@ export type GitHubReactionContent =
   | 'rocket'
   | 'eyes'
 
+export interface GitHubReactionUser {
+  login: string
+  name?: string | null
+  avatarUrl?: string | null
+}
+
 export interface GitHubIssueReaction {
   content: string
   count: number
   viewerHasReacted?: boolean
+  /** First reactors for hover previews; may be shorter than count. */
+  reactors?: GitHubReactionUser[]
 }
 
 export interface SetReactionOptions {

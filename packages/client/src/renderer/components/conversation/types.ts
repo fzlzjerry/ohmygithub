@@ -7,10 +7,18 @@ export interface ConversationActor {
   isBot?: boolean
 }
 
+export interface ConversationReactionUser {
+  login: string
+  name?: string | null
+  avatarUrl?: string | null
+}
+
 export interface ConversationReaction {
   content: string
   count: number
   viewerHasReacted?: boolean
+  /** First reactors for hover previews; may be shorter than count. */
+  reactors?: ConversationReactionUser[]
 }
 
 export interface ConversationBadge {

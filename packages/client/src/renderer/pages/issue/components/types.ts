@@ -65,6 +65,7 @@ export interface IssueReactionSummary {
   content: string
   count: number
   viewerHasReacted?: boolean
+  reactors?: GitHubReactionUser[]
 }
 
 export interface IssueTimelineComment {

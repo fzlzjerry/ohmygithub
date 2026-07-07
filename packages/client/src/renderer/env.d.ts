@@ -1739,10 +1739,18 @@ type GitHubReactionContent =
   | 'rocket'
   | 'eyes'
 
+type GitHubReactionUser = {
+  login: string
+  name?: string | null
+  avatarUrl?: string | null
+}
+
 type GitHubIssueReaction = {
   content: string
   count: number
   viewerHasReacted?: boolean
+  /** First reactors for hover previews; may be shorter than count. */
+  reactors?: GitHubReactionUser[]
 }
 
 type GitHubIssueMilestone = {

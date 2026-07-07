@@ -1,9 +1,21 @@
 <script setup lang="ts">
-import type { ConversationReaction } from './types'
+import type { ConversationReaction, ConversationReactionUser } from './types'
 import { computed, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { SmilePlus } from 'lucide-vue-next'
-import { Badge, Popover, PopoverContent, PopoverTrigger } from '@oh-my-github/ui'
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+  Badge,
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@oh-my-github/ui'
 import { REACTION_CONTENTS, reactionEmoji } from './reactions'
 
 const props = withDefaults(defineProps<{
@@ -19,6 +31,7 @@ const emit = defineEmits<{
 }>()
 
 const { t } = useI18n()
+const router = useRouter()
 
 const pickerOpen = ref(false)
 // Optimistic view of toggles the server has not confirmed yet; cleared when
@@ -72,6 +85,22 @@ function toggleReaction(content: string): void {
   pickerOpen.value = false
   emit('toggle', content, reacted)
 }
+
+function reactors(reaction: ConversationReaction): ConversationReactionUser[] {
+  return reaction.reactors ?? []
+}
+
+function hiddenReactorCount(reaction: ConversationReaction): number {
+  return Math.max(0, reaction.count - reactors(reaction).length)
+}
+
+function reactorFallback(user: ConversationReactionUser): string {
+  return user.login.slice(0, 2).toUpperCase()
+}
+
+function openReactorAccount(user: ConversationReactionUser): void {
+  void router.push(`/${encodeURIComponent(user.login)}`)
+}
 </script>
 
 <template>
@@ -79,26 +108,86 @@ function toggleReaction(content: string): void {
     v-if="displayReactions.length > 0 || canReact"
     class="flex min-w-0 flex-wrap items-center gap-1.5"
   >
-    <template v-if="canReact">
-      <Badge
-        v-for="reaction in displayReactions"
-        :key="reaction.content"
-        as="button"
-        :aria-label="t('conversation.reactions.toggle', { reaction: reaction.content })"
-        :aria-pressed="Boolean(reaction.viewerHasReacted)"
-        class="h-7 cursor-pointer gap-1.5 px-2.5 transition-colors hover:bg-accent"
-        :class="reaction.viewerHasReacted ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/15' : undefined"
-        type="button"
-        variant="outline"
-        @click="toggleReaction(reaction.content)"
+    <HoverCard
+      v-for="reaction in displayReactions"
+      :key="reaction.content"
+    >
+      <HoverCardTrigger as-child>
+        <Badge
+          v-if="canReact"
+          as="button"
+          :aria-label="t('conversation.reactions.toggle', { reaction: reaction.content })"
+          :aria-pressed="Boolean(reaction.viewerHasReacted)"
+          class="h-7 cursor-pointer gap-1.5 px-2.5 transition-colors hover:bg-accent"
+          :class="reaction.viewerHasReacted ? 'border-primary/30 bg-primary/10 text-primary hover:bg-primary/15' : undefined"
+          type="button"
+          variant="outline"
+          @click="toggleReaction(reaction.content)"
+        >
+          <span
+            aria-hidden="true"
+            class="text-sm leading-none"
+          >{{ reactionEmoji(reaction.content) }}</span>
+          <span class="text-xs tabular-nums">{{ reaction.count }}</span>
+        </Badge>
+        <Badge
+          v-else
+          class="h-7 gap-1.5 px-2.5"
+          :class="reaction.viewerHasReacted ? 'border-primary/30 bg-primary/10 text-primary' : undefined"
+          variant="outline"
+        >
+          <span
+            aria-hidden="true"
+            class="text-sm leading-none"
+          >{{ reactionEmoji(reaction.content) }}</span>
+          <span class="text-xs tabular-nums">{{ reaction.count }}</span>
+        </Badge>
+      </HoverCardTrigger>
+      <HoverCardContent
+        v-if="reactors(reaction).length > 0"
+        :align-offset="0"
+        class="w-64 p-1.5"
       >
-        <span
-          aria-hidden="true"
-          class="text-sm leading-none"
-        >{{ reactionEmoji(reaction.content) }}</span>
-        <span class="text-xs tabular-nums">{{ reaction.count }}</span>
-      </Badge>
+        <ul class="grid max-h-72 gap-0.5 overflow-y-auto">
+          <li
+            v-for="user in reactors(reaction)"
+            :key="user.login"
+          >
+            <button
+              class="flex w-full min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-left transition-colors hover:bg-accent"
+              type="button"
+              @click="openReactorAccount(user)"
+            >
+              <Avatar class="size-5 shrink-0">
+                <AvatarImage
+                  v-if="user.avatarUrl"
+                  :alt="user.login"
+                  :src="user.avatarUrl"
+                />
+                <AvatarFallback class="text-[10px]">
+                  {{ reactorFallback(user) }}
+                </AvatarFallback>
+              </Avatar>
+              <span class="min-w-0 flex-1 truncate text-body">
+                <span class="font-medium text-foreground">{{ user.name || user.login }}</span>
+                <span
+                  v-if="user.name"
+                  class="ml-1.5 text-muted-foreground"
+                >{{ user.login }}</span>
+              </span>
+            </button>
+          </li>
+        </ul>
+        <p
+          v-if="hiddenReactorCount(reaction) > 0"
+          class="select-none px-2 pb-1 pt-1.5 text-caption text-muted-foreground"
+        >
+          {{ t('conversation.reactions.moreReactors', { count: hiddenReactorCount(reaction) }) }}
+        </p>
+      </HoverCardContent>
+    </HoverCard>
 
+    <template v-if="canReact">
       <Popover v-model:open="pickerOpen">
         <PopoverTrigger as-child>
           <Badge
@@ -131,22 +220,6 @@ function toggleReaction(content: string): void {
           </div>
         </PopoverContent>
       </Popover>
-    </template>
-
-    <template v-else>
-      <Badge
-        v-for="reaction in displayReactions"
-        :key="reaction.content"
-        class="h-7 gap-1.5 px-2.5"
-        :class="reaction.viewerHasReacted ? 'border-primary/30 bg-primary/10 text-primary' : undefined"
-        variant="outline"
-      >
-        <span
-          aria-hidden="true"
-          class="text-sm leading-none"
-        >{{ reactionEmoji(reaction.content) }}</span>
-        <span class="text-xs tabular-nums">{{ reaction.count }}</span>
-      </Badge>
     </template>
   </div>
 </template>

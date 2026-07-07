@@ -10,6 +10,7 @@ import type {
   GitHubIssueMilestone,
   GitHubIssueProjectItem,
   GitHubIssueReaction,
+  GitHubReactionUser,
   GitHubIssueSubscription,
   GitHubPullRequest,
   GitHubPullRequestComment,
@@ -83,8 +84,15 @@ interface GraphQLReactionGroup {
   content: string
   reactors: {
     totalCount: number
+    nodes?: Array<GraphQLReactorNode | null> | null
   }
   viewerHasReacted?: boolean
+}
+
+interface GraphQLReactorNode {
+  login?: string | null
+  name?: string | null
+  avatarUrl?: string | null
 }
 
 interface GraphQLMilestoneNode {
@@ -602,8 +610,28 @@ const pullRequestDetailQuery = `
             }
             reactionGroups {
               content
-              reactors {
+              reactors(first: 20) {
                 totalCount
+                nodes {
+                  ... on User {
+                    login
+                    name
+                    avatarUrl
+                  }
+                  ... on Bot {
+                    login
+                    avatarUrl
+                  }
+                  ... on Mannequin {
+                    login
+                    avatarUrl
+                  }
+                  ... on Organization {
+                    login
+                    name
+                    avatarUrl
+                  }
+                }
               }
               viewerHasReacted
             }
@@ -847,8 +875,28 @@ const pullRequestDetailQuery = `
                   }
                   reactionGroups {
                     content
-                    reactors {
+                    reactors(first: 20) {
                       totalCount
+                      nodes {
+                        ... on User {
+                          login
+                          name
+                          avatarUrl
+                        }
+                        ... on Bot {
+                          login
+                          avatarUrl
+                        }
+                        ... on Mannequin {
+                          login
+                          avatarUrl
+                        }
+                        ... on Organization {
+                          login
+                          name
+                          avatarUrl
+                        }
+                      }
                     }
                     viewerHasReacted
                   }
@@ -1511,8 +1559,28 @@ const pullRequestDetailQuery = `
         }
         reactionGroups {
           content
-          reactors {
+          reactors(first: 20) {
             totalCount
+            nodes {
+              ... on User {
+                login
+                name
+                avatarUrl
+              }
+              ... on Bot {
+                login
+                avatarUrl
+              }
+              ... on Mannequin {
+                login
+                avatarUrl
+              }
+              ... on Organization {
+                login
+                name
+                avatarUrl
+              }
+            }
           }
           viewerHasReacted
         }
@@ -2166,7 +2234,24 @@ function mapReactions(
       {
         content: normalizeReactionContent(group.content),
         count,
-        viewerHasReacted: group.viewerHasReacted || undefined
+        viewerHasReacted: group.viewerHasReacted || undefined,
+        reactors: mapReactors(group.reactors.nodes)
+      }
+    ]
+  })
+}
+
+function mapReactors(
+  nodes: Array<GraphQLReactorNode | null> | null | undefined
+): GitHubReactionUser[] {
+  return (nodes ?? []).flatMap((node) => {
+    if (!node?.login) return []
+
+    return [
+      {
+        login: node.login,
+        name: node.name ?? null,
+        avatarUrl: node.avatarUrl ?? null
       }
     ]
   })

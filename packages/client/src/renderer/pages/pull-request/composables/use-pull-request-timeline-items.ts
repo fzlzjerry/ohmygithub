@@ -216,6 +216,7 @@ function toConversationReactions(
     content: reaction.content,
     count: reaction.count,
     viewerHasReacted: reaction.viewerHasReacted,
+    reactors: reaction.reactors,
   }))
 }
 
