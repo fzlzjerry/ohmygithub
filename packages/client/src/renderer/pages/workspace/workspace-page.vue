@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import type { WorkspaceTab } from './types'
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 import { SidebarInset, SidebarProvider } from '@oh-my-github/ui'
 import { useWorkspaceBookmarks } from './composables/use-workspace-bookmarks'
+import { useWorkspaceSearchRequestSignal } from './composables/use-workspace-search-request'
 import { useOrganizationsQuery } from '@/composables/github/use-organizations'
 import { useRightPanel } from '@/composables/use-right-panel'
 import { useToast } from '@/composables/use-toast'
@@ -163,6 +164,19 @@ function addTabBookmark(input: {
 function openSearchDialog(): void {
   isSearchDialogOpen.value = true
 }
+
+const searchRequestSignal = useWorkspaceSearchRequestSignal()
+let handledSearchRequest = searchRequestSignal.value
+
+function consumeSearchRequestIfPending(): void {
+  if (searchRequestSignal.value !== handledSearchRequest) {
+    handledSearchRequest = searchRequestSignal.value
+    openSearchDialog()
+  }
+}
+
+watch(searchRequestSignal, consumeSearchRequestIfPending)
+onMounted(consumeSearchRequestIfPending)
 
 function registerWorkspaceShortcuts(): void {
   if (shortcutUnregisters.length > 0) return
