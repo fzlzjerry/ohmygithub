@@ -6,7 +6,8 @@ Date: 2026-07-07
 
 Replace the add-secret / add-variable dialogs with inline draft rows at the
 top of each list, and support pasting .env-formatted text to create many
-drafts at once with one-click bulk save.
+drafts at once with one-click bulk save. Editing an existing entry also
+happens inline in its row instead of a dialog.
 
 ## Design
 
@@ -53,16 +54,22 @@ drafts at once with one-click bulk save.
   around values, cuts unquoted ` #` inline comments, and dedupes names with
   last-wins order.
 
+### Inline editing
+
+- The pencil button turns the row into an inline editor instead of opening a
+  dialog: the name stays read-only text (the API updates by name, so rename
+  is unsupported), and the value becomes an input — an empty write-only
+  password field for secrets, the current value prefilled for variables.
+- Check / X icon buttons replace pencil / trash while editing; Enter saves
+  and Escape cancels. Errors show inline under the row. One row per section
+  edits at a time; starting another edit switches rows, and switching scope
+  tabs cancels edits and drafts alike.
+
 ### Components
 
 - `settings/secrets/parse-env-entries.ts` — pure parser, unit-tested.
 - `settings/secrets/env-draft-rows.vue` — renders the draft rows for one
   section; props `drafts` + `maskValues`, emits `update:name`,
   `update:value`, `remove`, and `paste-entries` (already-parsed entries).
-- `secrets-panel.vue` — owns the two draft lists, header button states, and
-  batch save; the add dialogs are removed while the edit dialogs (update
-  secret value, edit variable) stay.
-
-### Out of scope
-
-Editing existing entries stays dialog-based; only the add flow changes.
+- `secrets-panel.vue` — owns the two draft lists, the per-section inline
+  edit state, header button states, and batch save; all dialogs are removed.
