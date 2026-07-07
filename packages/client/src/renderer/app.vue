@@ -6,6 +6,7 @@ import { Toaster } from '@oh-my-github/ui'
 import { useGlobalKeyboardShortcuts } from './keyboard/global-shortcuts'
 import { useKeyboardShortcutListener } from './keyboard/shortcut-runtime'
 import { useFocusRingModality } from './composables/use-focus-ring-modality'
+import { useTrayBridge } from './composables/use-tray-bridge'
 import { useAuthStore } from './stores/auth'
 import { useSettingsStore } from './stores/settings'
 
@@ -25,6 +26,7 @@ void settingsStore.initialize()
 useFocusRingModality()
 useKeyboardShortcutListener()
 useGlobalKeyboardShortcuts()
+useTrayBridge()
 </script>
 
 <template>
