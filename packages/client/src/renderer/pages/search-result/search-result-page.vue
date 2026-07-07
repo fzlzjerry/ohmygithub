@@ -288,11 +288,9 @@ function refetch(): void {
           <AppPagination
             v-model:page="page"
             :disabled="isLoading"
-            :has-next-page="result?.hasNextPage ?? false"
             :per-page="PER_PAGE"
             summary-key="searchResult.summary"
             :total-count="totalCount"
-            variant="compact"
           />
         </footer>
 
