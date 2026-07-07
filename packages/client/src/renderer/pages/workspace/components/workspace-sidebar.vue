@@ -37,6 +37,7 @@ import {
   useSidebar,
 } from '@oh-my-github/ui'
 import { BOOKMARK_ROOT_LIST_ID } from '@/pages/workspace/composables/use-workspace-bookmarks'
+import { usePinnedOrganizations } from '@/pages/workspace/composables/use-pinned-organizations'
 import {
   accountToTreeItem,
   bookmarkToTreeItem,
@@ -79,7 +80,6 @@ const INBOX_ITEM_ID = 'workspace-sidebar:inbox'
 const ACTIVITY_ITEM_ID = 'workspace-sidebar:activity'
 const NEW_ITEM_ID = 'workspace-sidebar:new'
 const NEW_ORGANIZATION_URL = 'https://github.com/account/organizations/new'
-const PINNED_ORGANIZATIONS_STORAGE_KEY = 'oh-my-github:workspace-pinned-organizations:v1'
 
 const emit = defineEmits<{
   copyGitHubUrl: [url: string]
@@ -105,7 +105,7 @@ const bookmarkFolderError = ref<'duplicate' | 'empty' | null>(null)
 const bookmarkRenameTarget = ref<BookmarkRenameTarget | null>(null)
 const bookmarkRenameTitle = ref('')
 const bookmarkRenameError = ref<'duplicate' | 'empty' | 'not-found' | null>(null)
-const pinnedOrganizationLogins = ref(readPinnedOrganizationLogins())
+const { pinnedOrganizationLogins, toggleOrganizationPin } = usePinnedOrganizations()
 const hasOrganizations = computed(() => Boolean(props.viewer) || props.organizations.length > 0)
 const showOrganizationsLoading = computed(() => props.organizationsLoading && !hasOrganizations.value)
 const showOrganizationsError = computed(() => props.organizationsError && !hasOrganizations.value)
@@ -427,15 +427,6 @@ function closeBookmarkRenameDialog(): void {
   bookmarkRenameError.value = null
 }
 
-function toggleOrganizationPin(login: string): void {
-  const isPinned = pinnedOrganizationLogins.value.includes(login)
-  pinnedOrganizationLogins.value = isPinned
-    ? pinnedOrganizationLogins.value.filter((item) => item !== login)
-    : [login, ...pinnedOrganizationLogins.value.filter((item) => item !== login)]
-
-  persistPinnedOrganizationLogins(pinnedOrganizationLogins.value)
-}
-
 function reorderBookmarkList(input: WorkspaceSidebarTreeSortInput): void {
   props.reorderBookmarkList(input)
 }
@@ -461,21 +452,6 @@ watch(
   },
   { immediate: true },
 )
-
-function readPinnedOrganizationLogins(): string[] {
-  try {
-    const parsed = JSON.parse(localStorage.getItem(PINNED_ORGANIZATIONS_STORAGE_KEY) ?? '[]') as unknown
-    if (!Array.isArray(parsed)) return []
-
-    return parsed.filter((login): login is string => typeof login === 'string' && login.trim().length > 0)
-  } catch {
-    return []
-  }
-}
-
-function persistPinnedOrganizationLogins(logins: string[]): void {
-  localStorage.setItem(PINNED_ORGANIZATIONS_STORAGE_KEY, JSON.stringify(logins))
-}
 </script>
 
 <template>

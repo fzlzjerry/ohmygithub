@@ -2098,6 +2098,17 @@ type StoredWorkspaceBookmarksInfo = {
   bookmarks: StoredWorkspaceBookmarks
 }
 
+type StoredPins = {
+  version: 1
+  organizations: string[]
+}
+
+type StoredPinsInfo = {
+  path: string
+  hasContent: boolean
+  pins: StoredPins
+}
+
 interface Window {
   ohMyGithub: {
     app: {
@@ -2584,6 +2595,10 @@ interface Window {
     bookmarks: {
       get: () => Promise<StoredWorkspaceBookmarksInfo>
       update: (payload: StoredWorkspaceBookmarks) => Promise<StoredWorkspaceBookmarksInfo>
+    }
+    pins: {
+      get: () => Promise<StoredPinsInfo>
+      update: (payload: StoredPins) => Promise<StoredPinsInfo>
     }
     userSettings: {
       getProfile: () => Promise<GitHubUserSettingsProfile>

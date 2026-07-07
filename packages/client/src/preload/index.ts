@@ -390,6 +390,10 @@ const api = {
     get: () => ipcRenderer.invoke('bookmarks:get'),
     update: (payload: unknown) => ipcRenderer.invoke('bookmarks:update', payload)
   },
+  pins: {
+    get: () => ipcRenderer.invoke('pins:get'),
+    update: (payload: unknown) => ipcRenderer.invoke('pins:update', payload)
+  },
   userSettings: {
     getProfile: () => ipcRenderer.invoke('user-settings:get-profile'),
     updateProfile: (input: unknown) => ipcRenderer.invoke('user-settings:update-profile', input),
