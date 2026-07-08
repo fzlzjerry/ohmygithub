@@ -1,5 +1,5 @@
 import { join, resolve } from 'node:path'
-import { app, BrowserWindow, ipcMain, Menu, nativeImage, nativeTheme, shell, type NativeImage } from 'electron'
+import { app, autoUpdater, BrowserWindow, ipcMain, Menu, nativeImage, nativeTheme, shell, type NativeImage } from 'electron'
 import { is } from '@electron-toolkit/utils'
 import { registerAccountsIpc } from './accounts'
 import { registerActionsIpc } from './actions'
@@ -234,6 +234,15 @@ void app.whenReady().then(() => {
 })
 
 app.on('before-quit', () => {
+  isQuitting = true
+})
+
+// macOS installs updates through Electron's native autoUpdater, which closes all
+// windows WITHOUT emitting 'before-quit' (it emits 'before-quit-for-update' on
+// itself instead) and only installs/relaunches once 'window-all-closed' fires.
+// Without this, the close-to-tray guard hides the window, the updater waits
+// forever, and "Restart to update" leaves the old app running hidden in the tray.
+autoUpdater.on('before-quit-for-update', () => {
   isQuitting = true
 })
 
