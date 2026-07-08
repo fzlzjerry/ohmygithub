@@ -62,7 +62,9 @@ export function usePinnedOrganizations(login: MaybeRefOrGetter<string | null | u
           throw new Error('Pins bridge is unavailable')
         }
 
-        await pinsBridge.setOrganizationPins({ login: normalizedLogin, organizations })
+        // Copy into a plain array: Vue's reactive proxy cannot cross the
+        // IPC structured-clone boundary (DataCloneError).
+        await pinsBridge.setOrganizationPins({ login: normalizedLogin, organizations: [...organizations] })
       })
       .catch((error) => {
         console.error('Failed to persist pinned organizations', error)

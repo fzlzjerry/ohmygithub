@@ -1,5 +1,5 @@
 import type { MaybeRefOrGetter, Ref } from 'vue'
-import { ref, toValue, watch } from 'vue'
+import { ref, toRaw, toValue, watch } from 'vue'
 
 export const MAX_CUSTOM_PINS = 6
 
@@ -51,9 +51,11 @@ export function useCustomRepositoryPins(
       throw new Error('Pins bridge is unavailable')
     }
 
+    // Unwrap to raw objects: Vue's reactive proxies cannot cross the
+    // IPC structured-clone boundary (DataCloneError).
     const info = await pinsBridge.setRepositoryPins({
       login: normalizedLogin,
-      repositories: repositories.slice(0, MAX_CUSTOM_PINS),
+      repositories: repositories.slice(0, MAX_CUSTOM_PINS).map((repository) => toRaw(repository)),
     })
     restoreToken += 1
     customPins.value = info?.pins?.repositoryPins?.[normalizedLogin] ?? []
