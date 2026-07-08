@@ -114,7 +114,7 @@ export function useAccountStarredRepositoriesQuery(
   page: MaybeRefOrGetter<number>,
   perPage: MaybeRefOrGetter<number>,
   search: MaybeRefOrGetter<string>,
-  language: MaybeRefOrGetter<string>,
+  list: MaybeRefOrGetter<string>,
   enabled: MaybeRefOrGetter<boolean>,
 ) {
   return useQuery<GitHubAccountRepositoryPage>({
@@ -125,7 +125,7 @@ export function useAccountStarredRepositoriesQuery(
       toValue(page),
       toValue(perPage),
       toValue(search).trim(),
-      toValue(language).trim(),
+      toValue(list).trim(),
     ],
     enabled: () => Boolean(toValue(login)) && toValue(enabled),
     staleTime: 1000 * 60 * 5,
@@ -143,18 +143,18 @@ export function useAccountStarredRepositoriesQuery(
         page: toValue(page),
         perPage: toValue(perPage),
         search: toValue(search).trim(),
-        language: toValue(language).trim(),
+        list: toValue(list).trim(),
       })
     },
   })
 }
 
-export function useAccountStarredLanguagesQuery(
+export function useAccountStarredListsQuery(
   login: MaybeRefOrGetter<string>,
   enabled: MaybeRefOrGetter<boolean>,
 ) {
-  return useQuery<GitHubAccountStarLanguage[]>({
-    key: () => ['github', 'account-starred-languages', toValue(login)],
+  return useQuery<GitHubAccountStarList[]>({
+    key: () => ['github', 'account-starred-lists', toValue(login)],
     enabled: () => Boolean(toValue(login)) && toValue(enabled),
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 30,
@@ -166,7 +166,7 @@ export function useAccountStarredLanguagesQuery(
         throw new Error('GitHub accounts bridge is unavailable')
       }
 
-      return window.ohMyGithub.accounts.listStarredLanguages(toValue(login))
+      return window.ohMyGithub.accounts.listStarredLists(toValue(login))
     },
   })
 }
@@ -308,7 +308,7 @@ export function useAccountListInvalidation() {
     // invalidate the whole prefix rather than guess the login.
     invalidateStarredRepositories(): void {
       void queryCache.invalidateQueries({ key: ['github', 'account-starred-repositories'] }, 'all')
-      void queryCache.invalidateQueries({ key: ['github', 'account-starred-languages'] }, 'all')
+      void queryCache.invalidateQueries({ key: ['github', 'account-starred-lists'] }, 'all')
     },
     // A new fork lands under `owner` (viewer account or org); only one list matches.
     invalidateOwnedRepositories(owner: string): void {

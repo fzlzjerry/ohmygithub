@@ -17,7 +17,7 @@ import type {
   GitHubAccountProfile,
   GitHubAccountRepository,
   GitHubAccountRepositoryPage,
-  GitHubAccountStarLanguage,
+  GitHubAccountStarList,
   GitHubAccountViewerState,
   GitHubActionJob,
   GitHubActionJobLog,
@@ -813,29 +813,20 @@ export class MockGitHubClient implements GitHubClient {
   }
 
   async listAccountStarredRepositories(options: ListAccountRepositoriesOptions): Promise<GitHubAccountRepositoryPage> {
-    const language = String(options.language ?? '').trim().toLowerCase()
-    const repositories = filterAccountRepositories(starredRepositoriesByAccount[options.login] ?? [], options.search)
-      .filter((repository) => !language || (repository.primaryLanguage ?? '').toLowerCase() === language)
+    const slug = String(options.list ?? '').trim().toLowerCase()
+    const starred = slug
+      ? getMockStarLists(options.login).find((entry) => entry.list.slug === slug)?.repositories ?? []
+      : starredRepositoriesByAccount[options.login] ?? []
 
     return createMockAccountRepositoryPage(
-      repositories,
+      filterAccountRepositories(starred, options.search),
       options.page ?? 1,
       options.perPage ?? 12,
     )
   }
 
-  async listAccountStarredLanguages(login: string): Promise<GitHubAccountStarLanguage[]> {
-    const counts = new Map<string, number>()
-
-    for (const repository of starredRepositoriesByAccount[login] ?? []) {
-      if (!repository.primaryLanguage) continue
-
-      counts.set(repository.primaryLanguage, (counts.get(repository.primaryLanguage) ?? 0) + 1)
-    }
-
-    return [...counts.entries()]
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+  async listAccountStarredLists(login: string): Promise<GitHubAccountStarList[]> {
+    return getMockStarLists(login).map((entry) => entry.list)
   }
 
   async getAccountViewerState(login: string): Promise<GitHubAccountViewerState> {
@@ -2208,6 +2199,29 @@ function createMockAccountRepositoryPage(
     hasNextPage: offset + perPage < repositories.length,
     incompleteResults: false,
   }
+}
+
+// Two demo lists carved out of the starred fixtures so the stars category
+// tabs have something to show.
+function getMockStarLists(login: string): Array<{ list: GitHubAccountStarList; repositories: GitHubAccountRepository[] }> {
+  const starred = starredRepositoriesByAccount[login] ?? []
+  const groups = [
+    { name: 'Favorites', slug: 'favorites', repositories: starred.filter((_, index) => index % 2 === 0) },
+    { name: 'Tools', slug: 'tools', repositories: starred.filter((_, index) => index % 2 === 1) },
+  ]
+
+  return groups
+    .filter((group) => group.repositories.length > 0)
+    .map((group) => ({
+      list: {
+        name: group.name,
+        slug: group.slug,
+        description: null,
+        isPrivate: false,
+        itemsCount: group.repositories.length,
+      },
+      repositories: group.repositories,
+    }))
 }
 
 function filterAccountRepositories(

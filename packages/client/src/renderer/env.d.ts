@@ -213,9 +213,12 @@ type GitHubAccountRepositoryPage = {
   incompleteResults: boolean
 }
 
-type GitHubAccountStarLanguage = {
+type GitHubAccountStarList = {
   name: string
-  count: number
+  slug: string
+  description: string | null
+  isPrivate: boolean
+  itemsCount: number
 }
 
 type GitHubAccountContributionDay = {
@@ -260,7 +263,7 @@ type ListAccountRepositoriesOptions = {
   page?: number
   perPage?: number
   search?: string
-  language?: string
+  list?: string
 }
 
 type AccountContributionsOptions = {
@@ -2128,7 +2131,7 @@ interface Window {
       getContributions: (options: AccountContributionsOptions) => Promise<GitHubAccountContributionYear>
       listRepositories: (options: ListAccountRepositoriesOptions) => Promise<GitHubAccountRepositoryPage>
       listStarredRepositories: (options: ListAccountRepositoriesOptions) => Promise<GitHubAccountRepositoryPage>
-      listStarredLanguages: (login: string) => Promise<GitHubAccountStarLanguage[]>
+      listStarredLists: (login: string) => Promise<GitHubAccountStarList[]>
       getViewerState: (login: string) => Promise<GitHubAccountViewerState>
       setFollowed: (options: SetAccountFollowedOptions) => Promise<void>
       listFollowers: (login: string) => Promise<GitHubAccountFollowList>

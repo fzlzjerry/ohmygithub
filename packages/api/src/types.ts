@@ -84,9 +84,12 @@ export interface GitHubAccountRepositoryPage {
   incompleteResults: boolean
 }
 
-export interface GitHubAccountStarLanguage {
+export interface GitHubAccountStarList {
   name: string
-  count: number
+  slug: string
+  description: string | null
+  isPrivate: boolean
+  itemsCount: number
 }
 
 export interface GitHubAccountContributionDay {
@@ -1662,7 +1665,7 @@ export interface GitHubClient {
   getAccountContributions(options: AccountContributionsOptions): Promise<GitHubAccountContributionYear>
   listAccountRepositories(options: ListAccountRepositoriesOptions): Promise<GitHubAccountRepositoryPage>
   listAccountStarredRepositories(options: ListAccountRepositoriesOptions): Promise<GitHubAccountRepositoryPage>
-  listAccountStarredLanguages(login: string): Promise<GitHubAccountStarLanguage[]>
+  listAccountStarredLists(login: string): Promise<GitHubAccountStarList[]>
   getAccountViewerState(login: string): Promise<GitHubAccountViewerState>
   setAccountFollowed(options: SetAccountFollowedOptions): Promise<void>
   listViewerOrganizations(): Promise<GitHubOrganization[]>
@@ -1945,7 +1948,8 @@ export interface ListAccountRepositoriesOptions {
   page?: number
   perPage?: number
   search?: string
-  language?: string
+  /** Star list slug; scopes starred-repository listings to that list. */
+  list?: string
 }
 
 export interface AccountContributionsOptions {

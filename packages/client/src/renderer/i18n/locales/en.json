@@ -793,7 +793,7 @@
     "stars": {
       "categories": {
         "all": "All",
-        "label": "Filter starred repositories by language"
+        "label": "Filter starred repositories by list"
       },
       "empty": {
         "description": "No starred repositories are visible for this account.",

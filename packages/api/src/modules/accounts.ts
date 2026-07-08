@@ -19,7 +19,7 @@ import type {
   GitHubAccountSponsorsSummary,
   GitHubAccountSponsorship,
   GitHubAccountSponsorshipPage,
-  GitHubAccountStarLanguage,
+  GitHubAccountStarList,
   GitHubAccountViewerState,
   GitHubOrganization,
   GitHubRepository,
@@ -189,6 +189,95 @@ interface GraphRepositoryNode {
   updatedAt?: string | null
   url?: string | null
 }
+
+interface GraphStarListNode {
+  name?: string | null
+  slug?: string | null
+  description?: string | null
+  isPrivate?: boolean
+  items?: {
+    totalCount?: number
+    nodes?: Array<GraphRepositoryNode | null>
+  } | null
+}
+
+interface GraphStarListsResponse {
+  user: {
+    lists?: {
+      nodes?: Array<GraphStarListNode | null>
+    } | null
+  } | null
+}
+
+const accountStarListsQuery = `
+  query AccountStarLists($login: String!) {
+    user(login: $login) {
+      lists(first: 50) {
+        nodes {
+          name
+          slug
+          description
+          isPrivate
+          items(first: 1) {
+            totalCount
+          }
+        }
+      }
+    }
+  }
+`
+
+// The schema has no user.list(slug:) lookup, so items are fetched through the
+// lists connection and the requested list is picked out by slug. The synthetic
+// offset cursors apply uniformly to every list's items connection.
+const accountStarListItemsQuery = `
+  query AccountStarListItems($login: String!, $first: Int!, $after: String) {
+    user(login: $login) {
+      lists(first: 50) {
+        nodes {
+          slug
+          items(first: $first, after: $after) {
+            totalCount
+            nodes {
+              ... on Repository {
+                databaseId
+                name
+                nameWithOwner
+                owner {
+                  login
+                  avatarUrl
+                }
+                description
+                isPrivate
+                visibility
+                isFork
+                isArchived
+                isTemplate
+                primaryLanguage {
+                  name
+                  color
+                }
+                stargazerCount
+                forkCount
+                repositoryTopics(first: 8) {
+                  nodes {
+                    topic {
+                      name
+                    }
+                  }
+                }
+                homepageUrl
+                pushedAt
+                updatedAt
+                url
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`
 
 const accountOverviewQuery = `
   query AccountOverview($login: String!, $pinnedFirst: Int!, $orgFirst: Int!, $socialFirst: Int!) {
@@ -569,9 +658,12 @@ export class AccountsApi {
     const page = normalizePage(options.page)
     const perPage = normalizePerPage(options.perPage)
     const search = normalizeSearch(options.search)
-    const language = normalizeSearch(options.language)
-    if (search || language) {
-      return this.filterStarredRepositories(options.login.trim(), search, language, page, perPage)
+    const list = normalizeSearch(options.list)
+    if (list) {
+      return this.listStarListRepositories(options.login.trim(), list, search, page, perPage)
+    }
+    if (search) {
+      return this.filterStarredRepositories(options.login.trim(), search, page, perPage)
     }
 
     const response = await this.octokit.request('GET /users/{username}/starred', {
@@ -585,18 +677,91 @@ export class AccountsApi {
     return mapRepositoryPage(response.data as RepositoryResponse[], response.headers.link, page, perPage)
   }
 
-  async listStarredLanguages(login: string): Promise<GitHubAccountStarLanguage[]> {
-    const counts = new Map<string, number>()
+  async listStarredLists(login: string): Promise<GitHubAccountStarList[]> {
+    const response = await this.octokit.graphql<GraphStarListsResponse>(
+      accountStarListsQuery,
+      { login: login.trim() },
+    )
 
-    await this.scanStarredRepositories(login.trim(), (repository) => {
-      if (!repository.primaryLanguage) return
+    return (response.user?.lists?.nodes ?? []).flatMap(mapGraphStarList)
+  }
 
-      counts.set(repository.primaryLanguage, (counts.get(repository.primaryLanguage) ?? 0) + 1)
+  private async listStarListRepositories(
+    login: string,
+    slug: string,
+    search: string,
+    page: number,
+    perPage: number,
+  ): Promise<GitHubAccountRepositoryPage> {
+    if (search) {
+      return this.filterStarListRepositories(login, slug, search, page, perPage)
+    }
+
+    const response = await this.octokit.graphql<GraphStarListsResponse>(accountStarListItemsQuery, {
+      login,
+      first: perPage,
+      after: offsetPageCursor(page, perPage),
     })
+    const items = findStarList(response, slug)
+    const repositories = (items?.nodes ?? []).flatMap(mapGraphRepository)
+    const totalCount = items?.totalCount ?? repositories.length
 
-    return [...counts.entries()]
-      .map(([name, count]) => ({ name, count }))
-      .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
+    return {
+      items: repositories,
+      totalCount,
+      page,
+      perPage,
+      hasNextPage: page * perPage < totalCount,
+      incompleteResults: false,
+    }
+  }
+
+  private async filterStarListRepositories(
+    login: string,
+    slug: string,
+    search: string,
+    page: number,
+    perPage: number,
+  ): Promise<GitHubAccountRepositoryPage> {
+    const matches: GitHubAccountRepository[] = []
+    const fetchPerPage = 100
+    const maxScannedRepositories = 1000
+    let nextPage = 1
+    let scannedRepositories = 0
+    let listTotalCount = 0
+
+    while (scannedRepositories < maxScannedRepositories) {
+      const response = await this.octokit.graphql<GraphStarListsResponse>(accountStarListItemsQuery, {
+        login,
+        first: fetchPerPage,
+        after: offsetPageCursor(nextPage, fetchPerPage),
+      })
+      const items = findStarList(response, slug)
+      const nodes = items?.nodes ?? []
+
+      listTotalCount = items?.totalCount ?? 0
+      scannedRepositories += nodes.length
+      matches.push(
+        ...nodes
+          .flatMap(mapGraphRepository)
+          .filter((repository) => repositoryMatchesSearch(repository, search)),
+      )
+
+      if (nodes.length === 0 || scannedRepositories >= listTotalCount) break
+
+      nextPage += 1
+    }
+
+    const offset = (page - 1) * perPage
+
+    return {
+      items: matches.slice(offset, offset + perPage),
+      totalCount: matches.length,
+      page,
+      perPage,
+      hasNextPage: offset + perPage < matches.length,
+      incompleteResults: scannedRepositories < listTotalCount,
+    }
   }
 
   private async searchAccountRepositories(
@@ -619,14 +784,13 @@ export class AccountsApi {
   private async filterStarredRepositories(
     login: string,
     search: string,
-    language: string,
     page: number,
     perPage: number,
   ): Promise<GitHubAccountRepositoryPage> {
     const matches: GitHubAccountRepository[] = []
 
     const incompleteResults = await this.scanStarredRepositories(login, (repository) => {
-      if (repositoryMatchesSearch(repository, search) && repositoryMatchesLanguage(repository, language)) {
+      if (repositoryMatchesSearch(repository, search)) {
         matches.push(repository)
       }
     })
@@ -1200,10 +1364,30 @@ function buildRepositorySearchQuery(search: string, qualifiers: string[]): strin
   return [...terms, ...qualifiers].join(' ')
 }
 
-function repositoryMatchesLanguage(repository: GitHubAccountRepository, language: string): boolean {
-  if (!language) return true
+function findStarList(
+  response: GraphStarListsResponse,
+  slug: string,
+): GraphStarListNode['items'] {
+  const normalizedSlug = slug.toLowerCase()
+  const node = (response.user?.lists?.nodes ?? []).find(
+    (list) => list?.slug?.toLowerCase() === normalizedSlug,
+  )
 
-  return (repository.primaryLanguage ?? '').toLowerCase() === language.toLowerCase()
+  return node?.items ?? null
+}
+
+function mapGraphStarList(node: GraphStarListNode | null | undefined): GitHubAccountStarList[] {
+  const slug = node?.slug?.trim()
+  const name = node?.name?.trim()
+  if (!slug || !name) return []
+
+  return [{
+    name,
+    slug,
+    description: node?.description?.trim() || null,
+    isPrivate: Boolean(node?.isPrivate),
+    itemsCount: node?.items?.totalCount ?? 0,
+  }]
 }
 
 function repositoryMatchesSearch(repository: GitHubAccountRepository, search: string): boolean {
