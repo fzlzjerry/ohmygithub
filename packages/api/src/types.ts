@@ -239,6 +239,7 @@ export interface GitHubWorkspaceSearchItem {
   repo?: string
   nameWithOwner?: string
   isPrivate?: boolean
+  starCount?: number
   updatedAt?: string | null
 }
 
@@ -1670,6 +1671,7 @@ export interface GitHubClient {
   setAccountFollowed(options: SetAccountFollowedOptions): Promise<void>
   listViewerOrganizations(): Promise<GitHubOrganization[]>
   listOrganizationRepositories(owner: string): Promise<GitHubRepository[]>
+  listAllViewerRepositories(): Promise<GitHubRepository[]>
   resolveWorkspaceGoto(input: string): Promise<GitHubWorkspaceGotoResult>
   resolveRepositoryReference(options: ResolveRepositoryReferenceOptions): Promise<GitHubRepositoryReferenceResolution>
   searchWorkspace(options: SearchWorkspaceOptions): Promise<GitHubWorkspaceSearchResult>

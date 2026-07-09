@@ -439,6 +439,7 @@ type GitHubWorkspaceSearchItem = {
   repo?: string
   nameWithOwner?: string
   isPrivate?: boolean
+  starCount?: number
   updatedAt?: string | null
 }
 
@@ -2140,6 +2141,7 @@ interface Window {
       listSponsorships: (options: ListAccountSponsorshipsOptions) => Promise<GitHubAccountSponsorshipPage>
       listOrganizations: () => Promise<GitHubOrganization[]>
       listOrganizationRepositories: (owner: string) => Promise<GitHubRepository[]>
+      listAllViewerRepositories: () => Promise<GitHubRepository[]>
     }
     organizationPeople: {
       getPeople: (org: string) => Promise<GitHubOrganizationPeople>
