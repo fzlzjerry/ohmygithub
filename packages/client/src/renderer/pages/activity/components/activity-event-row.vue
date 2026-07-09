@@ -4,18 +4,28 @@ import { useI18n } from 'vue-i18n'
 import { useRouter } from 'vue-router'
 import GithubActorLink from '@/components/github/github-actor-link.vue'
 import { formatRelativeTime } from '@/components/conversation/format'
-import { presentFeedEvent } from '../activity-helpers'
+import { presentFeedEvent, pushCountRefForEvent } from '../activity-helpers'
 import ActivityFeedCard from './activity-feed-card.vue'
 
 const props = defineProps<{
   event: GitHubFeedEvent
   repoCards?: Map<string, GitHubFeedRepoCard | null>
+  pushCounts?: Map<string, number | null>
 }>()
 
 const { locale } = useI18n()
 const router = useRouter()
 
-const presentation = computed(() => presentFeedEvent(props.event))
+const presentation = computed(() => {
+  const ref = pushCountRefForEvent(props.event)
+  // Only override the payload count once the compare result is actually cached: a Map
+  // miss (still pending / non-push) stays `undefined` so presentFeedEvent falls back to
+  // the payload's own count; a cached `null` (unavailable) renders the count-less sentence.
+  const resolved = ref && props.pushCounts?.has(ref.key)
+    ? props.pushCounts.get(ref.key)!
+    : undefined
+  return presentFeedEvent(props.event, resolved)
+})
 const relativeTime = computed(() => formatRelativeTime(props.event.createdAt, { locale: locale.value }))
 
 function openTarget(): void {
